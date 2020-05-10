@@ -1,0 +1,31 @@
+version: 2.1
+jobs:
+  build_server:
+    docker:
+      - image: nixos/nix:2.3
+    steps:
+      - checkout
+      - run:
+          name: build
+          command: nix-build --pure release.nix
+  build_dashboard:
+    working_directory: 'dashboard'
+    docker:
+      - image: circleci/node:10.16.3
+    steps:
+      - checkout
+      - run:
+          name: install-yarn
+          command: "sudo npm install yarn"
+      - restore_cache:
+          key: dependency-cache-{{ checksum "yarn-lock.json" }}
+      - run:
+          name: install
+          command: yarn install
+      - save_cache:
+          key: dependency-cache-{{ checksum "yarn-lock.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: build
+          command: npm run prod
