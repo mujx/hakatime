@@ -9,26 +9,22 @@ jobs:
           name: "Build"
           command: nix-build --pure release.nix
   build_dashboard:
-    working_directory: "~/project/dashboard"
     docker:
       - image: circleci/node:10.16.3
     steps:
       - checkout
-      - run:
-          name: "Install YARN"
-          command: "sudo npm install yarn"
       - restore_cache:
-          key: dependency-cache-{{ checksum "yarn-lock.json" }}
+          key: dependency-cache-{{ checksum "./dashboard/package.json" }}
       - run:
           name: "Install dependencies"
-          command: yarn install
+          command: cd dashboard && npm install
       - save_cache:
-          key: dependency-cache-{{ checksum "yarn-lock.json" }}
+          key: dependency-cache-{{ checksum "./dashboard/package.json" }}
           paths:
-            - ./node_modules
+            - ./dashboard/node_modules
       - run:
           name: "Build"
-          command: npm run prod
+          command: cd dashboard && npm run prod
 
 workflows:
   version: 2
