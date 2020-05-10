@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  build_server:
+  build:
     docker:
       - image: nixos/nix:2.3
     steps:
@@ -29,3 +29,10 @@ jobs:
       - run:
           name: build
           command: npm run prod
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - build_dashboard
