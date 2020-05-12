@@ -16,3 +16,6 @@ ui:
 
 gen-nix:
 	cabal2nix --no-haddock --no-check . > default.nix
+
+build-img:
+	docker build -t hakatime:latest .
