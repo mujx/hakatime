@@ -37,8 +37,8 @@ COPY hakatime.cabal ./
 COPY src/           ./src
 COPY test/          ./test
 
-RUN cabal build -j3 -O2 hakatime   && \
-    cabal install -j3 -O2 hakatime && \
+RUN cabal build -j1 -O2 hakatime   && \
+    cabal install -j1 -O2 hakatime && \
     mkdir -p /app/bin              && \
     cp ~/.cabal/bin/hakatime /app/bin/hakatime
 
