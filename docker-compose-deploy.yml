@@ -1,0 +1,30 @@
+version: "3"
+services:
+  server:
+    container_name: hakatime
+    image: mujx/hakatime:latest
+    environment:
+      # DB settings.
+      HAKA_DB_HOST: haka_db
+      HAKA_DB_PORT: 5432
+      HAKA_DB_NAME: test
+      HAKA_DB_PASS: test
+      HAKA_DB_USER: test
+      # Server settings.
+      HAKA_CORS_URL: 'http://localhost:8080'
+      HAKA_PORT: 8080
+    ports:
+      - 8080:8080
+  haka_db:
+    container_name: haka_db
+    image: postgres:11-alpine
+    environment:
+      POSTGRES_DB: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_USER: test
+    volumes:
+      - ./docker/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql
+      - deploy_db_data:/var/lib/postgresql/data
+
+volumes:
+  deploy_db_data: {}

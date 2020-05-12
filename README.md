@@ -12,6 +12,48 @@ activity.
 It comes together with a simple dashboard which provides a graphical
 representation of the collected data.
 
+## Deployment
+
+You can use the following docker-compose setup for testing locally or an actual
+deployment. Change `HAKA_CORS_URL` to match the actual external endpoint of your
+instance.
+
+```yaml
+version: "3"
+services:
+  server:
+    container_name: hakatime
+    image: mujx/hakatime:latest
+    environment:
+      # DB settings.
+      HAKA_DB_HOST: haka_db
+      HAKA_DB_PORT: 5432
+      HAKA_DB_NAME: test
+      HAKA_DB_PASS: test
+      HAKA_DB_USER: test
+      # Server settings.
+      HAKA_CORS_URL: "http://localhost:8080"
+      HAKA_PORT: 8080
+    ports:
+      - 8080:8080
+  haka_db:
+    container_name: haka_db
+    image: postgres:11-alpine
+    environment:
+      POSTGRES_DB: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_USER: test
+    volumes:
+      - ./docker/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql
+      - deploy_db_data:/var/lib/postgresql/data
+
+volumes:
+  deploy_db_data: {}
+```
+
+Run `docker-compose -f ./docker-compose-deploy.yml up` and navigate to
+[http://localhost:8080](http://localhost:8080) to access the UI.
+
 ## Building
 
 ### Server
@@ -115,7 +157,6 @@ Available commands:
 ### Projects
 
 ![Projects Page](img/projects.png "Projects Page")
-
 
 ## Contributing
 
