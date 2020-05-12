@@ -21,7 +21,7 @@ import Data.Time.Clock (UTCTime (..), getCurrentTime)
 import GHC.Generics
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
-import Haka.Types (ApiToken, AppCtx (..), AppM, TokenData (..))
+import Haka.Types (ApiToken, AppCtx (..), AppM, RegistrationStatus (..), TokenData (..))
 import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
@@ -139,8 +139,9 @@ loginHandler creds = do
         $ addHeader cookie
         $ mkLoginResponse tknData now
 
-registerHandler :: AuthRequest -> AppM LoginResponse'
-registerHandler creds = do
+registerHandler :: RegistrationStatus -> AuthRequest -> AppM LoginResponse'
+registerHandler DisabledRegistration _ = throw Err.disabledRegistration
+registerHandler EnabledRegistration creds = do
   now <- liftIO getCurrentTime
   dbPool <- asks pool
   res <-
@@ -215,9 +216,9 @@ createAPITokenHandler (Just tkn) =
         throw (DbOps.toJSONError e)
       Right t -> return $ TokenResponse {apiToken = t}
 
-server =
+server settings =
   loginHandler
     :<|> refreshTokenHandler
     :<|> createAPITokenHandler
     :<|> logoutHandler
-    :<|> registerHandler
+    :<|> registerHandler settings

@@ -34,6 +34,7 @@ services:
       # Server settings.
       HAKA_CORS_URL: "http://localhost:8080"
       HAKA_PORT: 8080
+      HAKA_ENABLE_REGISTRATION: true # Toggle after you've created your account.
     ports:
       - 8080:8080
   haka_db:

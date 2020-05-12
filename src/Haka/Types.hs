@@ -7,6 +7,8 @@
 module Haka.Types
   ( HeartbeatApiResponse (..),
     HearbeatData (..),
+    RegistrationStatus (..),
+    ServerSettings (..),
     BulkHeartbeatData (..),
     HeartbeatId (..),
     ApiErrorData (..),
@@ -54,6 +56,23 @@ import qualified Hasql.Pool as HqPool
 import qualified Katip as K
 import PostgreSQL.Binary.Data (Scientific)
 import Servant
+
+data RegistrationStatus
+  = EnabledRegistration
+  | DisabledRegistration
+
+-- | Server configuration settings.
+data ServerSettings
+  = ServerSettings
+      { -- | Where the service will listen to.
+        hakaPort :: Int,
+        -- | What domain to allow.
+        hakaCorsUrl :: Bs.ByteString,
+        -- | Where to look for dashboard's static files.
+        hakaDashboardPath :: FilePath,
+        -- | Whether the registration is enabled.
+        hakaEnableRegistration :: RegistrationStatus
+      }
 
 -- Data needed to generate a new auth token pair in the database.
 data TokenData

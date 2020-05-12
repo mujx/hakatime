@@ -2,6 +2,7 @@ module Haka.Errors
   ( missingAuthError,
     missingRefreshTokenCookie,
     invalidTokenError,
+    disabledRegistration,
     genericError,
     usernameExists,
     registerError,
@@ -51,6 +52,13 @@ expiredToken :: ServerError
 expiredToken =
   err403
     { errBody = encode $ mkApiError "The given api token has expired",
+      errHeaders = contentTypeHeader
+    }
+
+disabledRegistration :: ServerError
+disabledRegistration =
+  err403
+    { errBody = encode $ mkApiError "Registration is disabled",
       errHeaders = contentTypeHeader
     }
 

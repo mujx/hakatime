@@ -5,14 +5,20 @@ where
 
 import Control.Exception (try)
 import Control.Monad.Trans.Except (ExceptT (..))
-import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as Bs
 import qualified Haka.Authentication as Auth
 import qualified Haka.Cli as Cli
 import qualified Haka.Heartbeats as Heartbeats
 import qualified Haka.Projects as Projects
 import qualified Haka.Stats as Stats
-import Haka.Types (AppCtx (..), AppM, LogState (..), runAppT)
+import Haka.Types
+  ( AppCtx (..),
+    AppM,
+    LogState (..),
+    RegistrationStatus (..),
+    ServerSettings (..),
+    runAppT,
+  )
 import qualified Hasql.Pool as HasqlPool
 import Katip
 import Network.Wai
@@ -21,7 +27,7 @@ import Network.Wai.Logger (withStdoutLogger)
 import Network.Wai.Middleware.Cors
 import qualified Options.Applicative as Opt
 import Servant
-import System.Environment.MrEnv (envAsInt, envAsString)
+import System.Environment.MrEnv (envAsBool, envAsInt, envAsString)
 import System.IO (stdout)
 
 type Static = Raw
@@ -40,7 +46,7 @@ server settings =
   Heartbeats.server
     :<|> Stats.server
     :<|> Projects.server
-    :<|> Auth.server
+    :<|> Auth.server (hakaEnableRegistration settings)
     :<|> serveDirectoryFileServer (hakaDashboardPath settings)
 
 api :: Proxy HakaAPI
@@ -92,27 +98,18 @@ initApp settings unApp = do
             }
       )
 
--- | Server configuration settings.
-data ServerSettings
-  = ServerSettings
-      { -- | Where the service will listen to.
-        hakaPort :: Int,
-        -- | What domain to allow.
-        hakaCorsUrl :: ByteString,
-        -- | Where to look for dashboard's static files.
-        hakaDashboardPath :: FilePath
-      }
-
 getServerSettings :: IO ServerSettings
 getServerSettings = do
-  hPort <- envAsInt "HAKA_PORT" 8080
-  hCorsUrl <- Bs.pack <$> envAsString "HAKA_CORS_URL" "http://localhost:8080"
-  hDashboardPath <- envAsString "HAKA_DASHBOARD_PATH" "./dashboard/dist"
+  p <- envAsInt "HAKA_PORT" 8080
+  corsUrl <- Bs.pack <$> envAsString "HAKA_CORS_URL" "http://localhost:8080"
+  dashboardPath <- envAsString "HAKA_DASHBOARD_PATH" "./dashboard/dist"
+  enableRegistration <- envAsBool "HAKA_ENABLE_REGISTRATION" True
   return $
     ServerSettings
-      { hakaPort = hPort,
-        hakaCorsUrl = hCorsUrl,
-        hakaDashboardPath = hDashboardPath
+      { hakaPort = p,
+        hakaCorsUrl = corsUrl,
+        hakaDashboardPath = dashboardPath,
+        hakaEnableRegistration = if enableRegistration then EnabledRegistration else DisabledRegistration
       }
 
 main :: IO ()
