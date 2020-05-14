@@ -37,16 +37,7 @@ let State = {
         );
         m.redraw();
       })
-      .catch(function(err) {
-        if (err.code == 403) {
-          auth.tryToRefresh("The session expired", State.fetchItems);
-          return;
-        }
-
-        // TODO: Show a visual message.
-        console.log(err);
-        console.log("call failed with", err.response, err.code);
-      });
+      .catch(err => auth.retryCall(err, State.fetchItems));
   }
 };
 

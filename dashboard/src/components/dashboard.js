@@ -53,11 +53,7 @@ function createApiTokenDialog(event) {
       ApiToken.value = res.apiToken;
       ApiToken.openModal();
     })
-    .catch(function(e) {
-      console.log("request failed", e);
-      console.log(e.response);
-      console.log(e.code);
-    });
+    .catch(err => auth.retryCall(err, () => createApiTokenDialog(event)));
 }
 
 let Modal = {

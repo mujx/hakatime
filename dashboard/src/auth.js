@@ -82,3 +82,13 @@ export function getHeaderToken() {
 export function isLoggedIn() {
   return inMemToken != null;
 }
+
+export function retryCall(err, callback) {
+  if (err.code == 403) {
+    tryToRefresh("The session expired", callback);
+    return;
+  }
+
+  console.log(err);
+  console.log("call failed with", err.response, err.code);
+}

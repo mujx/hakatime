@@ -37,10 +37,7 @@ function fetchProjectStats(event) {
         new Date(obj.endDate)
       );
     })
-    .catch(function(err) {
-      console.log(err);
-      console.log("call failed with", err.response, err.code);
-    });
+    .catch(err => auth.retryCall(err, () => fetchProjectStats(event)));
 }
 
 // TODO: This will have to be implemented on the server.
