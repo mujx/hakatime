@@ -57,11 +57,11 @@ function createApiTokenDialog(event) {
 }
 
 let Modal = {
-  oncreate: vnode => {
+  oncreate: () => {
     console.log("oncreate");
     $('[data-toggle="tooltip"]').tooltip();
   },
-  view: vnode => {
+  view: () => {
     return m(
       "div.modal.fade.show",
       {
@@ -117,10 +117,10 @@ let Modal = {
 };
 
 export default {
-  onint: vnode => {
+  onint: () => {
     document.title = "Hakatime | Dashboard";
   },
-  oncreate: vnode => {
+  oncreate: () => {
     $('[data-toggle="tooltip"]').tooltip();
   },
   view: vnode => {

@@ -1,5 +1,5 @@
 import m from "mithril";
-import { login, isLoggedIn, tryToRefresh } from "../auth.js";
+import { login, isLoggedIn } from "../auth.js";
 
 var User = {
   username: null,
@@ -12,7 +12,7 @@ var ErrMsg = {
 };
 
 export default {
-  oncreate: vnode => {
+  oncreate: () => {
     document.title = "Hakatime | Register";
 
     if (isLoggedIn()) {

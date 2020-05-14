@@ -1,5 +1,3 @@
-import { State } from "./State.js";
-
 let TimeRange = {
   numOfDays: 30,
 

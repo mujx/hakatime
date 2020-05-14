@@ -6,7 +6,7 @@ function mkFaIcon(name) {
 
 export function mkSingleStatCard({ name, value, icon, textType = "primary" }) {
   return {
-    view: vnode => {
+    view: () => {
       return m(`div.card.border-left-${textType}.shadow.h-100.py-2`, [
         m("div.card-body", [
           m("div.row.no-gutters.align-items-center", [

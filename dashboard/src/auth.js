@@ -20,7 +20,6 @@ export function tryToRefresh(errMsg, callback) {
         tokenExpiry
       });
 
-      m.route.set("/app");
       if (callback) callback();
     })
     .catch(function(e) {
@@ -29,6 +28,7 @@ export function tryToRefresh(errMsg, callback) {
       if (errMsg) {
         m.route.set("/login", { msg: errMsg });
       } else {
+        console.log("refresh_token failed", e);
         m.route.set("/login");
       }
     });

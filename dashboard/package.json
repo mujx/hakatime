@@ -7,13 +7,15 @@
   "license": "UNLICENSE",
   "private": true,
   "devDependencies": {
+    "eslint": "^7.0.0",
     "parcel": "^1.12.4",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-custom-dist-structure": "^1.1.9"
   },
   "scripts": {
     "dev": "parcel index.html",
-    "prod": "parcel build index.html --no-source-maps"
+    "prod": "parcel build index.html --no-source-maps",
+    "lint": "eslint --ext js src"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.13.0",
@@ -33,11 +35,7 @@
       ".css": "css",
       ".map": "css",
       ".js": "js",
-      "images": [
-        ".jpg",
-        ".svg",
-        ".png"
-      ]
+      "images": [".jpg", ".svg", ".png"]
     }
   }
 }

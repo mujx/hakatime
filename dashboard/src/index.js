@@ -20,20 +20,20 @@ export function main() {
 
   m.route(root, "/", {
     "/": {
-      oninit: vnode => {
+      oninit: () => {
         document.title = "Hakatime";
       },
-      view: vnode => m("div")
+      view: () => m("div")
     },
     "/login": Login,
     "/register": Register,
     "/app": {
-      render: function(args, requestedPath, route) {
+      render: function() {
         return m(Dashboard, m(Overview));
       }
     },
     "/app/projects": {
-      render: function(args, requestedPath, route) {
+      render: function() {
         return m(Dashboard, m(Projects));
       }
     }
@@ -42,6 +42,8 @@ export function main() {
   if (auth.isLoggedIn()) {
     m.route.set("/app");
   } else {
-    auth.tryToRefresh();
+    auth.tryToRefresh(null, () => {
+      m.route.set("/app");
+    });
   }
 }

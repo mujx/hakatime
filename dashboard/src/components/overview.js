@@ -57,7 +57,7 @@ function mkTopStatRow() {
 
 function pieChart() {
   return {
-    view: vnode => {
+    view: () => {
       return m("div.chart");
     },
 
@@ -92,7 +92,7 @@ function pieChart() {
 
 function columnChart() {
   return {
-    view: vnode => {
+    view: () => {
       return m("div.chart");
     },
 
@@ -204,7 +204,7 @@ function heatmapDataForLangs(state, num = 7) {
 
 function heatmapChart(mkDataFn) {
   return {
-    view: vnode => {
+    view: () => {
       return m("div.chart");
     },
     oncreate: vnode => {
@@ -272,7 +272,7 @@ export default {
   onremove: function() {
     clearInterval(State.interval);
   },
-  view: vnode => {
+  view: () => {
     document.title = "Hakatime | Overview";
 
     if (State.obj == null) {
@@ -307,7 +307,7 @@ export default {
               return m(
                 "a.btn.dropdown-item",
                 {
-                  onclick: e => {
+                  onclick: () => {
                     if (TimeRange.setDays(r)) State.fetchItems();
                   }
                 },

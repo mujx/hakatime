@@ -70,7 +70,7 @@ function mkHourDayRadar() {
 
 function hourRadarChart() {
   return {
-    view: vnode => {
+    view: () => {
       return m("div.chart");
     },
     oncreate: vnode => {
@@ -129,7 +129,7 @@ function hourRadarChart() {
 
 function dayRadarChart() {
   return {
-    view: vnode => {
+    view: () => {
       return m("div.chart");
     },
     oncreate: vnode => {
@@ -199,7 +199,7 @@ function dayRadarChart() {
 
 function pieChart() {
   return {
-    view: vnode => {
+    view: () => {
       return m("div.chart");
     },
 
@@ -269,7 +269,7 @@ function mkTopStatRow() {
 
 function fileChart() {
   return {
-    view: vnode => {
+    view: () => {
       return m("div.chart");
     },
 
@@ -331,7 +331,7 @@ function fileChart() {
                 .dirname(val)
                 .split(path.sep)
                 .pop();
-              const filename = val.replace(/^.*[\\\/]/, "");
+              const filename = val.replace(/^.*[/]/, "");
 
               if (!basename) return filename;
 
@@ -367,7 +367,7 @@ function fileChart() {
 
 function barChart() {
   return {
-    view: vnode => {
+    view: () => {
       return m("div.chart");
     },
 
@@ -452,18 +452,8 @@ let LocalState = {
 
 export default {
   oninit: LocalState.fetchProjectList,
-  view: vnode => {
+  view: () => {
     document.title = "Hakatime | Projects";
-
-    let customizeBtn = m("div.mr-2", [
-      m(
-        "button.btn.btn-primary.shadow-sm",
-        {
-          type: "button"
-        },
-        m("i.fas.fa-cog.fa-md.text-white-50")
-      )
-    ]);
 
     let ranges = [7, 15, 30, 45, 90];
     let toolbar = m("div.d-sm-flex.mb-4", [
@@ -511,7 +501,7 @@ export default {
             return m(
               "a.btn.dropdown-item",
               {
-                onclick: e => {
+                onclick: () => {
                   if (TimeRange.setDays(r)) fetchProjectStats();
                 }
               },
