@@ -25,6 +25,9 @@ jobs:
       - run:
           name: "Build"
           command: cd dashboard && npm run prod
+      - run:
+          name: "Lint"
+          command: cd dashboard && npm run lint
 
 workflows:
   version: 2
