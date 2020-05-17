@@ -16,11 +16,11 @@ import config from "../config.js";
 import * as auth from "../auth.js";
 
 // Easy access of all charts in the page.
-let Charts = {
+const Charts = {
   timelineChart: {
     chart: null,
     mkOpts: function(series) {
-      var options = {
+      const options = {
         series: series,
         noData: config.noData,
         grid: {
@@ -95,13 +95,13 @@ function mkTimelineSeries(rawData) {
 }
 
 function removeDays(d, num) {
-  let d1 = new Date(d);
+  const d1 = new Date(d);
   d1.setDate(d.getDate() - num);
   return d1;
 }
 
 function addDays(d, num) {
-  let d1 = new Date(d);
+  const d1 = new Date(d);
   d1.setDate(d.getDate() + num);
   return d1;
 }
@@ -169,7 +169,7 @@ function pieChart() {
       const data = dataValues.map(v => v.data);
       const names = dataValues.map(v => v.name);
 
-      var options = {
+      const options = {
         series: data,
         noData: config.noData,
         chart: {
@@ -179,7 +179,7 @@ function pieChart() {
         labels: names
       };
 
-      var chart = new ApexCharts(vnode.dom, options);
+      const chart = new ApexCharts(vnode.dom, options);
       chart.render();
     }
   };
@@ -199,7 +199,7 @@ function columnChart() {
         return { x: data[0], y: data[1] };
       });
 
-      var options = {
+      const options = {
         chart: {
           type: "bar",
           fontFamily: "Nunito",
@@ -234,7 +234,7 @@ function columnChart() {
         }
       };
 
-      let myChart = new ApexCharts(vnode.dom, options);
+      const myChart = new ApexCharts(vnode.dom, options);
       myChart.render();
     }
   };
@@ -243,7 +243,7 @@ function columnChart() {
 function mkTimeline() {
   let picker;
 
-  let MenuComponent = {
+  const MenuComponent = {
     view: () => {
       return [
         m("a.dropdown-item", { id: "datetime-picker" }, "Pick a date range"),
@@ -423,7 +423,7 @@ function heatmapChart(mkDataFn) {
         }
       };
 
-      var chart = new ApexCharts(vnode.dom, options);
+      const chart = new ApexCharts(vnode.dom, options);
       chart.render();
     }
   };
@@ -470,8 +470,8 @@ export default {
       ]);
     }
 
-    let ranges = [7, 15, 30, 45, 90];
-    let toolbar = m(
+    const ranges = [7, 15, 30, 45, 90];
+    const toolbar = m(
       "div.d-sm-flex.align-items-center.justify-content-between.mb-4",
       [
         m("h1.h3.mb-0.text-gray-800", "Overview"),

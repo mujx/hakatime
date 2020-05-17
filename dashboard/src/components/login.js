@@ -1,12 +1,12 @@
 import m from "mithril";
 import { login, isLoggedIn } from "../auth.js";
 
-var AuthUser = {
+const AuthUser = {
   username: null,
   password: null
 };
 
-var ErrMsg = {
+const ErrMsg = {
   error: null
 };
 

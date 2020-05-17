@@ -73,8 +73,8 @@ function clearData() {
 
 export function checkInterval() {
   if (inMemToken) {
-    let now = new Date();
-    let then = new Date(inMemToken.tokenExpiry - 5 * 60000);
+    const now = new Date();
+    const then = new Date(inMemToken.tokenExpiry - 5 * 60000);
 
     if (now > then) {
       tryToRefresh();

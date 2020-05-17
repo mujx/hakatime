@@ -2,7 +2,7 @@ import m from "mithril";
 
 export default {
   mkCardContainer: function(title, body, menuActions) {
-    let optionsComponent = m("div.dropdown.no-arrow.ml-auto", [
+    const optionsComponent = m("div.dropdown.no-arrow.ml-auto", [
       m(
         "a.dropdown-toggle[data-toggle=dropdown][aria-haspopup=true][aria-expanded=false]",
         {

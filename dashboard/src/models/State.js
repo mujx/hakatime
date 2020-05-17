@@ -3,7 +3,7 @@ import * as auth from "../auth";
 import TimeRange from "./TimeRange";
 import utils from "../utils.js";
 
-let Model = {
+const Model = {
   // The raw statistics from the server.
   obj: null,
   // Timeline data.
@@ -50,7 +50,7 @@ let Model = {
       authorization: auth.getHeaderToken()
     };
 
-    let yesterday = new Date(today);
+    const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
     Promise.all([
@@ -74,7 +74,7 @@ let Model = {
       })
     ])
       .then(function(values) {
-        let obj = values[0];
+        const obj = values[0];
 
         Model.obj = obj;
         Model.dates = utils.getDaysBetween(

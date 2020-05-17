@@ -45,7 +45,7 @@ function hourDistribution() {
     oncreate: vnode => {
       if (LocalState.obj == null || LocalState.obj.totalSeconds === 0) return;
 
-      let data = _.zipObject([...Array(24).keys()], Array(24).fill(0));
+      const data = _.zipObject([...Array(24).keys()], Array(24).fill(0));
       _.forEach(LocalState.obj.hour, function(v) {
         data[utils.addTimeOffset(v.name)] = (v.totalSeconds / 3600).toFixed(1);
       });
@@ -91,7 +91,7 @@ function hourDistribution() {
         }
       };
 
-      var chart = new ApexCharts(vnode.dom, options);
+      const chart = new ApexCharts(vnode.dom, options);
       chart.render();
     }
   };
@@ -105,7 +105,7 @@ function dayRadarChart() {
     oncreate: vnode => {
       if (LocalState.obj == null) return;
 
-      let data = _.zipObject([...Array(7).keys()], Array(7).fill(0));
+      const data = _.zipObject([...Array(7).keys()], Array(7).fill(0));
       _.forEach(LocalState.obj.weekDay, function(v) {
         data[v.name] = (v.totalSeconds / 3600).toFixed(1);
       });
@@ -162,7 +162,7 @@ function dayRadarChart() {
         }
       };
 
-      var chart = new ApexCharts(vnode.dom, options);
+      const chart = new ApexCharts(vnode.dom, options);
       chart.render();
     }
   };
@@ -187,7 +187,7 @@ function pieChart() {
       const data = dataValues.map(v => v.data);
       const names = dataValues.map(v => v.name);
 
-      var options = {
+      const options = {
         series: data,
         noData: config.noData,
         chart: {
@@ -197,7 +197,7 @@ function pieChart() {
         labels: names
       };
 
-      var chart = new ApexCharts(vnode.dom, options);
+      const chart = new ApexCharts(vnode.dom, options);
       chart.render();
     }
   };
@@ -207,7 +207,7 @@ function pieChart() {
  * Row with single stats only. Each stat has a name, value, and an icon.
  */
 function mkTopStatRow() {
-  let totalHrs = utils.secondsToHms(utils.getTotalCodingTime(LocalState.obj));
+  const totalHrs = utils.secondsToHms(utils.getTotalCodingTime(LocalState.obj));
 
   return [
     {
@@ -257,7 +257,7 @@ function fileChart() {
       const data = myData.map(v => (v.totalSeconds / 3600).toFixed(1));
       const categories = myData.map(v => v.name);
 
-      var options = {
+      const options = {
         series: [
           {
             data: data,
@@ -332,7 +332,7 @@ function fileChart() {
         }
       };
 
-      let myChart = new ApexCharts(vnode.dom, options);
+      const myChart = new ApexCharts(vnode.dom, options);
       myChart.render();
     }
   };
@@ -353,7 +353,7 @@ function barChart() {
         return { x: data[0], y: data[1] };
       });
 
-      var options = {
+      const options = {
         chart: {
           type: "bar",
           height: "250",
@@ -394,7 +394,7 @@ function barChart() {
         }
       };
 
-      let myChart = new ApexCharts(vnode.dom, options);
+      const myChart = new ApexCharts(vnode.dom, options);
       myChart.render();
     }
   };
@@ -409,8 +409,8 @@ export default {
   view: () => {
     document.title = "Hakatime | Projects";
 
-    let ranges = [7, 15, 30, 45, 90];
-    let toolbar = m("div.d-sm-flex.mb-4", [
+    const ranges = [7, 15, 30, 45, 90];
+    const toolbar = m("div.d-sm-flex.mb-4", [
       m(
         "h1.h3.mb-0.mr-auto.text-gray-800",
         LocalState.currentProject ? LocalState.currentProject : "Projects"

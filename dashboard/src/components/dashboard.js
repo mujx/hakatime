@@ -5,7 +5,7 @@ import * as auth from "../auth";
 
 const MODAL_ID = "api-token-modal";
 
-let ApiToken = {
+const ApiToken = {
   value: null,
   copyToCliboard: function(e) {
     e.redraw = false;
@@ -56,7 +56,7 @@ function createApiTokenDialog(event) {
     .catch(err => auth.retryCall(err, () => createApiTokenDialog(event)));
 }
 
-let Modal = {
+const Modal = {
   oncreate: () => {
     console.log("oncreate");
     $('[data-toggle="tooltip"]').tooltip();
@@ -124,7 +124,7 @@ export default {
     $('[data-toggle="tooltip"]').tooltip();
   },
   view: vnode => {
-    let sideMenuItems = [
+    const sideMenuItems = [
       {
         name: "Overview",
         icon: "tachometer-alt",
@@ -136,7 +136,7 @@ export default {
         link: "/app/projects"
       }
     ].map(c => {
-      let activeClass = m.route.get() === c.link ? "active" : "";
+      const activeClass = m.route.get() === c.link ? "active" : "";
 
       return m(
         `li.nav-item.${activeClass}`,

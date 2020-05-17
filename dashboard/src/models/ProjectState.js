@@ -5,7 +5,7 @@ import TimeRange from "./TimeRange";
 import utils from "../utils.js";
 import * as auth from "../auth";
 
-let Model = {
+const Model = {
   projects: [],
   currentProject: null,
   dates: null,

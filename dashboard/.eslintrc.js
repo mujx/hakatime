@@ -12,5 +12,12 @@ module.exports = {
     ecmaVersion: 11,
     sourceType: "module"
   },
-  rules: {}
+  rules: {
+    "prefer-const": 2,
+    "no-var": 2,
+    complexity: 0,
+    "consistent-return": 1,
+    camelcase: 1,
+    complexity: ["error", { max: 5 }]
+  }
 };
