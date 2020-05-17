@@ -1,5 +1,9 @@
 import m from "mithril";
 
+import OverviewState from "./models/State.js";
+import ProjectState from "./models/ProjectState.js";
+import TimeRange from "./models/TimeRange.js";
+
 let inMemToken = null;
 
 export function login({ token, tokenExpiry }) {
@@ -52,12 +56,19 @@ export function logout() {
   })
     .then(function() {
       clearTokens();
+      clearData();
 
       m.route.set("/login", { msg: "You've been logged out" });
     })
     .catch(function(e) {
       m.route.set("/login", { msg: `Logout failed: ${e.response.error}` });
     });
+}
+
+function clearData() {
+  OverviewState.clear();
+  ProjectState.clear();
+  TimeRange.reset();
 }
 
 export function checkInterval() {

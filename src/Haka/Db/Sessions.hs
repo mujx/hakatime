@@ -4,6 +4,7 @@ module Haka.Db.Sessions
     createAPIToken,
     saveHeartbeats,
     getTotalStats,
+    getTimeline,
     getProjectStats,
     insertToken,
     insertUser,
@@ -27,6 +28,7 @@ import Haka.Types
     ProjectStatRow (..),
     RegisteredUser (..),
     StatRow (..),
+    TimelineRow (..),
     TokenData (..),
   )
 import qualified Haka.Utils as Utils
@@ -72,6 +74,10 @@ saveHeartbeats payloadData = do
 getTotalStats :: Text -> (UTCTime, UTCTime) -> Int64 -> Session [StatRow]
 getTotalStats user (startDate, endDate) cutOffLimit =
   statement (user, startDate, endDate, cutOffLimit) Statements.getUserActivity
+
+getTimeline :: Text -> (UTCTime, UTCTime) -> Int64 -> Session [TimelineRow]
+getTimeline user (startDate, endDate) cutOffLimit =
+  statement (user, startDate, endDate, cutOffLimit) Statements.getTimeline
 
 getProjectStats :: Text -> Text -> (UTCTime, UTCTime) -> Int64 -> Session [ProjectStatRow]
 getProjectStats user proj (startDate, endDate) cutOffLimit =

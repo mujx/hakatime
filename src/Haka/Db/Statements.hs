@@ -4,6 +4,7 @@ module Haka.Db.Statements
   ( insertHeartBeat,
     createAPIToken,
     insertProject,
+    getTimeline,
     getUserByToken,
     getUserByRefreshToken,
     deleteRefreshToken,
@@ -31,6 +32,7 @@ import Haka.Types
     ProjectStatRow (..),
     RegisteredUser (..),
     StatRow (..),
+    TimelineRow (..),
     TokenData (..),
   )
 import qualified Hasql.Decoders as D
@@ -445,3 +447,79 @@ getUserActivity = Statement query params result True
         <*> (D.column . D.nonNullable) D.numeric
     result :: D.Result [StatRow]
     result = D.rowList statRow
+
+getTimeline :: Statement (Text, UTCTime, UTCTime, Int64) [TimelineRow]
+getTimeline = Statement query params result True
+  where
+    query :: Bs.ByteString
+    query =
+      [r|
+SELECT DISTINCT
+    language,
+    project,
+    min(time_sent) OVER (PARTITION BY group_id) AS start_date,
+    max(time_sent) OVER (PARTITION BY group_id) AS end_date
+FROM (
+    SELECT
+        *,
+        sum(stats_2.new_grp) OVER (ORDER BY stats_2.time_sent) AS group_id
+    FROM (
+        SELECT
+            language,
+            project,
+            time_sent,
+            previous_diff,
+            (
+                CASE WHEN
+                  lag(language) OVER (ORDER BY time_sent) IS NULL AND
+                  lag(project) OVER (ORDER BY time_sent) IS NULL THEN 0
+                WHEN
+                  language                            = lag(language) OVER (ORDER BY time_sent) AND
+                  project                             = lag(project) OVER (ORDER BY time_sent) AND
+                  extract(minute FROM previous_diff) <= $4 THEN 0
+                ELSE
+                    1
+                END
+            ) new_grp
+        FROM (
+        SELECT
+            coalesce(language, 'Other') AS language,
+            coalesce(project, 'Other') AS project,
+            time_sent,
+            coalesce((time_sent - (lag(time_sent) OVER (ORDER BY time_sent))), '0 minutes') AS previous_diff
+        FROM
+            heartbeats
+        WHERE
+            sender = $1
+            AND time_sent > $2
+            AND time_sent < $3
+        GROUP BY
+            project,
+            language,
+            time_sent
+        ORDER BY
+            time_sent) stats) stats_2) stats_3
+GROUP BY
+    group_id,
+    language,
+    project,
+    time_sent
+ORDER BY
+    start_date
+      |]
+    params :: E.Params (Text, UTCTime, UTCTime, Int64)
+    params =
+      contrazip4
+        (E.param (E.nonNullable E.text))
+        (E.param (E.nonNullable E.timestamptz))
+        (E.param (E.nonNullable E.timestamptz))
+        (E.param (E.nonNullable E.int8))
+    tRow :: D.Row TimelineRow
+    tRow =
+      TimelineRow
+        <$> (D.column . D.nonNullable) D.text
+        <*> (D.column . D.nonNullable) D.text
+        <*> (D.column . D.nonNullable) D.timestamptz
+        <*> (D.column . D.nonNullable) D.timestamptz
+    result :: D.Result [TimelineRow]
+    result = D.rowList tRow

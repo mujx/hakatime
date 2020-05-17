@@ -4,49 +4,15 @@ import path from "path";
 import ApexCharts from "apexcharts/dist/apexcharts.common";
 
 // Models
-import { TimeRange } from "../models/TimeRange.js";
-import { State } from "../models/State.js";
+import TimeRange from "../models/TimeRange.js";
+import OverviewState from "../models/State.js";
+import LocalState from "../models/ProjectState.js";
 
 // Utils
 import { mkSingleStatCard } from "../single_stat_card.js";
 import cards from "../card_container.js";
 import utils from "../utils.js";
-import * as auth from "../auth.js";
-
-function fetchProjectStats(event) {
-  if (event) LocalState.currentProject = event.target.innerHTML;
-  const start = new Date();
-  const today = new Date();
-  start.setDate(start.getDate() - TimeRange.numOfDays);
-
-  m.request({
-    url: `/api/v1/users/current/projects/${LocalState.currentProject}`,
-    responseType: "json",
-    headers: {
-      authorization: auth.getHeaderToken()
-    },
-    params: {
-      start: start.toISOString(),
-      end: today.toISOString()
-    }
-  })
-    .then(function(obj) {
-      LocalState.obj = obj;
-      LocalState.dates = utils.getDaysBetween(
-        new Date(obj.startDate),
-        new Date(obj.endDate)
-      );
-    })
-    .catch(err => auth.retryCall(err, () => fetchProjectStats(event)));
-}
-
-// TODO: This will have to be implemented on the server.
-function addTimeOffset(v) {
-  const n = parseInt(v);
-  const offSet = new Date().getTimezoneOffset() / 60;
-
-  return ((n - offSet) % 23).toString();
-}
+import config from "../config.js";
 
 function mkFileChart() {
   return cards.mkCardContainer("Most active files", m(fileChart()));
@@ -64,21 +30,24 @@ function mkWeekDayRadar() {
   return cards.mkCardContainer("Activity per weekday", m(dayRadarChart()));
 }
 
-function mkHourDayRadar() {
-  return cards.mkCardContainer("Activity per hour of day", m(hourRadarChart()));
+function mkHourDistribution() {
+  return cards.mkCardContainer(
+    "Activity per hour of day",
+    m(hourDistribution())
+  );
 }
 
-function hourRadarChart() {
+function hourDistribution() {
   return {
     view: () => {
       return m("div.chart");
     },
     oncreate: vnode => {
-      if (LocalState.obj == null) return;
+      if (LocalState.obj == null || LocalState.obj.totalSeconds === 0) return;
 
       let data = _.zipObject([...Array(24).keys()], Array(24).fill(0));
       _.forEach(LocalState.obj.hour, function(v) {
-        data[addTimeOffset(v.name)] = (v.totalSeconds / 3600).toFixed(1);
+        data[utils.addTimeOffset(v.name)] = (v.totalSeconds / 3600).toFixed(1);
       });
 
       const options = {
@@ -88,6 +57,7 @@ function hourRadarChart() {
             name: "Activity"
           }
         ],
+        noData: config.noData,
         tooltip: {
           y: {
             formatter: function(val) {
@@ -147,6 +117,7 @@ function dayRadarChart() {
             name: "Activity"
           }
         ],
+        noData: config.noData,
         tooltip: {
           y: {
             formatter: function(val) {
@@ -218,6 +189,7 @@ function pieChart() {
 
       var options = {
         series: data,
+        noData: config.noData,
         chart: {
           type: "donut",
           height: "260"
@@ -292,6 +264,7 @@ function fileChart() {
             name: "Activity"
           }
         ],
+        noData: config.noData,
         tooltip: {
           y: {
             formatter: function(val) {
@@ -372,7 +345,7 @@ function barChart() {
     },
 
     oncreate: vnode => {
-      if (LocalState.obj == null) return;
+      if (!LocalState.obj || LocalState.obj.totalSeconds === 0) return;
 
       const values = LocalState.obj.dailyTotal.map(v => (v / 3600).toFixed(1));
 
@@ -394,6 +367,7 @@ function barChart() {
             data: data
           }
         ],
+        noData: config.noData,
         xaxis: {
           type: "datetime"
         },
@@ -426,32 +400,12 @@ function barChart() {
   };
 }
 
-let LocalState = {
-  projects: [],
-  currentProject: null,
-  dates: null,
-  obj: null,
-  fetchProjectList: function() {
-    if (!State.obj) return;
-
-    LocalState.projects = _.orderBy(
-      State.obj.projects,
-      ["totalSeconds"],
-      ["desc"]
-    )
-      .map(p => p.name)
-      .filter(n => n !== "Other");
-
-    if (LocalState.projects.length > 0) {
-      LocalState.currentProject = LocalState.projects[0];
-    }
-
-    fetchProjectStats();
-  }
-};
-
 export default {
-  oninit: LocalState.fetchProjectList,
+  oninit: function() {
+    if (!OverviewState.obj) return;
+
+    LocalState.initProjectList(OverviewState.obj.projects);
+  },
   view: () => {
     document.title = "Hakatime | Projects";
 
@@ -476,7 +430,7 @@ export default {
             return m(
               "a.btn.dropdown-item",
               {
-                onclick: fetchProjectStats
+                onclick: LocalState.fetchProjectStats
               },
               project
             );
@@ -502,7 +456,7 @@ export default {
               "a.btn.dropdown-item",
               {
                 onclick: () => {
-                  if (TimeRange.setDays(r)) fetchProjectStats();
+                  if (TimeRange.setDays(r)) LocalState.fetchProjectStats();
                 }
               },
               `Last ${r} days`
@@ -529,7 +483,7 @@ export default {
       ]),
       m("div.row", [
         m("div.col-xl-6", mkWeekDayRadar()),
-        m("div.col-xl-6", mkHourDayRadar())
+        m("div.col-xl-6", mkHourDistribution())
       ]),
       m("div.row", [m("div.col-xl-12", mkFileChart())])
     ];

@@ -1,11 +1,13 @@
-let TimeRange = {
-  numOfDays: 30,
+export default {
+  numOfDays: 15,
+
+  reset: function() {
+    this.numOfDays = 15;
+  },
 
   setDays: function(d) {
-    if (TimeRange.numOfDays === d) return false;
-    TimeRange.numOfDays = d;
+    if (this.numOfDays === d) return false;
+    this.numOfDays = d;
     return true;
   }
 };
-
-export { TimeRange };

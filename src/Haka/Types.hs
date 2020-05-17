@@ -19,6 +19,7 @@ module Haka.Types
     RequestConfig (..),
     RegisteredUser (..),
     StatRow (..),
+    TimelineRow (..),
     ProjectStatRow (..),
     AppCtx (..),
     LogState (..),
@@ -62,46 +63,41 @@ data RegistrationStatus
   | DisabledRegistration
 
 -- | Server configuration settings.
-data ServerSettings
-  = ServerSettings
-      { -- | Where the service will listen to.
-        hakaPort :: Int,
-        -- | What domain to allow.
-        hakaCorsUrl :: Bs.ByteString,
-        -- | Where to look for dashboard's static files.
-        hakaDashboardPath :: FilePath,
-        -- | Whether the registration is enabled.
-        hakaEnableRegistration :: RegistrationStatus
-      }
+data ServerSettings = ServerSettings
+  { -- | Where the service will listen to.
+    hakaPort :: Int,
+    -- | What domain to allow.
+    hakaCorsUrl :: Bs.ByteString,
+    -- | Where to look for dashboard's static files.
+    hakaDashboardPath :: FilePath,
+    -- | Whether the registration is enabled.
+    hakaEnableRegistration :: RegistrationStatus
+  }
 
 -- Data needed to generate a new auth token pair in the database.
-data TokenData
-  = TokenData
-      { -- | The user to assign the token.
-        tknOwner :: Text,
-        -- | The actual token that will be used for authentication.
-        tknToken :: Text,
-        -- | The refresh token.
-        tknRefreshToken :: Text
-      }
+data TokenData = TokenData
+  { -- | The user to assign the token.
+    tknOwner :: Text,
+    -- | The actual token that will be used for authentication.
+    tknToken :: Text,
+    -- | The refresh token.
+    tknRefreshToken :: Text
+  }
 
-data LogState
-  = LogState
-      { lsContext :: !K.LogContexts,
-        lsNamespace :: !K.Namespace,
-        lsLogEnv :: !K.LogEnv
-      }
+data LogState = LogState
+  { lsContext :: !K.LogContexts,
+    lsNamespace :: !K.Namespace,
+    lsLogEnv :: !K.LogEnv
+  }
 
-data AppCtx
-  = AppCtx
-      { pool :: HqPool.Pool,
-        logState :: LogState
-      }
+data AppCtx = AppCtx
+  { pool :: HqPool.Pool,
+    logState :: LogState
+  }
 
-newtype AppT m a
-  = AppT
-      { unAppT :: ReaderT AppCtx m a
-      }
+newtype AppT m a = AppT
+  { unAppT :: ReaderT AppCtx m a
+  }
   deriving
     ( Applicative,
       Functor,
@@ -182,62 +178,72 @@ mkAppT = AppT . ReaderT
 runAppT :: AppCtx -> AppT m a -> m a
 runAppT ctx app = runReaderT (unAppT app) ctx
 
-data RegisteredUser
-  = RegisteredUser
-      { username :: Text,
-        hashedPassword :: Bs.ByteString,
-        saltUsed :: Bs.ByteString
-      }
+data RegisteredUser = RegisteredUser
+  { username :: Text,
+    hashedPassword :: Bs.ByteString,
+    saltUsed :: Bs.ByteString
+  }
+  deriving (Eq, Show)
+
+-- | Aggregated data for the timeline chart.
+data TimelineRow = TimelineRow
+  { -- | The language that was used.
+    tmLang :: Text,
+    -- | The project that the activity uccurred.
+    tmProject :: Text,
+    -- | The start of the time block.
+    tmRangeStart :: UTCTime,
+    -- | The end of the block.
+    tmRangeEnd :: UTCTime
+  }
   deriving (Eq, Show)
 
 -- | Aggregated data for coding activity.
-data ProjectStatRow
-  = ProjectStatRow
-      { -- | Day that activity occurred.
-        prDay :: UTCTime,
-        -- | Weekday (0 - 6)
-        prWeekday :: Text,
-        -- | The hour of day (0 - 23)
-        prHour :: Text,
-        -- | Programming language used.
-        prLanguage :: Text,
-        -- | File entity.
-        prEntity :: Text,
-        -- | Total seconds occupied on that entity.
-        prTotalSeconds :: Int64,
-        -- | Percentage of total time (with the range in context) spent on the resource.
-        prPct :: Scientific,
-        -- | Percentage of daily time spent on the resource.
-        prDailyPct :: Scientific
-      }
+data ProjectStatRow = ProjectStatRow
+  { -- | Day that activity occurred.
+    prDay :: UTCTime,
+    -- | Weekday (0 - 6)
+    prWeekday :: Text,
+    -- | The hour of day (0 - 23)
+    prHour :: Text,
+    -- | Programming language used.
+    prLanguage :: Text,
+    -- | File entity.
+    prEntity :: Text,
+    -- | Total seconds occupied on that entity.
+    prTotalSeconds :: Int64,
+    -- | Percentage of total time (with the range in context) spent on the resource.
+    prPct :: Scientific,
+    -- | Percentage of daily time spent on the resource.
+    prDailyPct :: Scientific
+  }
   deriving (Eq, Show)
 
 -- | Aggregated data for coding activity.
-data StatRow
-  = StatRow
-      { -- | Day that activity occurred.
-        rDay :: UTCTime,
-        -- | Activity with that project.
-        rProject :: Text,
-        -- | Programming language used.
-        rLanguage :: Text,
-        -- | Programming editor used.
-        rEditor :: Text,
-        -- | CVS branch.
-        rBranch :: Text,
-        -- | Operating system.
-        rPlatform :: Text,
-        -- | Hostname.
-        rMachine :: Text,
-        -- | File edited.
-        rEntity :: Text,
-        -- | Total seconds occupied on that entity.
-        rTotalSeconds :: Int64,
-        -- | Percentage of total time (with the range in context) spent on the resource.
-        rPct :: Scientific,
-        -- | Percentage of daily time spent on the resource.
-        rDailyPct :: Scientific
-      }
+data StatRow = StatRow
+  { -- | Day that activity occurred.
+    rDay :: UTCTime,
+    -- | Activity with that project.
+    rProject :: Text,
+    -- | Programming language used.
+    rLanguage :: Text,
+    -- | Programming editor used.
+    rEditor :: Text,
+    -- | CVS branch.
+    rBranch :: Text,
+    -- | Operating system.
+    rPlatform :: Text,
+    -- | Hostname.
+    rMachine :: Text,
+    -- | File edited.
+    rEntity :: Text,
+    -- | Total seconds occupied on that entity.
+    rTotalSeconds :: Int64,
+    -- | Percentage of total time (with the range in context) spent on the resource.
+    rPct :: Scientific,
+    -- | Percentage of daily time spent on the resource.
+    rDailyPct :: Scientific
+  }
   deriving (Eq, Show)
 
 newtype ApiToken = ApiToken Text
@@ -258,19 +264,17 @@ data HeartbeatApiResponse
   | ApiError ApiErrorData
   deriving (Show, Generic)
 
-newtype HeartbeatId
-  = HeartbeatId
-      { heartbeatId :: Text
-      }
+newtype HeartbeatId = HeartbeatId
+  { heartbeatId :: Text
+  }
   deriving (Show, Generic)
 
 instance ToJSON HeartbeatId where
   toJSON = genericToJSON noPrefixOptions
 
-newtype HearbeatData
-  = HearbeatData
-      { heartbeatData :: HeartbeatId
-      }
+newtype HearbeatData = HearbeatData
+  { heartbeatData :: HeartbeatId
+  }
   deriving (Show, Generic)
 
 instance ToJSON HearbeatData where
@@ -282,10 +286,9 @@ data ReturnBulkStruct = ReturnData HearbeatData | ReturnCode Int
 instance ToJSON ReturnBulkStruct where
   toJSON = genericToJSON untagged
 
-newtype BulkHeartbeatData
-  = BulkHeartbeatData
-      { bResponses :: [[ReturnBulkStruct]]
-      }
+newtype BulkHeartbeatData = BulkHeartbeatData
+  { bResponses :: [[ReturnBulkStruct]]
+  }
   deriving (Show, Generic)
 
 instance ToJSON BulkHeartbeatData where
@@ -300,44 +303,43 @@ instance ToJSON ApiErrorData where
 instance ToJSON HeartbeatApiResponse where
   toJSON = genericToJSON untagged
 
-data HeartbeatPayload
-  = HeartbeatPayload
-      { -- | The code editor used.
-        editor :: Maybe Text,
-        -- | The wakatime plugin used by the code editor.
-        plugin :: Maybe Text,
-        -- | The operating system info.
-        platform :: Maybe Text,
-        -- | Usually the hostname of the machine that sent the heartbeat.
-        -- Extracted from the X-Machine-Name header fiel.d
-        machine :: Maybe Text,
-        -- | The user associated with this request. Referenced by the Api Token.
-        sender :: Maybe Text,
-        -- | Identifier of the client, code editor etc.
-        user_agent :: Text,
-        -- | The VCS branch of the project.
-        branch :: Maybe Text,
-        -- | The category of the project.
-        category :: Maybe Text,
-        cursorpos :: Maybe Int64,
-        -- | Software dependencies extracted from the source code.
-        dependencies :: Maybe [Text],
-        -- | The file, app etc.
-        entity :: Text,
-        -- | Whether or not the heartbeat was trigger by a file save.
-        is_write :: Maybe Bool,
-        -- | The language used by the entity.
-        language :: Maybe Text,
-        lineno :: Maybe Int64,
-        -- | Total number of lines for the entity.
-        file_lines :: Maybe Int64,
-        -- | Name of the project.
-        project :: Maybe Text,
-        -- | Type of the entity that triggered the heartbeat (file, app, domain)
-        ty :: EntityType,
-        -- | Unix timestamp for when the heartbeat was generated.
-        time_sent :: Double
-      }
+data HeartbeatPayload = HeartbeatPayload
+  { -- | The code editor used.
+    editor :: Maybe Text,
+    -- | The wakatime plugin used by the code editor.
+    plugin :: Maybe Text,
+    -- | The operating system info.
+    platform :: Maybe Text,
+    -- | Usually the hostname of the machine that sent the heartbeat.
+    -- Extracted from the X-Machine-Name header fiel.d
+    machine :: Maybe Text,
+    -- | The user associated with this request. Referenced by the Api Token.
+    sender :: Maybe Text,
+    -- | Identifier of the client, code editor etc.
+    user_agent :: Text,
+    -- | The VCS branch of the project.
+    branch :: Maybe Text,
+    -- | The category of the project.
+    category :: Maybe Text,
+    cursorpos :: Maybe Int64,
+    -- | Software dependencies extracted from the source code.
+    dependencies :: Maybe [Text],
+    -- | The file, app etc.
+    entity :: Text,
+    -- | Whether or not the heartbeat was trigger by a file save.
+    is_write :: Maybe Bool,
+    -- | The language used by the entity.
+    language :: Maybe Text,
+    lineno :: Maybe Int64,
+    -- | Total number of lines for the entity.
+    file_lines :: Maybe Int64,
+    -- | Name of the project.
+    project :: Maybe Text,
+    -- | Type of the entity that triggered the heartbeat (file, app, domain)
+    ty :: EntityType,
+    -- | Unix timestamp for when the heartbeat was generated.
+    time_sent :: Double
+  }
   deriving (Eq, Show, Generic)
 
 instance FromJSON HeartbeatPayload where
@@ -360,13 +362,12 @@ instance ToJSON EntityType where
   toJSON DomainType = A.String "domain"
 
 -- Global read-only state required for all the db operations.
-data RequestConfig
-  = RequestConfig
-      { -- | The connection pool assigned with each request.
-        dbPool :: HqPool.Pool,
-        -- | The API token retrieved from the HTTP request headers.
-        apiToken :: ApiToken,
-        -- | Hostname information about the sender host.
-        machineName :: Maybe Text
-      }
+data RequestConfig = RequestConfig
+  { -- | The connection pool assigned with each request.
+    dbPool :: HqPool.Pool,
+    -- | The API token retrieved from the HTTP request headers.
+    apiToken :: ApiToken,
+    -- | Hostname information about the sender host.
+    machineName :: Maybe Text
+  }
   deriving (Show)

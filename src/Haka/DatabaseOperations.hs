@@ -6,6 +6,7 @@ module Haka.DatabaseOperations
   ( processHeartbeatRequest,
     interpretDatabaseIO,
     genProjectStatistics,
+    getTimeline,
     registerUser,
     createNewApiToken,
     clearTokens,
@@ -29,6 +30,7 @@ import Haka.Types
     ProjectStatRow (..),
     RequestConfig (..),
     StatRow (..),
+    TimelineRow (..),
     TokenData (..),
   )
 import Haka.Users (createUser, mkUser, validatePassword)
@@ -78,6 +80,8 @@ data Database m a where
   SaveHeartbeats :: HqPool.Pool -> [HeartbeatPayload] -> Database m [Int64]
   -- | Retrieve a list of statistics within the given time range.
   GetTotalStats :: HqPool.Pool -> Text -> (UTCTime, UTCTime) -> Int64 -> Database m [StatRow]
+  -- | Retrieve the activity timeline for a period of time.
+  GetTimelineStats :: HqPool.Pool -> Text -> (UTCTime, UTCTime) -> Int64 -> Database m [TimelineRow]
   -- | Retrieve a list of statistics within the given time range.
   GetProjectStats :: HqPool.Pool -> Text -> Text -> (UTCTime, UTCTime) -> Int64 -> Database m [ProjectStatRow]
   -- | Create a pair of an access token a refresh token for use on web interface.
@@ -88,6 +92,17 @@ data Database m a where
   DeleteTokens :: HqPool.Pool -> ApiToken -> Text -> Database m Int64
   -- | Create a new API token that can be used on the client (no expiry date).
   CreateAPIToken :: HqPool.Pool -> Text -> Database m Text
+
+mkTokenData :: Text -> IO TokenData
+mkTokenData user = do
+  refreshToken <- Utils.toBase64 <$> Utils.randomToken
+  token <- Utils.toBase64 <$> Utils.randomToken
+  pure $
+    TokenData
+      { tknOwner = user,
+        tknToken = token,
+        tknRefreshToken = refreshToken
+      }
 
 -- TODO: Restrict each user to each own data.
 interpretDatabaseIO ::
@@ -117,6 +132,9 @@ interpretDatabaseIO =
     GetTotalStats pool user trange cutOffLimit -> do
       res <- liftIO $ HqPool.use pool (Sessions.getTotalStats user trange cutOffLimit)
       either (throw . SessionException) pure res
+    GetTimelineStats pool user trange cutOffLimit -> do
+      res <- liftIO $ HqPool.use pool (Sessions.getTimeline user trange cutOffLimit)
+      either (throw . SessionException) pure res
     GetProjectStats pool user proj trange cutOffLimit -> do
       res <- liftIO $ HqPool.use pool (Sessions.getProjectStats user proj trange cutOffLimit)
       either (throw . SessionException) pure res
@@ -127,25 +145,11 @@ interpretDatabaseIO =
       res <- liftIO $ HqPool.use pool (Sessions.createAPIToken user)
       either (throw . SessionException) pure res
     CreateWebToken pool user -> do
-      refreshToken <- Utils.toBase64 <$> liftIO Utils.randomToken
-      token <- Utils.toBase64 <$> liftIO Utils.randomToken
-      let tknData =
-            TokenData
-              { tknOwner = user,
-                tknToken = token,
-                tknRefreshToken = refreshToken
-              }
+      tknData <- liftIO $ mkTokenData user
       res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens tknData)
       either (throw . SessionException) (\_ -> pure tknData) res
     RegisterUser pool user pass -> do
-      refreshToken <- Utils.toBase64 <$> liftIO Utils.randomToken
-      token <- Utils.toBase64 <$> liftIO Utils.randomToken
-      let tknData =
-            TokenData
-              { tknOwner = user,
-                tknToken = token,
-                tknRefreshToken = refreshToken
-              }
+      tknData <- liftIO $ mkTokenData user
       hashUser <- liftIO $ mkUser user pass
       case hashUser of
         Left err -> throw $ RegistrationFailed (pack $ show err)
@@ -209,6 +213,21 @@ generateStatistics pool token tmRange = do
   case retrievedUser of
     Nothing -> throw UserNotFound
     Just username -> getTotalStats pool username tmRange heartbeatCutoffLimit
+
+getTimeline ::
+  forall r.
+  ( Member Database r,
+    Member (Error DatabaseException) r
+  ) =>
+  HqPool.Pool ->
+  ApiToken ->
+  (UTCTime, UTCTime) ->
+  Sem r [TimelineRow]
+getTimeline pool token tmRange = do
+  retrievedUser <- getUser pool token
+  case retrievedUser of
+    Nothing -> throw UserNotFound
+    Just username -> getTimelineStats pool username tmRange heartbeatCutoffLimit
 
 genProjectStatistics ::
   forall r.

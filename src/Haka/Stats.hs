@@ -16,13 +16,13 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Text (Text)
-import Data.Time (addDays, diffDays)
+import Data.Time (addDays, diffDays, diffUTCTime)
 import Data.Time.Clock (UTCTime (..), getCurrentTime)
 import GHC.Generics
 import Haka.AesonHelpers (noPrefixOptions)
 import qualified Haka.DatabaseOperations as DbOps
 import Haka.Errors (missingAuthError)
-import Haka.Types (ApiToken (..), AppM, StatRow (..), pool)
+import Haka.Types (ApiToken (..), AppM, StatRow (..), TimelineRow (..), pool)
 import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
@@ -30,51 +30,76 @@ import Polysemy.IO (embedToMonadIO)
 import PostgreSQL.Binary.Data (Scientific)
 import Servant
 
-data ResourceStats
-  = ResourceStats
-      { -- | The name of the resource.
-        pName :: Text,
-        -- | Total number of seconds spent on the resource for the time range.
-        pTotalSeconds :: Int64,
-        -- | Percentage of the total time in the range spent on the resource.
-        pTotalPct :: Scientific,
-        -- | Total seconds spend on the project for each day in the range.
-        pTotalDaily :: [Int64],
-        -- | Percentage of the day spent on the resource for each day in the range.
-        pPctDaily :: [Scientific]
-      }
+data ResourceStats = ResourceStats
+  { -- | The name of the resource.
+    pName :: Text,
+    -- | Total number of seconds spent on the resource for the time range.
+    pTotalSeconds :: Int64,
+    -- | Percentage of the total time in the range spent on the resource.
+    pTotalPct :: Scientific,
+    -- | Total seconds spend on the project for each day in the range.
+    pTotalDaily :: [Int64],
+    -- | Percentage of the day spent on the resource for each day in the range.
+    pPctDaily :: [Scientific]
+  }
   deriving (Show, Generic)
 
 instance ToJSON ResourceStats where
   toJSON = genericToJSON noPrefixOptions
 
 -- TODO: Move data types to a separate module
-data StatsPayload
-  = StatsPayload
-      { -- The first day in the range (inclusive).
-        startDate :: UTCTime,
-        -- The last day in the range (inclusive).
-        endDate :: UTCTime,
-        -- | Total coding activity as seconds for the given range of time.
-        totalSeconds :: Int64,
-        -- | Average coding activity per day as seconds for the given range of time.
-        dailyAvg :: Double,
-        -- | Total coding activity for each day.
-        dailyTotal :: [Int64],
-        -- Statistics for all each project separately.
-        projects :: [ResourceStats],
-        -- Statistics for all each language separately.
-        languages :: [ResourceStats],
-        -- Statistics for all each platform separately.
-        platforms :: [ResourceStats],
-        -- Statistics for all each machine separately.
-        machines :: [ResourceStats],
-        -- Statistics for all each editor separately.
-        editors :: [ResourceStats]
-      }
+data StatsPayload = StatsPayload
+  { -- The first day in the range (inclusive).
+    startDate :: UTCTime,
+    -- The last day in the range (inclusive).
+    endDate :: UTCTime,
+    -- | Total coding activity as seconds for the given range of time.
+    totalSeconds :: Int64,
+    -- | Average coding activity per day as seconds for the given range of time.
+    dailyAvg :: Double,
+    -- | Total coding activity for each day.
+    dailyTotal :: [Int64],
+    -- Statistics for all each project separately.
+    projects :: [ResourceStats],
+    -- Statistics for all each language separately.
+    languages :: [ResourceStats],
+    -- Statistics for all each platform separately.
+    platforms :: [ResourceStats],
+    -- Statistics for all each machine separately.
+    machines :: [ResourceStats],
+    -- Statistics for all each editor separately.
+    editors :: [ResourceStats]
+  }
   deriving (Show, Generic)
 
 instance ToJSON StatsPayload
+
+data TimelineItem = TimelineItem
+  { tName :: Text,
+    tRangeStart :: UTCTime,
+    tRangeEnd :: UTCTime
+  }
+  deriving (Show, Generic)
+
+instance ToJSON TimelineItem
+
+newtype TimelinePayload = TimelinePayload
+  { timelineLangs :: Map.Map Text [TimelineItem]
+  }
+  deriving (Show, Generic)
+
+instance ToJSON TimelinePayload
+
+type TimelineStats =
+  "api"
+    :> "v1"
+    :> "users"
+    :> "current"
+    :> "timeline"
+    :> QueryParam "start" UTCTime
+    :> QueryParam "end" UTCTime
+    :> Header "Authorization" ApiToken
+    :> Get '[JSON] TimelinePayload
 
 type TotalStats =
   "api"
@@ -87,64 +112,18 @@ type TotalStats =
     :> Header "Authorization" ApiToken
     :> Get '[JSON] StatsPayload
 
-type TotalUserStats =
-  "api"
-    :> "v1"
-    :> "users"
-    :> Capture "user" Text
-    :> "stats"
-    :> QueryParam "start" UTCTime
-    :> QueryParam "end" UTCTime
-    :> Get '[JSON] StatsPayload
+type API = TotalStats :<|> TimelineStats
 
-type API = TotalStats :<|> TotalUserStats
+server = statsHandler :<|> timelineStatsHandler
 
-server ::
-  ( Maybe UTCTime ->
-    Maybe UTCTime ->
-    Maybe ApiToken ->
-    AppM StatsPayload
-  )
-    :<|> ( Text ->
-           Maybe UTCTime ->
-           Maybe UTCTime ->
-           AppM StatsPayload
-         )
-server = statsHandler :<|> statsUserHandler
-
--- API Handlers
-statsUserHandler ::
-  Text ->
-  Maybe UTCTime ->
-  Maybe UTCTime ->
-  AppM StatsPayload
-statsUserHandler _ _ _ = undefined
-
-statsHandler ::
-  Maybe UTCTime ->
-  Maybe UTCTime ->
-  Maybe ApiToken ->
-  AppM StatsPayload
-statsHandler _ _ Nothing = throw missingAuthError
-statsHandler t0Param t1Param (Just token) = do
-  t1def <- liftIO getCurrentTime
-  p <- asks pool
-  let (t0, t1) = case (t0Param, t1Param) of
-        (Nothing, Nothing) -> (removeAWeek t1def, t1def)
-        (Nothing, Just b) -> (removeAWeek b, b)
-        (Just a, Nothing) -> (a, addAWeek a)
-        (Just a, Just b) -> (max a (removeAYear b), b)
-  res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO
-      $ DbOps.generateStatistics p token (t0, t1)
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right rows -> return $ toStatsPayload t0 t1 rows
+defaultTimeRange :: Maybe UTCTime -> Maybe UTCTime -> IO (UTCTime, UTCTime)
+defaultTimeRange t0 t1 = do
+  now <- getCurrentTime
+  case (t0, t1) of
+    (Nothing, Nothing) -> pure (removeAWeek now, now)
+    (Nothing, Just b) -> pure (removeAWeek b, b)
+    (Just a, Nothing) -> pure (a, addAWeek a)
+    (Just a, Just b) -> pure (max a (removeAYear b), b)
   where
     removeAWeek, removeAYear, addAWeek :: UTCTime -> UTCTime
     removeAWeek t =
@@ -162,6 +141,69 @@ statsHandler t0Param t1Param (Just token) = do
         { utctDay = addDays 7 (utctDay t),
           utctDayTime = 0
         }
+
+timelineStatsHandler :: Maybe UTCTime -> Maybe UTCTime -> Maybe ApiToken -> AppM TimelinePayload
+timelineStatsHandler _ _ Nothing = throw missingAuthError
+timelineStatsHandler t0Param t1Param (Just token) = do
+  p <- asks pool
+  (t0, t1) <- liftIO $ defaultTimeRange t0Param t1Param
+  res <-
+    runM
+      . embedToMonadIO
+      . runError
+      $ DbOps.interpretDatabaseIO
+      $ DbOps.getTimeline p token (t0, t1)
+  case res of
+    Left e -> do
+      $(logTM) ErrorS (logStr $ show e)
+      throw (DbOps.toJSONError e)
+    Right rows -> return $ mkTimelinePayload rows
+  where
+    mkTimelinePayload :: [TimelineRow] -> TimelinePayload
+    mkTimelinePayload rows =
+      TimelinePayload
+        { timelineLangs = go Map.empty rows
+        }
+    secondsSince :: UTCTime -> UTCTime -> Integer
+    secondsSince t0 t1 = i
+      where
+        (i, _) = properFraction $ diffUTCTime t1 t0
+    go :: Map.Map Text [TimelineItem] -> [TimelineRow] -> Map.Map Text [TimelineItem]
+    go m [] = m
+    go m (x : xs) =
+      let key = tmLang x
+          value =
+            TimelineItem
+              { tName = tmProject x,
+                tRangeStart = tmRangeStart x,
+                tRangeEnd = tmRangeEnd x
+              }
+       in if secondsSince (tmRangeStart x) (tmRangeEnd x) < 60
+            then go m xs
+            else case Map.lookup key m of
+              Just v -> go (Map.insert key (v ++ [value]) m) xs
+              Nothing -> go (Map.insert key [value] m) xs
+
+statsHandler ::
+  Maybe UTCTime ->
+  Maybe UTCTime ->
+  Maybe ApiToken ->
+  AppM StatsPayload
+statsHandler _ _ Nothing = throw missingAuthError
+statsHandler t0Param t1Param (Just token) = do
+  p <- asks pool
+  (t0, t1) <- liftIO $ defaultTimeRange t0Param t1Param
+  res <-
+    runM
+      . embedToMonadIO
+      . runError
+      $ DbOps.interpretDatabaseIO
+      $ DbOps.generateStatistics p token (t0, t1)
+  case res of
+    Left e -> do
+      $(logTM) ErrorS (logStr $ show e)
+      throw (DbOps.toJSONError e)
+    Right rows -> return $ toStatsPayload t0 t1 rows
 
 fillMissing :: [UTCTime] -> [[StatRow]] -> [[StatRow]]
 fillMissing times rows = go times rows ([] :: [[StatRow]])

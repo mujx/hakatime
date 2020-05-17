@@ -7,7 +7,13 @@ export default {
     }
     return arr;
   },
+  // TODO: This will have to be implemented on the server.
+  addTimeOffset: function(v) {
+    const n = parseInt(v);
+    const offSet = new Date().getTimezoneOffset() / 60;
 
+    return ((n - offSet) % 23).toString();
+  },
   secondsToHms: function(d) {
     d = Number(d);
     const h = Math.floor(d / 3600);
@@ -34,11 +40,13 @@ export default {
 
     const res = _.orderBy(obj.projects, ["totalSeconds"], ["desc"])[0];
     if (res) return res.name;
+    else return "-";
   },
   getMostActiveLanguage: function(obj) {
     if (!obj) return;
 
     const res = _.orderBy(obj.languages, ["totalSeconds"], ["desc"])[0];
     if (res) return res.name;
+    else return "-";
   }
 };

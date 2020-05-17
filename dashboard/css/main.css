@@ -139,3 +139,7 @@
   max-height: 200px;
   overflow-y: auto;
 }
+
+a.dropdown-item:hover {
+  cursor: pointer;
+}

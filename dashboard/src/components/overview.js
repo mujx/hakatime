@@ -1,17 +1,110 @@
 // Third-party
 import m from "mithril";
+import Litepicker from "litepicker";
 import _ from "lodash";
 import ApexCharts from "apexcharts/dist/apexcharts.common";
 
 // Models
-import { State } from "../models/State";
-import { TimeRange } from "../models/TimeRange";
+import State from "../models/State";
+import TimeRange from "../models/TimeRange";
 
 // Utils
 import { mkSingleStatCard } from "../single_stat_card.js";
 import utils from "../utils.js";
 import cards from "../card_container.js";
+import config from "../config.js";
 import * as auth from "../auth.js";
+
+// Easy access of all charts in the page.
+let Charts = {
+  timelineChart: {
+    chart: null,
+    mkOpts: function(series) {
+      var options = {
+        series: series,
+        noData: config.noData,
+        grid: {
+          show: true,
+          xaxis: {
+            lines: {
+              show: true
+            }
+          }
+        },
+        chart: {
+          height: 350,
+          type: "rangeBar",
+          fontFamily: "Nunito",
+          toolbar: {
+            show: false
+          }
+        },
+        plotOptions: {
+          bar: {
+            horizontal: true
+          }
+        },
+        xaxis: {
+          type: "datetime",
+          labels: {
+            datetimeUTC: false
+          }
+        },
+        yaxis: {
+          labels: {
+            style: {
+              fontFamily: "Nunito",
+              fontWeight: 500,
+              fontSize: "14px"
+            }
+          }
+        },
+        tooltip: {
+          x: {
+            show: true,
+            format: "d MMM, HH:mm"
+          }
+        },
+        legend: {
+          position: "top",
+          horizontalAlign: "left"
+        }
+      };
+
+      return options;
+    }
+  }
+};
+
+// Convert data retrieved from the API server to a format suitable for the chart.
+function mkTimelineSeries(rawData) {
+  return _.keys(rawData.timelineLangs).map(function(k) {
+    return {
+      name: k,
+      data: rawData.timelineLangs[k].map(v => {
+        return {
+          x: v.tName,
+          y: [
+            new Date(v.tRangeStart).getTime(),
+            new Date(v.tRangeEnd).getTime()
+          ]
+        };
+      })
+    };
+  });
+}
+
+function removeDays(d, num) {
+  let d1 = new Date(d);
+  d1.setDate(d.getDate() - num);
+  return d1;
+}
+
+function addDays(d, num) {
+  let d1 = new Date(d);
+  d1.setDate(d.getDate() + num);
+  return d1;
+}
 
 // Check if the given chart item has enough value to be displayed.
 // Attempting to reduce noise by remove low values.
@@ -23,12 +116,12 @@ function hasEnoughPercentage(val) {
  * Row with single stats only. Each stat has a name, value, and an icon.
  */
 function mkTopStatRow() {
-  let totalHrs = utils.secondsToHms(utils.getTotalCodingTime(State.obj));
+  const totalHrs = utils.secondsToHms(utils.getTotalCodingTime(State.obj));
 
   return [
     {
       name: "Total coding time",
-      value: `${totalHrs}`,
+      value: totalHrs ? `${totalHrs}` : "0",
       icon: "globe",
       textType: "primary"
     },
@@ -78,7 +171,9 @@ function pieChart() {
 
       var options = {
         series: data,
+        noData: config.noData,
         chart: {
+          fontFamily: "Nunito",
           type: "donut"
         },
         labels: names
@@ -107,11 +202,13 @@ function columnChart() {
       var options = {
         chart: {
           type: "bar",
+          fontFamily: "Nunito",
           height: "250",
           toolbar: {
             show: false
           }
         },
+        noData: config.noData,
         series: [
           {
             name: "Coding time",
@@ -139,6 +236,94 @@ function columnChart() {
 
       let myChart = new ApexCharts(vnode.dom, options);
       myChart.render();
+    }
+  };
+}
+
+function mkTimeline() {
+  let picker;
+
+  let MenuComponent = {
+    view: () => {
+      return [
+        m("a.dropdown-item", { id: "datetime-picker" }, "Pick a date range"),
+        m("div.dropdown-divider"),
+        m("div.dropdown-header", "Recent"),
+        m(
+          "a.dropdown-item",
+          {
+            onclick: e => {
+              e.redraw = false;
+
+              MenuComponent.updateSeries(
+                removeDays(new Date(), 1),
+                addDays(new Date(), 1)
+              );
+            }
+          },
+          "Last 24 hours"
+        ),
+        m(
+          "a.dropdown-item",
+          {
+            onclick: e => {
+              e.redraw = false;
+
+              MenuComponent.updateSeries(
+                removeDays(new Date(), 2),
+                addDays(new Date(), 1)
+              );
+            }
+          },
+          "Last 48 hours"
+        )
+      ];
+    },
+    updateSeries: (d1, d2) => {
+      State.fetchTimeline(d1, d2, res => {
+        if (Charts.timelineChart.chart)
+          Charts.timelineChart.chart.updateSeries(mkTimelineSeries(res));
+      });
+    },
+    onbeforedestroy: () => {
+      if (picker) picker.destroy();
+    },
+    oncreate: () => {
+      picker = new Litepicker({
+        element: document.getElementById("datetime-picker"),
+        minDays: 1,
+        maxDays: 2,
+        maxDate: addDays(new Date(), 1),
+        showTooltip: true,
+        singleMode: false,
+        mobileFriendly: true,
+        onSelect: MenuComponent.updateSeries
+      });
+    }
+  };
+
+  return cards.mkCardContainer(
+    "Timeline",
+    m(timelineChart()),
+    m(MenuComponent)
+  );
+}
+
+function timelineChart() {
+  return {
+    view: () => {
+      return m("div.chart");
+    },
+
+    oncreate: vnode => {
+      if (State.timeline == null) return;
+
+      const opts = Charts.timelineChart.mkOpts(
+        mkTimelineSeries(State.timeline)
+      );
+
+      Charts.timelineChart.chart = new ApexCharts(vnode.dom, opts);
+      Charts.timelineChart.chart.render();
     }
   };
 }
@@ -221,11 +406,13 @@ function heatmapChart(mkDataFn) {
 
       const options = {
         series: series,
+        noData: config.noData,
         dataLabels: {
           enabled: false
         },
         chart: {
           type: "heatmap",
+          fontFamily: "Nunito",
           height: 250,
           toolbar: {
             show: false
@@ -265,18 +452,17 @@ function mkLangHeatMap() {
 }
 export default {
   oninit: State.fetchItems,
-  oncreate: function() {
+  oncreate: () => {
     // Silent refresh.
     State.interval = setInterval(auth.checkInterval, 60000);
   },
-  onremove: function() {
+  onremove: () => {
     clearInterval(State.interval);
   },
   view: () => {
     document.title = "Hakatime | Overview";
 
     if (State.obj == null) {
-      State.fetchItems();
       return m("div.spinner", [
         m("div.bounce1"),
         m("div.bounce2"),
@@ -329,7 +515,8 @@ export default {
       m("div.row", [
         m("div.col-xl-6", mkHeatMap()),
         m("div.col-xl-6", mkLangHeatMap())
-      ])
+      ]),
+      m("div.row", m("div.col-xl-12", mkTimeline()))
     ];
   }
 };
