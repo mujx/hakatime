@@ -67,10 +67,9 @@ serverCommands =
           (Opt.info runCmd (Opt.progDesc "Start the server"))
     )
 
-newtype CliOpts
-  = CliOpts
-      { serverCmd :: ServerCommand
-      }
+newtype CliOpts = CliOpts
+  { serverCmd :: ServerCommand
+  }
   deriving (Show, Eq)
 
 cliOpts :: Opt.Parser (ServerCommand -> CliOpts)

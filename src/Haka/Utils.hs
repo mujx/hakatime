@@ -58,12 +58,11 @@ countDuration points interval =
     countDiff [_] = 0
     countDiff (x : xs) = abs (x - last xs)
 
-data EditorInfo
-  = EditorInfo
-      { editor :: Maybe Text,
-        plugin :: Maybe Text,
-        platform :: Maybe Text
-      }
+data EditorInfo = EditorInfo
+  { editor :: Maybe Text,
+    plugin :: Maybe Text,
+    platform :: Maybe Text
+  }
   deriving (Show)
 
 -- / Parse the user agent string & extract the editor & plugin name/version pair.

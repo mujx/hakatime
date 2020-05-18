@@ -29,28 +29,25 @@ import Polysemy.IO (embedToMonadIO)
 import Servant
 import Web.Cookie
 
-data AuthRequest
-  = AuthRequest
-      { username :: Text,
-        password :: Text
-      }
+data AuthRequest = AuthRequest
+  { username :: Text,
+    password :: Text
+  }
   deriving (Show, Generic)
 
 instance FromJSON AuthRequest
 
-data LoginResponse
-  = LoginResponse
-      { token :: Text,
-        tokenExpiry :: UTCTime
-      }
+data LoginResponse = LoginResponse
+  { token :: Text,
+    tokenExpiry :: UTCTime
+  }
   deriving (Show, Generic)
 
 instance ToJSON LoginResponse
 
-newtype TokenResponse
-  = TokenResponse
-      { apiToken :: Text
-      }
+newtype TokenResponse = TokenResponse
+  { apiToken :: Text
+  }
   deriving (Show, Generic)
 
 instance ToJSON TokenResponse

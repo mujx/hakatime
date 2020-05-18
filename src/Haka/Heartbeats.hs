@@ -27,21 +27,19 @@ import Polysemy.IO (embedToMonadIO)
 import Polysemy.Reader (runReader)
 import Servant
 
-data User
-  = User
-      { name :: T.Text,
-        age :: Int,
-        email :: T.Text,
-        registration_date :: Day
-      }
+data User = User
+  { name :: T.Text,
+    age :: Int,
+    email :: T.Text,
+    registration_date :: Day
+  }
   deriving (Eq, Show, Generic)
 
 instance ToJSON User
 
-newtype HeartbeatResponses
-  = HeartbeatResponses
-      { responses :: [HeartbeatIdAndStatusCode]
-      }
+newtype HeartbeatResponses = HeartbeatResponses
+  { responses :: [HeartbeatIdAndStatusCode]
+  }
   deriving (Show, Generic)
 
 data HeartbeatIdAndStatusCode = Foo | Bar | Baz
@@ -170,4 +168,5 @@ storeHeartbeats p token machineId heartbeats =
       )
     $ DbOps.interpretDatabaseIO
     $ DbOps.processHeartbeatRequest heartbeats
+
 -- TODO: Discard timestamps from the future

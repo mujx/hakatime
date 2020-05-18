@@ -31,43 +31,41 @@ import Polysemy.IO (embedToMonadIO)
 import PostgreSQL.Binary.Data (Scientific)
 import Servant
 
-data ResourceStats
-  = ResourceStats
-      { -- | The name of the resource.
-        pName :: Text,
-        -- | Total number of seconds spent on the resource for the time range.
-        pTotalSeconds :: Int64,
-        -- | Percentage of the total time in the range spent on the resource.
-        pTotalPct :: Scientific,
-        -- | Total seconds spend on the project for each day in the range.
-        pTotalDaily :: [Int64],
-        -- | Percentage of the day spent on the resource for each day in the range.
-        pPctDaily :: [Scientific]
-      }
+data ResourceStats = ResourceStats
+  { -- | The name of the resource.
+    pName :: Text,
+    -- | Total number of seconds spent on the resource for the time range.
+    pTotalSeconds :: Int64,
+    -- | Percentage of the total time in the range spent on the resource.
+    pTotalPct :: Scientific,
+    -- | Total seconds spend on the project for each day in the range.
+    pTotalDaily :: [Int64],
+    -- | Percentage of the day spent on the resource for each day in the range.
+    pPctDaily :: [Scientific]
+  }
   deriving (Show, Generic)
 
 instance ToJSON ResourceStats where
   toJSON = genericToJSON noPrefixOptions
 
-data ProjectStatistics
-  = ProjectStatistics
-      { -- The first day in the range (inclusive).
-        startDate :: UTCTime,
-        -- The last day in the range (inclusive).
-        endDate :: UTCTime,
-        -- | Total coding activity as seconds for the given range of time.
-        totalSeconds :: Int64,
-        -- | Total coding activity for each day.
-        dailyTotal :: [Int64],
-        -- Statistics for all each language separately.
-        languages :: [ResourceStats],
-        -- Statistics for all each language separately.
-        files :: [ResourceStats],
-        -- Statistics for all each day of the week.
-        weekDay :: [ResourceStats],
-        -- Statistics for all each time of the day
-        hour :: [ResourceStats]
-      }
+data ProjectStatistics = ProjectStatistics
+  { -- The first day in the range (inclusive).
+    startDate :: UTCTime,
+    -- The last day in the range (inclusive).
+    endDate :: UTCTime,
+    -- | Total coding activity as seconds for the given range of time.
+    totalSeconds :: Int64,
+    -- | Total coding activity for each day.
+    dailyTotal :: [Int64],
+    -- Statistics for all each language separately.
+    languages :: [ResourceStats],
+    -- Statistics for all each language separately.
+    files :: [ResourceStats],
+    -- Statistics for all each day of the week.
+    weekDay :: [ResourceStats],
+    -- Statistics for all each time of the day
+    hour :: [ResourceStats]
+  }
   deriving (Show, Generic)
 
 instance ToJSON ProjectStatistics
