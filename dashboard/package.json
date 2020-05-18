@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "parcel index.html --no-source-maps",
-    "prod": "parcel build index.html --no-source-maps",
+    "prod": "parcel build index.html --detailed-report --no-source-maps",
     "lint": "eslint --ext js src"
   },
   "dependencies": {

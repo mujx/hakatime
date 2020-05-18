@@ -12,7 +12,7 @@ shell:
 	nix-shell -p ghc cabal-install zlib postgresql
 
 ui:
-	cd ./dashboard && yarn install && yarn run prod
+	cd ./dashboard && yarn install && yarn run prod && yarn run lint
 
 gen-nix:
 	cabal2nix --no-haddock --no-check . > default.nix

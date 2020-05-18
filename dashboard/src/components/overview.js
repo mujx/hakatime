@@ -94,9 +94,9 @@ function mkTimelineSeries(rawData) {
   });
 }
 
-function removeDays(d, num) {
+function removeHours(d, num) {
   const d1 = new Date(d);
-  d1.setDate(d.getDate() - num);
+  d1.setHours(d.getHours() - num);
   return d1;
 }
 
@@ -245,38 +245,28 @@ function mkTimeline() {
 
   const MenuComponent = {
     view: () => {
+      const datesItems = [6, 12, 24, 48].map(i => {
+        return m(
+          "a.dropdown-item",
+          {
+            onclick: e => {
+              e.redraw = false;
+
+              MenuComponent.updateSeries(
+                removeHours(new Date(), i),
+                new Date()
+              );
+            }
+          },
+          `Last ${i} hours`
+        );
+      });
+
       return [
         m("a.dropdown-item", { id: "datetime-picker" }, "Pick a date range"),
         m("div.dropdown-divider"),
         m("div.dropdown-header", "Recent"),
-        m(
-          "a.dropdown-item",
-          {
-            onclick: e => {
-              e.redraw = false;
-
-              MenuComponent.updateSeries(
-                removeDays(new Date(), 1),
-                addDays(new Date(), 1)
-              );
-            }
-          },
-          "Last 24 hours"
-        ),
-        m(
-          "a.dropdown-item",
-          {
-            onclick: e => {
-              e.redraw = false;
-
-              MenuComponent.updateSeries(
-                removeDays(new Date(), 2),
-                addDays(new Date(), 1)
-              );
-            }
-          },
-          "Last 48 hours"
-        )
+        datesItems
       ];
     },
     updateSeries: (d1, d2) => {
