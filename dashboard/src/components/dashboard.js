@@ -58,7 +58,6 @@ function createApiTokenDialog(event) {
 
 const Modal = {
   oncreate: () => {
-    console.log("oncreate");
     $('[data-toggle="tooltip"]').tooltip();
   },
   view: () => {
