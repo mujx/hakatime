@@ -2,13 +2,13 @@ import m from "mithril";
 import { login, isLoggedIn } from "../auth.js";
 
 const User = {
-  username: null,
-  password: null,
-  confirmPassword: null
+  username: "",
+  password: "",
+  confirmPassword: ""
 };
 
 const ErrMsg = {
-  error: null
+  error: ""
 };
 
 export default {
@@ -52,7 +52,7 @@ export default {
             .then(function(creds) {
               login(creds);
 
-              ErrMsg.error = null;
+              ErrMsg.error = "";
 
               m.route.set("/app");
             })
@@ -62,7 +62,7 @@ export default {
                 return;
               }
 
-              ErrMsg.error = `Registration failed: ${e.code}`;
+              ErrMsg.error = "Registration failed: Unknown error";
             });
         }
       },

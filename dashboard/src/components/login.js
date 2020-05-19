@@ -2,12 +2,12 @@ import m from "mithril";
 import { login, isLoggedIn } from "../auth.js";
 
 const AuthUser = {
-  username: null,
-  password: null
+  username: "",
+  password: ""
 };
 
 const ErrMsg = {
-  error: null
+  error: ""
 };
 
 export default {
@@ -38,17 +38,17 @@ export default {
             .then(function(creds) {
               login(creds);
 
-              ErrMsg.error = null;
+              ErrMsg.error = "";
 
               m.route.set("/app");
             })
             .catch(function(e) {
-              if (e.response.error) {
+              if (e.response && e.response.error) {
                 ErrMsg.error = `Login failed: ${e.response.error}`;
                 return;
               }
 
-              ErrMsg.error = `Login failed: ${e.code}`;
+              ErrMsg.error = "Login failed: Unknown error";
             });
         }
       },
