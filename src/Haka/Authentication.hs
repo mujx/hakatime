@@ -37,6 +37,8 @@ data AuthRequest = AuthRequest
 
 instance FromJSON AuthRequest
 
+instance ToJSON AuthRequest
+
 data LoginResponse = LoginResponse
   { token :: Text,
     tokenExpiry :: UTCTime
@@ -45,12 +47,16 @@ data LoginResponse = LoginResponse
 
 instance ToJSON LoginResponse
 
+instance FromJSON LoginResponse
+
 newtype TokenResponse = TokenResponse
   { apiToken :: Text
   }
   deriving (Show, Generic)
 
 instance ToJSON TokenResponse
+
+instance FromJSON TokenResponse
 
 type LoginResponse' = Headers '[Header "Set-Cookie" SetCookie] LoginResponse
 

@@ -10,7 +10,7 @@ where
 import Control.Exception.Safe (throw)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
-import Data.Aeson (ToJSON (..), genericToJSON)
+import Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
 import Data.Int (Int64)
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
@@ -47,6 +47,9 @@ data ResourceStats = ResourceStats
 instance ToJSON ResourceStats where
   toJSON = genericToJSON noPrefixOptions
 
+instance FromJSON ResourceStats where
+  parseJSON = genericParseJSON noPrefixOptions
+
 -- TODO: Move data types to a separate module
 data StatsPayload = StatsPayload
   { -- The first day in the range (inclusive).
@@ -74,6 +77,8 @@ data StatsPayload = StatsPayload
 
 instance ToJSON StatsPayload
 
+instance FromJSON StatsPayload
+
 data TimelineItem = TimelineItem
   { tName :: Text,
     tRangeStart :: UTCTime,
@@ -83,12 +88,16 @@ data TimelineItem = TimelineItem
 
 instance ToJSON TimelineItem
 
+instance FromJSON TimelineItem
+
 newtype TimelinePayload = TimelinePayload
   { timelineLangs :: Map.Map Text [TimelineItem]
   }
   deriving (Show, Generic)
 
 instance ToJSON TimelinePayload
+
+instance FromJSON TimelinePayload
 
 type TimelineStats =
   "api"

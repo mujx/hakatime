@@ -11,8 +11,10 @@ let
     packageOverrides = pkgs: rec {
       haskellPackages = pkgs.haskellPackages.override {
         overrides = haskellPackagesNew: haskellPackagesOld: rec {
-          servant        = haskellPackagesNew.callPackage ./servant.nix {};
-          servant-server = haskellPackagesNew.callPackage ./servant-server.nix {};
+          servant             = haskellPackagesNew.callPackage ./servant.nix {};
+          servant-server      = haskellPackagesNew.callPackage ./servant-server.nix {};
+          servant-client      = haskellPackagesNew.callPackage ./servant-client.nix {};
+          servant-client-core = haskellPackagesNew.callPackage ./servant-client-core.nix {};
         };
       };
     };

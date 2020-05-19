@@ -11,7 +11,7 @@ where
 import Control.Exception.Safe (throw)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
-import Data.Aeson (ToJSON (..), genericToJSON)
+import Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
 import Data.Int (Int64)
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
@@ -48,6 +48,9 @@ data ResourceStats = ResourceStats
 instance ToJSON ResourceStats where
   toJSON = genericToJSON noPrefixOptions
 
+instance FromJSON ResourceStats where
+  parseJSON = genericParseJSON noPrefixOptions
+
 data ProjectStatistics = ProjectStatistics
   { -- The first day in the range (inclusive).
     startDate :: UTCTime,
@@ -69,6 +72,8 @@ data ProjectStatistics = ProjectStatistics
   deriving (Show, Generic)
 
 instance ToJSON ProjectStatistics
+
+instance FromJSON ProjectStatistics
 
 type API = ProjectStats
 

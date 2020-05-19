@@ -37,9 +37,9 @@ COPY hakatime.cabal ./
 COPY src/           ./src
 COPY test/          ./test
 
-RUN cabal build -j1 -O2 hakatime   && \
-    cabal install -j1 -O2 hakatime && \
-    mkdir -p /app/bin              && \
+RUN cabal build -j1 -O2 exe:hakatime   && \
+    cabal install -j1 -O2 exe:hakatime && \
+    mkdir -p /app/bin                  && \
     cp ~/.cabal/bin/hakatime /app/bin/hakatime
 
 FROM alpine:edge

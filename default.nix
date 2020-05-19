@@ -1,10 +1,12 @@
 { mkDerivation, aeson, base, base64-bytestring, bits, bytestring
 , case-insensitive, containers, contravariant-extras, cookie
-, cryptonite, hasql, hasql-pool, hasql-transaction, katip, mr-env
-, mtl, optparse-applicative, polysemy, polysemy-plugin
-, postgresql-binary, raw-strings-qq, safe-exceptions, servant
-, servant-server, stdenv, text, time, transformers, unliftio-core
-, uuid, wai, wai-cors, wai-extra, wai-logger, warp
+, cryptonite, fakedata, hasql, hasql-pool, hasql-transaction
+, http-client, http-client-tls, katip, mr-env, mtl
+, optparse-applicative, polysemy, polysemy-plugin
+, postgresql-binary, pretty-simple, raw-strings-qq, safe-exceptions
+, servant, servant-client, servant-server, stdenv, text, time
+, transformers, unliftio-core, uuid, wai, wai-cors, wai-extra
+, wai-logger, warp
 }:
 mkDerivation {
   pname = "hakatime";
@@ -12,13 +14,19 @@ mkDerivation {
   src = ./.;
   isLibrary = false;
   isExecutable = true;
-  executableHaskellDepends = [
+  libraryHaskellDepends = [
     aeson base base64-bytestring bits bytestring case-insensitive
     containers contravariant-extras cookie cryptonite hasql hasql-pool
     hasql-transaction katip mr-env mtl optparse-applicative polysemy
     polysemy-plugin postgresql-binary raw-strings-qq safe-exceptions
     servant servant-server text time transformers unliftio-core uuid
-    wai wai-cors wai-extra wai-logger warp
+  ];
+  executableHaskellDepends = [
+    aeson base base64-bytestring bytestring fakedata hasql-pool
+    http-client http-client-tls katip mr-env mtl optparse-applicative
+    polysemy polysemy-plugin pretty-simple servant servant-client
+    servant-server text time transformers wai wai-cors wai-extra
+    wai-logger warp
   ];
   testHaskellDepends = [ base ];
   doHaddock = false;

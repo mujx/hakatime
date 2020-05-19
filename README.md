@@ -12,6 +12,16 @@ activity.
 It comes together with a simple dashboard which provides a graphical
 representation of the collected data.
 
+## Demo
+
+There is demo instance with fake data [here](https://hakatime-demo.mtx-dev.xyz).
+
+Use `demo` as username and `demodemo` as password to login. You can create an API token
+and try sending your data.
+
+**NOTE**: Due to the random nature of the data some charts like the timeline might not be
+available.
+
 ## Deployment
 
 You can use the following docker-compose setup for testing locally or an actual

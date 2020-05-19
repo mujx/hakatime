@@ -45,7 +45,7 @@ import Data.Aeson
 import qualified Data.ByteString as Bs
 import Data.Int (Int64)
 import Data.Text (Text, strip)
-import Data.Text.Encoding (decodeUtf8)
+import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Data.Time.Clock (UTCTime)
 import GHC.Generics
 import Haka.AesonHelpers
@@ -53,6 +53,7 @@ import Haka.AesonHelpers
     noPrefixOptions,
     untagged,
   )
+import qualified Haka.Utils as Utils
 import qualified Hasql.Pool as HqPool
 import qualified Katip as K
 import PostgreSQL.Binary.Data (Scientific)
@@ -249,6 +250,10 @@ data StatRow = StatRow
 newtype ApiToken = ApiToken Text
   deriving (Show, Generic)
 
+instance ToHttpApiData ApiToken where
+  toHeader (ApiToken t) = encodeUtf8 $ "Basic " <> Utils.toBase64 t
+  toUrlPiece (ApiToken t) = Utils.toBase64 t
+
 instance FromHttpApiData ApiToken where
   parseUrlPiece = error "ApiToken should only be used as Header param"
 
@@ -272,6 +277,9 @@ newtype HeartbeatId = HeartbeatId
 instance ToJSON HeartbeatId where
   toJSON = genericToJSON noPrefixOptions
 
+instance FromJSON HeartbeatId where
+  parseJSON = genericParseJSON noPrefixOptions
+
 newtype HearbeatData = HearbeatData
   { heartbeatData :: HeartbeatId
   }
@@ -280,11 +288,17 @@ newtype HearbeatData = HearbeatData
 instance ToJSON HearbeatData where
   toJSON = genericToJSON noPrefixOptions
 
+instance FromJSON HearbeatData where
+  parseJSON = genericParseJSON noPrefixOptions
+
 data ReturnBulkStruct = ReturnData HearbeatData | ReturnCode Int
   deriving (Show, Generic)
 
 instance ToJSON ReturnBulkStruct where
   toJSON = genericToJSON untagged
+
+instance FromJSON ReturnBulkStruct where
+  parseJSON = genericParseJSON untagged
 
 newtype BulkHeartbeatData = BulkHeartbeatData
   { bResponses :: [[ReturnBulkStruct]]
@@ -294,14 +308,23 @@ newtype BulkHeartbeatData = BulkHeartbeatData
 instance ToJSON BulkHeartbeatData where
   toJSON = genericToJSON noPrefixOptions
 
+instance FromJSON BulkHeartbeatData where
+  parseJSON = genericParseJSON noPrefixOptions
+
 newtype ApiErrorData = ApiErrorData {apiError :: Text}
   deriving (Show, Generic)
 
 instance ToJSON ApiErrorData where
   toJSON = genericToJSON noPrefixOptions
 
+instance FromJSON ApiErrorData where
+  parseJSON = genericParseJSON noPrefixOptions
+
 instance ToJSON HeartbeatApiResponse where
   toJSON = genericToJSON untagged
+
+instance FromJSON HeartbeatApiResponse where
+  parseJSON = genericParseJSON untagged
 
 data HeartbeatPayload = HeartbeatPayload
   { -- | The code editor used.
@@ -344,6 +367,9 @@ data HeartbeatPayload = HeartbeatPayload
 
 instance FromJSON HeartbeatPayload where
   parseJSON = genericParseJSON convertReservedWords
+
+instance ToJSON HeartbeatPayload where
+  toJSON = genericToJSON convertReservedWords
 
 data EntityType = FileType | AppType | DomainType
   deriving (Eq, Show, Generic)

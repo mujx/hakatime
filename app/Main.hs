@@ -6,11 +6,8 @@ where
 import Control.Exception (try)
 import Control.Monad.Trans.Except (ExceptT (..))
 import qualified Data.ByteString.Char8 as Bs
-import qualified Haka.Authentication as Auth
+import qualified Haka.Api as Api
 import qualified Haka.Cli as Cli
-import qualified Haka.Heartbeats as Heartbeats
-import qualified Haka.Projects as Projects
-import qualified Haka.Stats as Stats
 import Haka.Types
   ( AppCtx (..),
     AppM,
@@ -30,28 +27,6 @@ import Servant
 import System.Environment.MrEnv (envAsBool, envAsInt, envAsString)
 import System.IO (stdout)
 
-type Static = Raw
-
--- Combined API type for each sub-api available.
-type HakaAPI =
-  Heartbeats.API
-    :<|> Stats.API
-    :<|> Projects.API
-    :<|> Auth.API
-    :<|> Static
-
--- The API handlers should be presented in the same order as in the API type.
-server :: ServerSettings -> ServerT HakaAPI AppM
-server settings =
-  Heartbeats.server
-    :<|> Stats.server
-    :<|> Projects.server
-    :<|> Auth.server (hakaEnableRegistration settings)
-    :<|> serveDirectoryFileServer (hakaDashboardPath settings)
-
-api :: Proxy HakaAPI
-api = Proxy
-
 -- | Convert our 'App' type to a 'Servant.Handler', for a given 'AppCtx'.
 nt :: AppCtx -> AppM a -> Handler a
 nt ctx = Handler . ExceptT . try . runAppT ctx
@@ -59,8 +34,8 @@ nt ctx = Handler . ExceptT . try . runAppT ctx
 app :: ServerSettings -> AppCtx -> Application
 app settings conf =
   cors (const $ Just policy)
-    $ serve api
-    $ hoistServer api (nt conf) (server settings)
+    $ serve Api.api
+    $ hoistServer Api.api (nt conf) (Api.server settings)
   where
     policy =
       simpleCorsResourcePolicy
