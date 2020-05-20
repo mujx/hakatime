@@ -36,6 +36,7 @@ COPY README.md      ./
 COPY hakatime.cabal ./
 COPY src/           ./src
 COPY test/          ./test
+COPY tools/         ./tools
 
 RUN cabal build -j1 -O2 exe:hakatime   && \
     cabal install -j1 -O2 exe:hakatime && \
