@@ -12,6 +12,11 @@ build-type:          Simple
 extra-doc-files:     README.md
 tested-with:         GHC == 8.8.3
 
+Flag dev
+  Description: Build without optimizations.
+  Default:     False
+  Manual:      True
+
 executable haka-data
   hs-source-dirs:      tools
   main-is:             Main.hs
@@ -37,8 +42,12 @@ executable haka-data
                      , DataKinds
                      , TypeOperators
 
+  if flag(dev)
+    ghc-options:       -O0
+  else
+    ghc-options:       -O2
+
   ghc-options:         -Wall
-                       -O2
                        -threaded
                        -rtsopts
                        -with-rtsopts=-N
@@ -93,8 +102,12 @@ library libhaka
                      , unliftio-core        >= 0.1 && < 0.2
                      , uuid
 
+  if flag(dev)
+    ghc-options:       -O0
+  else
+    ghc-options:       -O2
+
   ghc-options:         -Wall
-                       -O2
                        -Wcompat
                        -Widentities
                        -Wincomplete-record-updates
@@ -147,8 +160,12 @@ executable hakatime
                      , wai-logger           == 2.3.*
                      , warp                 == 3.3.10
 
+  if flag(dev)
+    ghc-options:       -O0
+  else
+    ghc-options:       -O2
+
   ghc-options:         -Wall
-                       -O2
                        -threaded
                        -rtsopts
                        -with-rtsopts=-N

@@ -474,9 +474,9 @@ FROM (
                   lag(language) OVER (ORDER BY time_sent) IS NULL AND
                   lag(project) OVER (ORDER BY time_sent) IS NULL THEN 0
                 WHEN
-                  language                            = lag(language) OVER (ORDER BY time_sent) AND
-                  project                             = lag(project) OVER (ORDER BY time_sent) AND
-                  extract(minute FROM previous_diff) <= $4 THEN 0
+                  language       = lag(language) OVER (ORDER BY time_sent) AND
+                  project        = lag(project) OVER (ORDER BY time_sent) AND
+                  previous_diff  <= ($4 * 60) THEN 0
                 ELSE
                     1
                 END
@@ -486,7 +486,7 @@ FROM (
             coalesce(language, 'Other') AS language,
             coalesce(project, 'Other') AS project,
             time_sent,
-            coalesce((time_sent - (lag(time_sent) OVER (ORDER BY time_sent))), '0 minutes') AS previous_diff
+            extract(epoch from coalesce((time_sent - (lag(time_sent) OVER (ORDER BY time_sent))), '0 minutes')) AS previous_diff
         FROM
             heartbeats
         WHERE
