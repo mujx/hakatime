@@ -379,12 +379,7 @@ getUserActivity = Statement query params result True
           total_stats.platform,
           total_stats.machine,
           total_stats.entity,
-          cast(
-            sum(
-              extract(minute from previous_diff) * 60 +
-              extract(second from previous_diff)
-            ) as int8
-          ) as total_seconds
+          cast(sum(extract(epoch from previous_diff) + 0) as int8) as total_seconds
         from (
           select
             time_sent::date + interval '0h' as day,
@@ -402,7 +397,7 @@ getUserActivity = Statement query params result True
               time_sent >= $2 and time_sent <= $3
             order by time_sent
         ) total_stats
-        where extract(minute from previous_diff) <= $4
+        where extract(epoch from previous_diff) <= ($4 * 60)
         group by total_stats.day,
                 total_stats.project,
                 total_stats.language,
