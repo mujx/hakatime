@@ -94,18 +94,6 @@ function mkTimelineSeries(rawData) {
   });
 }
 
-function removeHours(d, num) {
-  const d1 = new Date(d);
-  d1.setHours(d.getHours() - num);
-  return d1;
-}
-
-function addDays(d, num) {
-  const d1 = new Date(d);
-  d1.setDate(d.getDate() + num);
-  return d1;
-}
-
 // Check if the given chart item has enough value to be displayed.
 // Attempting to reduce noise by remove low values.
 function hasEnoughPercentage(val) {
@@ -253,7 +241,7 @@ function mkTimeline() {
               e.redraw = false;
 
               MenuComponent.updateSeries(
-                removeHours(new Date(), i),
+                utils.removeHours(new Date(), i),
                 new Date()
               );
             }
@@ -283,7 +271,7 @@ function mkTimeline() {
         element: document.getElementById("datetime-picker"),
         minDays: 1,
         maxDays: 2,
-        maxDate: addDays(new Date(), 1),
+        maxDate: utils.addDays(new Date(), 1),
         showTooltip: true,
         singleMode: false,
         mobileFriendly: true,

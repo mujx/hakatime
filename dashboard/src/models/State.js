@@ -50,9 +50,6 @@ const Model = {
       authorization: auth.getHeaderToken()
     };
 
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
     Promise.all([
       m.request({
         url: "/api/v1/users/current/stats",
@@ -67,8 +64,8 @@ const Model = {
         url: "/api/v1/users/current/timeline",
         responseType: "json",
         params: {
-          start: yesterday.toISOString(),
-          end: today.toISOString()
+          start: utils.removeHours(new Date(), 12).toISOString(),
+          end: (new Date()).toISOString()
         },
         headers: headers
       })
