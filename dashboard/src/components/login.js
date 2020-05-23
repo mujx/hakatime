@@ -1,4 +1,5 @@
 import m from "mithril";
+import Commons from "./common.js";
 import { login, isLoggedIn } from "../auth.js";
 
 const AuthUser = {
@@ -83,7 +84,7 @@ export default {
           "Don't have an account?",
           m("a.ml-2", { href: "#!/register" }, "Register here")
         ]),
-        m("p.mt-5.mb-3.text-center", "Hakatime")
+        Commons.githubLink()
       ]
     );
   }
