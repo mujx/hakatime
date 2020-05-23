@@ -35,9 +35,7 @@ const Charts = {
           height: 350,
           type: "rangeBar",
           fontFamily: "Nunito",
-          toolbar: {
-            show: false
-          }
+          toolbar: config.toolbar
         },
         plotOptions: {
           bar: {
@@ -192,9 +190,7 @@ function columnChart() {
           type: "bar",
           fontFamily: "Nunito",
           height: "250",
-          toolbar: {
-            show: false
-          }
+          toolbar: config.toolbar
         },
         noData: config.noData,
         series: [
@@ -392,9 +388,7 @@ function heatmapChart(mkDataFn) {
           type: "heatmap",
           fontFamily: "Nunito",
           height: 250,
-          toolbar: {
-            show: false
-          }
+          toolbar: config.toolbar
         },
         xaxis: {
           type: "datetime"

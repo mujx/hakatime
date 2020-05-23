@@ -5,5 +5,8 @@ export default {
       fontSize: "16px",
       fontFamily: "Nunito"
     }
+  },
+  toolbar: {
+    show: false
   }
 };

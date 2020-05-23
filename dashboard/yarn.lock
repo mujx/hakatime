@@ -5804,6 +5804,11 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
+typeface-nunito@^1.1.3:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/typeface-nunito/-/typeface-nunito-1.1.3.tgz#b0a7d0c4db40d69b58bcc56668344861ca4df4ab"
+  integrity sha512-UNdX9TdK+xcYh/ESVIZq8vK3qf7Q3GwdRoaQmxpWrHkLmIYgno0/571xvfPzfvQx8MmlO4J4iQVEEJfnW3fQkQ==
+
 uncss@^0.17.2:
   version "0.17.3"
   resolved "https://registry.yarnpkg.com/uncss/-/uncss-0.17.3.tgz#50fc1eb4ed573ffff763458d801cd86e4d69ea11"

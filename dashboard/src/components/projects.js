@@ -71,9 +71,7 @@ function hourDistribution() {
         chart: {
           type: "bar",
           height: "300",
-          toolbar: {
-            show: false
-          }
+          toolbar: config.toolbar
         },
         plotOptions: {
           bar: {
@@ -131,9 +129,7 @@ function dayRadarChart() {
         chart: {
           type: "radar",
           height: "300",
-          toolbar: {
-            show: false
-          }
+          toolbar: config.toolbar
         },
         plotOptions: {
           radar: {
@@ -275,9 +271,7 @@ function fileChart() {
         chart: {
           type: "bar",
           height: 360,
-          toolbar: {
-            show: false
-          }
+          toolbar: config.toolbar
         },
         plotOptions: {
           bar: {
@@ -357,9 +351,7 @@ function barChart() {
         chart: {
           type: "bar",
           height: "250",
-          toolbar: {
-            show: false
-          }
+          toolbar: config.toolbar
         },
         series: [
           {
