@@ -81,6 +81,7 @@ library libhaka
                      , contravariant-extras
                      , cookie               == 0.4.5
                      , cryptonite           == 0.26.*
+                     , file-embed
                      , hasql                == 1.4.*
                      , hasql-pool           == 0.5.1
                      , hasql-transaction    == 1.0.*

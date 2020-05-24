@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Haka.Db.Statements
   ( insertHeartBeat,
@@ -21,6 +22,7 @@ where
 
 import Contravariant.Extras.Contrazip (contrazip4, contrazip5)
 import qualified Data.ByteString as Bs
+import Data.FileEmbed
 import Data.Functor.Contravariant ((>$<))
 import Data.Int (Int64)
 import Data.Text (Text)
@@ -225,35 +227,7 @@ insertHeartBeat = Statement query params result True
     result :: D.Result Int64
     result = D.singleRow (D.column (D.nonNullable D.int8))
     query :: Bs.ByteString
-    query =
-      [r|
-        INSERT INTO heartbeats 
-        (
-            editor,
-            plugin,
-            platform,
-            machine,
-            sender,
-            user_agent,
-            branch,
-            category,
-            cursorpos,
-            dependencies,
-            entity,
-            is_write,
-            language,
-            lineno,
-            file_lines,
-            project,
-            ty,
-            time_sent
-        ) 
-        VALUES ( $1, $2, $3, $4, $5, 
-                  $6, $7, $8, $9, $10,
-                  $11, $12, $13, $14, $15,
-                  $16, $17, $18 )
-        RETURNING "id";
-      |]
+    query = $(embedFile "src/Haka/Db/sql/insert_heartbeat.sql")
     params :: E.Params HeartbeatPayload
     params =
       (editor >$< E.param (E.nullable E.text))
@@ -291,56 +265,7 @@ getProjectStats :: Statement (Text, Text, UTCTime, UTCTime, Int64) [ProjectStatR
 getProjectStats = Statement query params result True
   where
     query :: Bs.ByteString
-    query =
-      [r|
-        with stats as (
-          select
-            total_stats.day,
-            total_stats.dayofweek,
-            total_stats.hourofday,
-            coalesce(total_stats.language, 'Other') as language,
-            total_stats.entity,
-            cast(
-              sum(
-                extract(minute from previous_diff) * 60 +
-                extract(second from previous_diff)
-              ) as int8
-            ) as total_seconds
-          from (
-            select
-              (cast(extract(dow from (time_sent::date + interval '0h')) as int8))::text as dayofweek,
-              (cast(extract(hour from time_sent) as int8))::text as hourofday,
-              time_sent::date + interval '0h' as day,
-              heartbeats.language,
-              heartbeats.entity,
-              (time_sent - (lag(time_sent) over (order by time_sent))) as previous_diff
-          from heartbeats
-            where
-              sender = $1 and
-              project = $2 and
-              time_sent >= $3 and time_sent <= $4
-            order by time_sent
-          ) total_stats
-
-          where extract(minute from previous_diff) <= $5
-          group by total_stats.day,
-                   total_stats.dayofweek,
-                   total_stats.hourofday,
-                   total_stats.language,
-                   total_stats.entity
-          order by total_stats.day
-          )
-
-          select
-            *,
-            cast(
-              1.0 * total_seconds / nullif(sum(total_seconds) over (),0) as numeric
-            ) as pct,
-            cast (
-              1.0 * total_seconds / nullif(sum(total_seconds) over (partition by day), 0) as numeric
-            ) as daily_pct
-        from stats;
-      |]
+    query = $(embedFile "src/Haka/Db/sql/get_projects_stats.sql")
     params :: E.Params (Text, Text, UTCTime, UTCTime, Int64)
     params =
       contrazip5
@@ -367,58 +292,7 @@ getUserActivity :: Statement (Text, UTCTime, UTCTime, Int64) [StatRow]
 getUserActivity = Statement query params result True
   where
     query :: Bs.ByteString
-    query =
-      [r|
-      with stats as (
-        select
-          total_stats.day,
-          coalesce(total_stats.project, 'Other') as project,
-          coalesce(total_stats.language, 'Other') as language,
-          coalesce(total_stats.editor, 'Other') as editor,
-          coalesce(total_stats.branch, 'Other') as branch,
-          total_stats.platform,
-          total_stats.machine,
-          total_stats.entity,
-          cast(sum(extract(epoch from previous_diff) + 0) as int8) as total_seconds
-        from (
-          select
-            time_sent::date + interval '0h' as day,
-            heartbeats.project,
-            heartbeats.language,
-            heartbeats.editor,
-            heartbeats.branch,
-            heartbeats.entity,
-            heartbeats.machine,
-            heartbeats.platform,
-            (time_sent - (lag(time_sent) over (order by time_sent))) as previous_diff
-          from heartbeats
-            where
-              sender = $1 and
-              time_sent >= $2 and time_sent <= $3
-            order by time_sent
-        ) total_stats
-        where extract(epoch from previous_diff) <= ($4 * 60)
-        group by total_stats.day,
-                total_stats.project,
-                total_stats.language,
-                total_stats.editor,
-                total_stats.branch,
-                total_stats.entity,
-                total_stats.machine,
-                total_stats.platform
-        order by total_stats.day
-        )
-
-        select
-          *,
-          cast(
-            1.0 * total_seconds / nullif(sum(total_seconds) over (), 0) as numeric
-          ) as pct,
-          cast(
-            1.0 * total_seconds / nullif(sum(total_seconds) over (partition by day), 0) as numeric
-          ) as daily_pct
-        from stats
-      |]
+    query = $(embedFile "src/Haka/Db/sql/get_user_activity.sql")
     params :: E.Params (Text, UTCTime, UTCTime, Int64)
     params =
       contrazip4
@@ -447,61 +321,7 @@ getTimeline :: Statement (Text, UTCTime, UTCTime, Int64) [TimelineRow]
 getTimeline = Statement query params result True
   where
     query :: Bs.ByteString
-    query =
-      [r|
-SELECT DISTINCT
-    language,
-    project,
-    min(time_sent) OVER (PARTITION BY group_id) AS start_date,
-    max(time_sent) OVER (PARTITION BY group_id) AS end_date
-FROM (
-    SELECT
-        *,
-        sum(stats_2.new_grp) OVER (ORDER BY stats_2.time_sent) AS group_id
-    FROM (
-        SELECT
-            language,
-            project,
-            time_sent,
-            previous_diff,
-            (
-                CASE WHEN
-                  lag(language) OVER (ORDER BY time_sent) IS NULL AND
-                  lag(project) OVER (ORDER BY time_sent) IS NULL THEN 0
-                WHEN
-                  language       = lag(language) OVER (ORDER BY time_sent) AND
-                  project        = lag(project) OVER (ORDER BY time_sent) AND
-                  previous_diff  <= ($4 * 60) THEN 0
-                ELSE
-                    1
-                END
-            ) new_grp
-        FROM (
-        SELECT
-            coalesce(language, 'Other') AS language,
-            coalesce(project, 'Other') AS project,
-            time_sent,
-            extract(epoch from coalesce((time_sent - (lag(time_sent) OVER (ORDER BY time_sent))), '0 minutes')) AS previous_diff
-        FROM
-            heartbeats
-        WHERE
-            sender = $1
-            AND time_sent > $2
-            AND time_sent < $3
-        GROUP BY
-            project,
-            language,
-            time_sent
-        ORDER BY
-            time_sent) stats) stats_2) stats_3
-GROUP BY
-    group_id,
-    language,
-    project,
-    time_sent
-ORDER BY
-    start_date
-      |]
+    query = $(embedFile "src/Haka/Db/sql/get_timeline.sql")
     params :: E.Params (Text, UTCTime, UTCTime, Int64)
     params =
       contrazip4
