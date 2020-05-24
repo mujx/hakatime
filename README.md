@@ -46,7 +46,7 @@ services:
       HAKA_PORT: 8080
       HAKA_ENABLE_REGISTRATION: "true" # Toggle after you've created your account.
     ports:
-      - "127.0.0.1:8080":8080
+      - "127.0.0.1:8080:8080"
   haka_db:
     container_name: haka_db
     image: postgres:11-alpine
@@ -55,7 +55,7 @@ services:
       POSTGRES_PASSWORD: test
       POSTGRES_USER: test
     volumes:
-      - ./docker/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql
+      - ./docker/:/docker-entrypoint-initdb.d/
       - deploy_db_data:/var/lib/postgresql/data
 
 volumes:
