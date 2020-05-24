@@ -982,9 +982,9 @@ anymatch@^2.0.0:
     normalize-path "^2.1.1"
 
 apexcharts@^3.19.0:
-  version "3.19.0"
-  resolved "https://registry.yarnpkg.com/apexcharts/-/apexcharts-3.19.0.tgz#388265227e230c342390c47979898d5a0d4d7640"
-  integrity sha512-fzupCGVDvOoU6kEzguLAfgRgrlHynHM5fnkkyCL85tYf9U8bw1hCijs4A+kWXurC/SNytJrArBc21kA/2wuHYg==
+  version "3.19.2"
+  resolved "https://registry.yarnpkg.com/apexcharts/-/apexcharts-3.19.2.tgz#d46113bf253e79f15e67d00721e5bb12af73914e"
+  integrity sha512-hMFLRE2Lyx4WrN9pYfQLvBDcn+HOodZrqRwc+kucxM+hcUmI2NHY4z+GI14+VcSFmD4aKiMbS3z3Q2jiBxUrcg==
   dependencies:
     svg.draggable.js "^2.2.2"
     svg.easing.js "^2.0.0"
