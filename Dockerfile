@@ -35,13 +35,15 @@ COPY app/           ./app
 COPY README.md      ./
 COPY hakatime.cabal ./
 COPY src/           ./src
+COPY sql/           ./sql
 COPY test/          ./test
 COPY tools/         ./tools
 
-RUN cabal build -j1 -O2 exe:hakatime   && \
-    cabal install -j1 -O2 exe:hakatime && \
-    mkdir -p /app/bin                  && \
-    cp ~/.cabal/bin/hakatime /app/bin/hakatime
+RUN cabal build -j2 --dependencies-only all
+
+RUN cabal build -j2 exe:hakatime && \
+    mkdir -p /app/bin                && \
+    cp /build/dist-newstyle/build/x86_64-linux/ghc-*/hakatime-*/x/hakatime/build/hakatime/hakatime /app/bin/hakatime
 
 FROM alpine:edge
 

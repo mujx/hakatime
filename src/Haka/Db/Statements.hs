@@ -227,7 +227,7 @@ insertHeartBeat = Statement query params result True
     result :: D.Result Int64
     result = D.singleRow (D.column (D.nonNullable D.int8))
     query :: Bs.ByteString
-    query = $(embedFile "src/Haka/Db/sql/insert_heartbeat.sql")
+    query = $(embedFile "sql/insert_heartbeat.sql")
     params :: E.Params HeartbeatPayload
     params =
       (editor >$< E.param (E.nullable E.text))
@@ -265,7 +265,7 @@ getProjectStats :: Statement (Text, Text, UTCTime, UTCTime, Int64) [ProjectStatR
 getProjectStats = Statement query params result True
   where
     query :: Bs.ByteString
-    query = $(embedFile "src/Haka/Db/sql/get_projects_stats.sql")
+    query = $(embedFile "sql/get_projects_stats.sql")
     params :: E.Params (Text, Text, UTCTime, UTCTime, Int64)
     params =
       contrazip5
@@ -292,7 +292,7 @@ getUserActivity :: Statement (Text, UTCTime, UTCTime, Int64) [StatRow]
 getUserActivity = Statement query params result True
   where
     query :: Bs.ByteString
-    query = $(embedFile "src/Haka/Db/sql/get_user_activity.sql")
+    query = $(embedFile "sql/get_user_activity.sql")
     params :: E.Params (Text, UTCTime, UTCTime, Int64)
     params =
       contrazip4
@@ -321,7 +321,7 @@ getTimeline :: Statement (Text, UTCTime, UTCTime, Int64) [TimelineRow]
 getTimeline = Statement query params result True
   where
     query :: Bs.ByteString
-    query = $(embedFile "src/Haka/Db/sql/get_timeline.sql")
+    query = $(embedFile "sql/get_timeline.sql")
     params :: E.Params (Text, UTCTime, UTCTime, Int64)
     params =
       contrazip4
