@@ -25,7 +25,7 @@ WITH stats AS (
         ORDER BY
             time_sent) total_stats
     WHERE
-        extract(minute FROM previous_diff) <= $5
+        extract(epoch FROM previous_diff) <= ($5 * 60)
     GROUP BY
         total_stats.day,
         total_stats.dayofweek,
