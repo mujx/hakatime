@@ -26,6 +26,7 @@ import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
+import Safe (headMay)
 import Servant
 import Web.Cookie
 
@@ -115,12 +116,12 @@ mkLoginResponse tknData now =
       tokenExpiry = addUTCTime (30 * 60) now
     }
 
--- getRefreshToken :: ByteString -> Text
--- TODO: Make it total
-getRefreshToken :: Bs.ByteString -> Text
+getRefreshToken :: Bs.ByteString -> Maybe Text
 getRefreshToken cookies =
-  decodeUtf8 $ head $ map snd $
-    filter (\(k, _) -> k == "refresh_token") (parseCookies cookies)
+  let value = headMay $ map snd $ filter (\(k, _) -> k == "refresh_token") (parseCookies cookies)
+   in case value of
+        Just v -> Just $ decodeUtf8 v
+        Nothing -> Nothing
 
 loginHandler :: AuthRequest -> AppM LoginResponse'
 loginHandler creds = do

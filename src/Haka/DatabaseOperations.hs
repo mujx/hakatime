@@ -52,6 +52,7 @@ data DatabaseException
   = SessionException HqPool.UsageError
   | UserNotFound
   | InvalidCredentials
+  | MissingRefreshTokenCookie
   | ExpiredToken
   | UsernameExists Text
   | RegistrationFailed Text
@@ -67,6 +68,7 @@ toJSONError (SessionException e) = Err.genericError (pack $ show e)
 toJSONError (OperationException e) = Err.genericError e
 toJSONError (UsernameExists _) = Err.usernameExists
 toJSONError (RegistrationFailed _) = Err.registerError
+toJSONError MissingRefreshTokenCookie = Err.missingRefreshTokenCookie
 
 -- Effect model
 data Database m a where
@@ -104,7 +106,6 @@ mkTokenData user = do
         tknRefreshToken = refreshToken
       }
 
--- TODO: Restrict each user to each own data.
 interpretDatabaseIO ::
   ( Member (Embed IO) r,
     Member (Error DatabaseException) r
@@ -279,10 +280,11 @@ refreshAuthTokens ::
   ( Member Database r,
     Member (Error DatabaseException) r
   ) =>
-  Text ->
+  Maybe Text ->
   HqPool.Pool ->
   Sem r TokenData
-refreshAuthTokens refreshToken pool = do
+refreshAuthTokens Nothing _ = throw MissingRefreshTokenCookie
+refreshAuthTokens (Just refreshToken) pool = do
   res <- getUserByRefreshToken pool refreshToken
   case res of
     Nothing -> throw ExpiredToken
@@ -294,10 +296,11 @@ clearTokens ::
     Member (Error DatabaseException) r
   ) =>
   ApiToken ->
-  Text ->
+  Maybe Text ->
   HqPool.Pool ->
   Sem r ()
-clearTokens token refreshToken pool = do
+clearTokens _ Nothing _ = throw MissingRefreshTokenCookie
+clearTokens token (Just refreshToken) pool = do
   res <- deleteTokens pool token refreshToken
   -- TODO: Improve this.
   case res of

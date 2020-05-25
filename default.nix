@@ -3,10 +3,10 @@
 , cryptonite, fakedata, file-embed, hasql, hasql-pool
 , hasql-transaction, http-client, http-client-tls, katip, mr-env
 , mtl, optparse-applicative, polysemy, polysemy-plugin
-, postgresql-binary, pretty-simple, raw-strings-qq, safe-exceptions
-, servant, servant-client, servant-server, stdenv, text, time
-, transformers, unliftio-core, uuid, wai, wai-cors, wai-extra
-, wai-logger, warp
+, postgresql-binary, pretty-simple, raw-strings-qq, safe
+, safe-exceptions, servant, servant-client, servant-server, stdenv
+, text, time, transformers, unliftio-core, uuid, wai, wai-cors
+, wai-extra, wai-logger, warp
 }:
 mkDerivation {
   pname = "hakatime";
@@ -18,7 +18,7 @@ mkDerivation {
     aeson base base64-bytestring bits bytestring case-insensitive
     containers contravariant-extras cookie cryptonite file-embed hasql
     hasql-pool hasql-transaction katip mr-env mtl optparse-applicative
-    polysemy polysemy-plugin postgresql-binary raw-strings-qq
+    polysemy polysemy-plugin postgresql-binary raw-strings-qq safe
     safe-exceptions servant servant-server text time transformers
     unliftio-core uuid
   ];

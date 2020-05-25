@@ -94,6 +94,7 @@ library libhaka
                      , postgresql-binary    == 0.12.*
                      , raw-strings-qq
                      , safe-exceptions
+                     , safe
                      , servant              == 0.17.*
                      , servant-server       == 0.17.*
                      , text
