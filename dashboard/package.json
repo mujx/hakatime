@@ -10,12 +10,14 @@
     "eslint": "^7.0.0",
     "parcel": "^1.12.4",
     "parcel-bundler": "^1.12.4",
-    "parcel-plugin-custom-dist-structure": "^1.1.9"
+    "parcel-plugin-custom-dist-structure": "^1.1.9",
+    "prettier": "1.19.1"
   },
   "scripts": {
     "dev": "parcel index.html --no-source-maps",
     "prod": "parcel build index.html --detailed-report --no-source-maps",
-    "lint": "eslint --ext js src"
+    "lint": "eslint --ext js src",
+    "fmt": "prettier --write src/**/*.js"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.13.0",
@@ -37,11 +39,7 @@
       ".css": "css",
       ".map": "css",
       ".js": "js",
-      "images": [
-        ".jpg",
-        ".svg",
-        ".png"
-      ]
+      "images": [".jpg", ".svg", ".png"]
     }
   }
 }

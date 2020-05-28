@@ -28,6 +28,9 @@ jobs:
       - run:
           name: "Lint"
           command: cd dashboard && npm run lint
+      - run:
+          name: "Format"
+          command: cd dashboard && npm run fmt
 
 workflows:
   version: 2

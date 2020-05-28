@@ -65,7 +65,7 @@ const Model = {
         responseType: "json",
         params: {
           start: utils.removeHours(new Date(), 12).toISOString(),
-          end: (new Date()).toISOString()
+          end: new Date().toISOString()
         },
         headers: headers
       })
