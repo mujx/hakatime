@@ -3,6 +3,7 @@
 --
 import Control.Monad (replicateM)
 import Data.Text (Text, pack)
+import Data.Time (addUTCTime)
 import Data.Time.Clock.POSIX
 import Faker
 import Faker.Combinators
@@ -15,10 +16,39 @@ import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Options.Applicative
 import Servant.API
 import Servant.Client
-import Text.Pretty.Simple (pPrint)
+import System.Random (randomRIO)
 
-fakePerson :: Fake HeartbeatPayload
-fakePerson = do
+fakeLang :: Fake Text
+fakeLang =
+  elements
+    [ "C++",
+      "Docker",
+      "Go",
+      "Haskell",
+      "JSON",
+      "JavaScript",
+      "Nix",
+      "Python",
+      "Ruby",
+      "TypeScript",
+      "YAML"
+    ]
+
+fakeProject :: Fake Text
+fakeProject =
+  elements
+    [ "hakatime",
+      "my-app",
+      "bootstrap",
+      "jQuery",
+      "Kubernetes",
+      "nixpkgs",
+      "zulip",
+      "Pandas"
+    ]
+
+fakeFilename :: Fake Text
+fakeFilename = do
   filename <-
     elements
       [ "src/app",
@@ -46,77 +76,43 @@ fakePerson = do
         "config",
         "resources"
       ]
-  ext <-
-    elements
-      [ ".cpp",
-        ".go",
-        ".hs",
-        ".json",
-        ".js",
-        ".ts",
-        ".py",
-        ".rb",
-        ".yaml",
-        ".rs"
-      ]
-  language' <-
-    Just
-      <$> elements
-        [ "C++",
-          "Docker",
-          "Go",
-          "Haskell",
-          "JSON",
-          "JavaScript",
-          "Nix",
-          "Python",
-          "Ruby",
-          "TypeScript",
-          "YAML"
-        ]
-  project' <-
-    Just
-      <$> elements
-        [ "hakatime",
-          "my-app",
-          "bootstrap",
-          "jQuery",
-          "Kubernetes",
-          "nixpkgs",
-          "zulip",
-          "Pandas"
-        ]
-  user_agent' <- Faker.Internet.userAgentFirefox
-  time_sent' <-
-    fromIntegral . floor . utcTimeToPOSIXSeconds
-      <$> Faker.DateTime.utcBetweenYears 2020 2020
+  ext <- elements [".cpp", ".go", ".hs", ".json", ".js", ".ts", ".py", ".rb", ".yaml", ".rs"]
+  pure $ pack $ filename ++ ext
 
-  pure $
-    HeartbeatPayload
-      { sender = Just "demo",
-        category = Nothing,
-        editor = Just "vim",
-        plugin = Nothing,
-        platform = Nothing,
-        user_agent = user_agent',
-        branch = Just "master",
-        language = language',
-        project = project',
-        ty = FileType,
-        machine = Just "laptop",
-        time_sent = time_sent',
-        entity = pack $ filename ++ ext,
-        cursorpos = Nothing,
-        dependencies = Nothing,
-        lineno = Nothing,
-        file_lines = Nothing,
-        is_write = Nothing
-      }
-
-run :: IO HeartbeatPayload
-run = do
+generateTimeline :: IO [HeartbeatPayload]
+generateTimeline = do
   let settings = setNonDeterministic defaultFakerSettings
-  generateWithSettings settings fakePerson
+  steps <- randomRIO (10, 80)
+  start <- generateWithSettings settings (Faker.DateTime.utcBetweenYears 2020 2020)
+  lang <- generateWithSettings settings fakeLang
+  proj <- generateWithSettings settings fakeProject
+  filename <- generateWithSettings settings fakeFilename
+  user_agent' <- generateWithSettings settings Faker.Internet.userAgentFirefox
+  mapM
+    ( \i ->
+        pure $
+          HeartbeatPayload
+            { sender = Just "demo",
+              category = Nothing,
+              editor = Just "vim",
+              plugin = Nothing,
+              platform = Nothing,
+              user_agent = user_agent',
+              branch = Just "master",
+              language = Just lang,
+              project = Just proj,
+              ty = FileType,
+              machine = Just "laptop",
+              time_sent = fromIntegral $ floor $ utcTimeToPOSIXSeconds i,
+              entity = filename,
+              cursorpos = Nothing,
+              dependencies = Nothing,
+              lineno = Nothing,
+              file_lines = Nothing,
+              is_write = Nothing
+            }
+    )
+    (take steps $ iterate (addUTCTime 120) start)
 
 main :: IO ()
 main = runClient
@@ -181,15 +177,15 @@ opts =
 runClient :: IO ()
 runClient = do
   parsedConf <- execParser opts
-  beats <- replicateM (totalHeartbeats parsedConf) run
+  timelineBeats <- concat <$> replicateM (totalHeartbeats parsedConf) generateTimeline
   mgr <- mkMgr parsedConf
-  res <-
+  r <-
     runClientM
-      (sendHeartbeats (Just "laptop") (Just $ ApiToken (pack $ token parsedConf)) beats)
+      (sendHeartbeats (Just "laptop") (Just $ ApiToken (pack $ token parsedConf)) timelineBeats)
       (mkEnv mgr parsedConf)
-  case res of
-    Left err -> print err
-    Right r -> pPrint r
+  case r of
+    Left e -> print e
+    _ -> putStrLn "Heartbeats sent succefully!"
   where
     mkMgr conf =
       if port conf == 443
