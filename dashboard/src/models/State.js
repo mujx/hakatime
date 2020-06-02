@@ -23,7 +23,8 @@ const Model = {
       background: true,
       params: {
         start: d1.toISOString(),
-        end: d2.toISOString()
+        end: d2.toISOString(),
+        timeLimit: TimeRange.timeLimit
       },
       headers: {
         authorization: auth.getHeaderToken()
@@ -56,7 +57,8 @@ const Model = {
         responseType: "json",
         params: {
           start: start.toISOString(),
-          end: today.toISOString()
+          end: today.toISOString(),
+          timeLimit: TimeRange.timeLimit
         },
         headers: headers
       }),
@@ -65,7 +67,8 @@ const Model = {
         responseType: "json",
         params: {
           start: utils.removeHours(new Date(), 12).toISOString(),
-          end: new Date().toISOString()
+          end: new Date().toISOString(),
+          timeLimit: TimeRange.timeLimit
         },
         headers: headers
       })

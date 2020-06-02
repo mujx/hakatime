@@ -3,6 +3,7 @@
 module Haka.Utils
   ( toStrError,
     passwordInput,
+    defaultLimit,
     randomToken,
     toBase64,
     EditorInfo (..),
@@ -15,6 +16,7 @@ where
 
 import Control.Exception (bracket_)
 import Data.ByteString.Base64 (encode)
+import Data.Int (Int64)
 import Data.Text (Text, pack, splitOn)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Data.Time.Clock (UTCTime)
@@ -24,6 +26,9 @@ import Data.UUID.V4 (nextRandom)
 import Hasql.Pool (UsageError (..))
 import qualified Hasql.Session as S
 import System.IO (hFlush, hGetEcho, hSetEcho, stdin, stdout)
+
+defaultLimit :: Int64
+defaultLimit = 15
 
 fmtDate :: UTCTime -> String
 fmtDate = formatTime defaultTimeLocale "%FT%T%QZ"

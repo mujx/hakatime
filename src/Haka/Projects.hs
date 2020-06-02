@@ -24,6 +24,7 @@ import Haka.AesonHelpers (noPrefixOptions)
 import qualified Haka.DatabaseOperations as DbOps
 import Haka.Errors (missingAuthError)
 import Haka.Types (ApiToken (..), AppM, ProjectStatRow (..), pool)
+import Haka.Utils (defaultLimit)
 import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
@@ -86,6 +87,7 @@ type ProjectStats =
     :> Capture "project" Text
     :> QueryParam "start" UTCTime
     :> QueryParam "end" UTCTime
+    :> QueryParam "timeLimit" Int64
     :> Header "Authorization" ApiToken
     :> Get '[JSON] ProjectStatistics
 
@@ -93,10 +95,11 @@ server ::
   Text ->
   Maybe UTCTime ->
   Maybe UTCTime ->
+  Maybe Int64 ->
   Maybe ApiToken ->
   AppM ProjectStatistics
-server _ _ _ Nothing = throw missingAuthError
-server project t0Param t1Param (Just token) = do
+server _ _ _ _ Nothing = throw missingAuthError
+server project t0Param t1Param timeLimit (Just token) = do
   t1def <- liftIO getCurrentTime
   p <- asks pool
   let (t0, t1) = case (t0Param, t1Param) of
@@ -109,7 +112,7 @@ server project t0Param t1Param (Just token) = do
       . embedToMonadIO
       . runError
       $ DbOps.interpretDatabaseIO
-      $ DbOps.genProjectStatistics p token project (t0, t1)
+      $ DbOps.genProjectStatistics p token project (fromMaybe defaultLimit timeLimit) (t0, t1)
   case res of
     Left e -> do
       $(logTM) ErrorS (logStr $ show e)

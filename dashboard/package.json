@@ -7,7 +7,7 @@
   "license": "UNLICENSE",
   "private": true,
   "devDependencies": {
-    "eslint": "^7.0.0",
+    "eslint": "^7.1.0",
     "parcel": "^1.12.4",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-custom-dist-structure": "^1.1.9",
@@ -22,7 +22,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.13.0",
     "apexcharts": "^3.19.0",
-    "bootstrap": "^4.4.1",
+    "bootstrap": "^4.5.0",
     "jquery": "^3.5.1",
     "litepicker": "^1.3.4",
     "lodash": "^4.17.15",

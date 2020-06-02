@@ -43,7 +43,8 @@ const Model = {
       },
       params: {
         start: start.toISOString(),
-        end: today.toISOString()
+        end: today.toISOString(),
+        timeLimit: TimeRange.timeLimit
       }
     })
       .then(function(obj) {

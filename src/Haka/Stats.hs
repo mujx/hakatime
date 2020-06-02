@@ -23,6 +23,7 @@ import Haka.AesonHelpers (noPrefixOptions)
 import qualified Haka.DatabaseOperations as DbOps
 import Haka.Errors (missingAuthError)
 import Haka.Types (ApiToken (..), AppM, StatRow (..), TimelineRow (..), pool)
+import Haka.Utils (defaultLimit)
 import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
@@ -107,6 +108,7 @@ type TimelineStats =
     :> "timeline"
     :> QueryParam "start" UTCTime
     :> QueryParam "end" UTCTime
+    :> QueryParam "timeLimit" Int64
     :> Header "Authorization" ApiToken
     :> Get '[JSON] TimelinePayload
 
@@ -118,6 +120,7 @@ type TotalStats =
     :> "stats"
     :> QueryParam "start" UTCTime
     :> QueryParam "end" UTCTime
+    :> QueryParam "timeLimit" Int64
     :> Header "Authorization" ApiToken
     :> Get '[JSON] StatsPayload
 
@@ -151,9 +154,14 @@ defaultTimeRange t0 t1 = do
           utctDayTime = 0
         }
 
-timelineStatsHandler :: Maybe UTCTime -> Maybe UTCTime -> Maybe ApiToken -> AppM TimelinePayload
-timelineStatsHandler _ _ Nothing = throw missingAuthError
-timelineStatsHandler t0Param t1Param (Just token) = do
+timelineStatsHandler ::
+  Maybe UTCTime ->
+  Maybe UTCTime ->
+  Maybe Int64 ->
+  Maybe ApiToken ->
+  AppM TimelinePayload
+timelineStatsHandler _ _ _ Nothing = throw missingAuthError
+timelineStatsHandler t0Param t1Param timeLimit (Just token) = do
   p <- asks pool
   (t0, t1) <- liftIO $ defaultTimeRange t0Param t1Param
   res <-
@@ -161,7 +169,7 @@ timelineStatsHandler t0Param t1Param (Just token) = do
       . embedToMonadIO
       . runError
       $ DbOps.interpretDatabaseIO
-      $ DbOps.getTimeline p token (t0, t1)
+      $ DbOps.getTimeline p token (fromMaybe defaultLimit timeLimit) (t0, t1)
   case res of
     Left e -> do
       $(logTM) ErrorS (logStr $ show e)
@@ -196,10 +204,11 @@ timelineStatsHandler t0Param t1Param (Just token) = do
 statsHandler ::
   Maybe UTCTime ->
   Maybe UTCTime ->
+  Maybe Int64 ->
   Maybe ApiToken ->
   AppM StatsPayload
-statsHandler _ _ Nothing = throw missingAuthError
-statsHandler t0Param t1Param (Just token) = do
+statsHandler _ _ _ Nothing = throw missingAuthError
+statsHandler t0Param t1Param timeLimit (Just token) = do
   p <- asks pool
   (t0, t1) <- liftIO $ defaultTimeRange t0Param t1Param
   res <-
@@ -207,7 +216,7 @@ statsHandler t0Param t1Param (Just token) = do
       . embedToMonadIO
       . runError
       $ DbOps.interpretDatabaseIO
-      $ DbOps.generateStatistics p token (t0, t1)
+      $ DbOps.generateStatistics p token (fromMaybe defaultLimit timeLimit) (t0, t1)
   case res of
     Left e -> do
       $(logTM) ErrorS (logStr $ show e)

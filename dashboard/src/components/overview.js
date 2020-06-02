@@ -443,39 +443,63 @@ export default {
     }
 
     const ranges = [7, 15, 30, 45, 90];
-    const toolbar = m(
-      "div.d-sm-flex.align-items-center.justify-content-between.mb-4",
-      [
-        m("h1.h3.mb-0.text-gray-800", "Overview"),
-        m("div.dropdown", [
-          m(
-            "button.btn.btn-primary.dropdown-toggle.shadow-sm[data-toggle='dropdown'][aria-haspopup='true'][aria-expanded='false']",
-            {
-              type: "button",
-              id: "dropdownMenuButton"
-            },
-            [
-              m("i.fas.fa-calendar.fa-md.text-white-50.mr-2"),
-              m("small", `Time range (${TimeRange.numOfDays} days)`)
-            ]
-          ),
-          m(
-            'div.dropdown-menu[aria-labelledby="dropdownMenuButton"]',
-            ranges.map(r => {
-              return m(
-                "a.btn.dropdown-item",
-                {
-                  onclick: () => {
-                    if (TimeRange.setDays(r)) State.fetchItems();
-                  }
-                },
-                `Last ${r} days`
-              );
-            })
-          )
-        ])
-      ]
-    );
+    const toolbar = m("div.d-flex.mb-4", [
+      m("h1.h3.mr-auto.mb-0.text-gray-800", "Overview"),
+      m("div.dropdown.mr-2", [
+        m(
+          "button.btn.btn-primary.dropdown-toggle.shadow-sm[data-toggle='dropdown'][aria-haspopup='true'][aria-expanded='false']",
+          {
+            type: "button",
+            id: "dropdownMenuButton"
+          },
+          [
+            m("i.fas.fa-clock.fa-md.text-white-50.mr-2"),
+            m("small", `Time limit (${TimeRange.timeLimit} mins)`)
+          ]
+        ),
+        m(
+          'div.dropdown-menu[aria-labelledby="dropdownMenuButton"]',
+          [5, 10, 15, 20, 30].map(r => {
+            return m(
+              "a.btn.dropdown-item",
+              {
+                onclick: () => {
+                  if (TimeRange.setTimeLimit(r)) State.fetchItems();
+                }
+              },
+              `${r} mins`
+            );
+          })
+        )
+      ]),
+      m("div.dropdown", [
+        m(
+          "button.btn.btn-primary.dropdown-toggle.shadow-sm[data-toggle='dropdown'][aria-haspopup='true'][aria-expanded='false']",
+          {
+            type: "button",
+            id: "dropdownMenuButton"
+          },
+          [
+            m("i.fas.fa-calendar.fa-md.text-white-50.mr-2"),
+            m("small", `Time range (${TimeRange.numOfDays} days)`)
+          ]
+        ),
+        m(
+          'div.dropdown-menu[aria-labelledby="dropdownMenuButton"]',
+          ranges.map(r => {
+            return m(
+              "a.btn.dropdown-item",
+              {
+                onclick: () => {
+                  if (TimeRange.setDays(r)) State.fetchItems();
+                }
+              },
+              `Last ${r} days`
+            );
+          })
+        )
+      ])
+    ]);
 
     return [
       toolbar,

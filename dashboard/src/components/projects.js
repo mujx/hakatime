@@ -429,6 +429,33 @@ export default {
           })
         )
       ]),
+      m("div.dropdown.mr-2", [
+        m(
+          "button.btn.btn-primary.dropdown-toggle.shadow-sm[data-toggle='dropdown'][aria-haspopup='true'][aria-expanded='false']",
+          {
+            type: "button",
+            id: "dropdownMenuButton"
+          },
+          [
+            m("i.fas.fa-clock.fa-md.text-white-50.mr-2"),
+            m("small", `Time limit (${TimeRange.timeLimit} mins)`)
+          ]
+        ),
+        m(
+          'div.dropdown-menu[aria-labelledby="dropdownMenuButton"]',
+          [5, 10, 15, 20, 30].map(r => {
+            return m(
+              "a.btn.dropdown-item",
+              {
+                onclick: () => {
+                  if (TimeRange.setTimeLimit(r)) LocalState.fetchProjectStats();
+                }
+              },
+              `${r} mins`
+            );
+          })
+        )
+      ]),
       m("div.dropdown", [
         m(
           "button.btn.btn-primary.dropdown-toggle.shadow-sm[data-toggle='dropdown'][aria-haspopup='true'][aria-expanded='false']",

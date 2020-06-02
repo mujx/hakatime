@@ -41,9 +41,6 @@ import Polysemy.Error
 import Polysemy.Reader
 import Servant (ServerError (..))
 
-heartbeatCutoffLimit :: Int64
-heartbeatCutoffLimit = 15
-
 data OperationError = UsageError | Text
   deriving (Show)
 
@@ -207,13 +204,14 @@ generateStatistics ::
   ) =>
   HqPool.Pool ->
   ApiToken ->
+  Int64 ->
   (UTCTime, UTCTime) ->
   Sem r [StatRow]
-generateStatistics pool token tmRange = do
+generateStatistics pool token timeLimit tmRange = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UserNotFound
-    Just username -> getTotalStats pool username tmRange heartbeatCutoffLimit
+    Just username -> getTotalStats pool username tmRange timeLimit
 
 getTimeline ::
   forall r.
@@ -222,13 +220,14 @@ getTimeline ::
   ) =>
   HqPool.Pool ->
   ApiToken ->
+  Int64 ->
   (UTCTime, UTCTime) ->
   Sem r [TimelineRow]
-getTimeline pool token tmRange = do
+getTimeline pool token timeLimit tmRange = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UserNotFound
-    Just username -> getTimelineStats pool username tmRange heartbeatCutoffLimit
+    Just username -> getTimelineStats pool username tmRange timeLimit
 
 genProjectStatistics ::
   forall r.
@@ -238,13 +237,14 @@ genProjectStatistics ::
   HqPool.Pool ->
   ApiToken ->
   Text ->
+  Int64 ->
   (UTCTime, UTCTime) ->
   Sem r [ProjectStatRow]
-genProjectStatistics pool token proj tmRange = do
+genProjectStatistics pool token proj timeLimit tmRange = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UserNotFound
-    Just username -> getProjectStats pool username proj tmRange heartbeatCutoffLimit
+    Just username -> getProjectStats pool username proj tmRange timeLimit
 
 createNewApiToken ::
   forall r.
