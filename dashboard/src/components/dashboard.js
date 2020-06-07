@@ -176,6 +176,21 @@ export default {
               },
               [m("i.fas.fa-fw.fa-sign-out-alt"), m("span", "Logout")]
             )
+          ),
+          m("hr.sidebar-divider.d-none.d-md-block"),
+          m(
+            "div.text-center.d-none.d-md-inline",
+            m("button.rounded-circle.border-0", {
+              id: "sidebarToggle",
+              onclick: function() {
+                $("body").toggleClass("sidebar-toggled");
+                $(".sidebar").toggleClass("toggled");
+
+                if ($(".sidebar").hasClass("toggled")) {
+                  $(".sidebar .collapse").collapse("hide");
+                }
+              }
+            })
           )
         ]),
 
