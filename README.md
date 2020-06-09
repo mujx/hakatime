@@ -19,6 +19,21 @@ There is demo instance with fake data [here](https://hakatime-demo.mtx-dev.xyz).
 Use `demo` as username and `demodemo` as password to login. You can create an API token
 and try sending your data.
 
+## Client setup
+
+After you've generated a new API token from Hakatime's UI, update your `~/.wakatime.cfg` file like below:
+
+```ini
+[settings]
+api_key=<generated_token>
+
+# e.g api_url=https://hakatime-demo.mtx-dev.xyz/api/v1/users/current/heartbeats.bulk for the demo instance.
+api_url=<hakatime_instance_url>/api/v1/users/current/heartbeats.bulk
+```
+
+The file's location might be different depending on your system and editor. Please consult the [client docs](https://wakatime.com/plugins)
+for further information.
+
 ## Deployment
 
 You can use the following docker-compose setup for testing locally or an actual
@@ -59,8 +74,13 @@ volumes:
   deploy_db_data: {}
 ```
 
-Run `docker-compose -f ./docker-compose-deploy.yml up` and navigate to
-[http://localhost:8080](http://localhost:8080) to access the UI.
+To start all the services run:
+
+```bash
+$ docker-compose -f ./docker-compose-deploy.yml up
+```
+
+and navigate to [http://localhost:8080](http://localhost:8080) to access the UI.
 
 ## Building
 
@@ -135,9 +155,6 @@ hakatime run
 1. Point your browser to [http://localhost:8080](http://localhost:8080)
 2. Create a new user.
 3. Create an API token and set up your Wakatime client with it.
-
-_NOTE_: In order to start sending data from your editor, you'll have to change the
-original URL on the Wakatime client with the one of your Hakatime instance.
 
 ## CLI options
 
