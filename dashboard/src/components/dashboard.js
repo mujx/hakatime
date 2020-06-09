@@ -115,6 +115,11 @@ const Modal = {
   }
 };
 
+function clickLogout(e) {
+  e.redraw = false;
+  auth.logout();
+}
+
 export default {
   onint: () => {
     document.title = "Hakatime | Dashboard";
@@ -169,10 +174,7 @@ export default {
               "a.nav-link",
               {
                 href: "#!/",
-                onclick: e => {
-                  e.redraw = false;
-                  auth.logout();
-                }
+                onclick: clickLogout
               },
               [m("i.fas.fa-fw.fa-sign-out-alt"), m("span", "Logout")]
             )
@@ -205,14 +207,44 @@ export default {
                   { id: "navbarSupportedContent" },
                   [
                     m("ul.navbar-nav.ml-auto.mt-2.mt-lg-0", [
-                      m("li.nav-item", [
+                      m("li.nav-item.align-self-center", [
                         m(
-                          "button.btn.btn-sm.btn-success.shadow-sm[data-toggle='tooltip'][data-placement='left'][title='Create a new API token']",
+                          "button.btn.btn-sm.btn-circle.btn-info[data-toggle='tooltip'][data-placement='left'][title='Create a new API token']",
                           {
                             onclick: createApiTokenDialog,
                             role: "button"
                           },
-                          m("i.fas.fa-plus.fa-fw.text-white-100")
+                          m("i.fas.fa-key.fa-fw.text-white-100")
+                        )
+                      ]),
+                      m("div.topbar-divider.d-none.d-sm-block"),
+                      m("li.nav-item.dropdown.no-arrow", [
+                        m(
+                          "a.nav-link.dropdown-toggle[data-toggle=dropdown][aria-haspopup=true][aria-expanded=false]",
+                          { id: "userDropdown", role: "button" },
+                          m(
+                            "span.mr-3.d-none.d-lg-inline.text-gray-600.small",
+                            auth.getUsername()
+                          ),
+                          m(
+                            "div.btn.btn-secondary.btn-circle.btn-md",
+                            auth
+                              .getUsername()
+                              .charAt(0)
+                              .toUpperCase()
+                          )
+                        ),
+                        m(
+                          "div.dropdown-menu.dropdown-menu-right.shadow.animated--grow-in[aria-labelledby=userDropdown]",
+                          [
+                            m(
+                              "a.dropdown-item",
+                              {
+                                onclick: clickLogout
+                              },
+                              "Logout"
+                            )
+                          ]
                         )
                       ])
                     ])

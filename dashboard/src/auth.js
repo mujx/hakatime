@@ -4,12 +4,25 @@ import OverviewState from "./models/State.js";
 import ProjectState from "./models/ProjectState.js";
 import TimeRange from "./models/TimeRange.js";
 
-let inMemToken = null;
+let inMemToken = {
+  token: "",
+  tokenExpiry: "",
+  username: ""
+};
 
-export function login({ token, tokenExpiry }) {
+function clearToken() {
   inMemToken = {
-    token,
-    tokenExpiry
+    token: "",
+    tokenExpiry: "",
+    username: ""
+  };
+}
+
+export function login(r) {
+  inMemToken = {
+    token: r.token,
+    tokenExpiry: r.tokenExpiry,
+    username: r.tokenUsername
   };
 }
 
@@ -18,11 +31,8 @@ export function tryToRefresh(errMsg, callback) {
     method: "POST",
     url: "/auth/refresh_token"
   })
-    .then(function({ token, tokenExpiry }) {
-      login({
-        token,
-        tokenExpiry
-      });
+    .then(function(r) {
+      login(r);
 
       if (callback) callback();
     })
@@ -39,7 +49,7 @@ export function tryToRefresh(errMsg, callback) {
 }
 
 export function clearTokens() {
-  inMemToken = null;
+  clearToken();
 
   // to support logging out from all windows.
   window.localStorage.setItem("logout", Date.now());
@@ -72,7 +82,7 @@ function clearData() {
 }
 
 export function checkInterval() {
-  if (inMemToken) {
+  if (isLoggedIn()) {
     const now = new Date();
     const then = new Date(inMemToken.tokenExpiry - 5 * 60000);
 
@@ -82,8 +92,8 @@ export function checkInterval() {
   }
 }
 
-export function getToken() {
-  return inMemToken;
+export function getUsername() {
+  return inMemToken.username;
 }
 
 export function getHeaderToken() {
@@ -91,7 +101,7 @@ export function getHeaderToken() {
 }
 
 export function isLoggedIn() {
-  return inMemToken != null;
+  return inMemToken.token !== "" && inMemToken.tokenExpiry !== "";
 }
 
 export function retryCall(err, callback) {

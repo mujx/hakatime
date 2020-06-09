@@ -42,7 +42,8 @@ instance ToJSON AuthRequest
 
 data LoginResponse = LoginResponse
   { token :: Text,
-    tokenExpiry :: UTCTime
+    tokenExpiry :: UTCTime,
+    tokenUsername :: Text
   }
   deriving (Show, Generic)
 
@@ -113,7 +114,8 @@ mkLoginResponse :: TokenData -> UTCTime -> LoginResponse
 mkLoginResponse tknData now =
   LoginResponse
     { token = tknToken tknData,
-      tokenExpiry = addUTCTime (30 * 60) now
+      tokenExpiry = addUTCTime (30 * 60) now,
+      tokenUsername = tknOwner tknData
     }
 
 getRefreshToken :: Bs.ByteString -> Maybe Text
