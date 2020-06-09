@@ -21,7 +21,7 @@ export default {
     }
   },
   view: vnode => {
-    if (vnode.attrs.msg) {
+    if (vnode.attrs.msg && ErrMsg.error === "") {
       ErrMsg.error = vnode.attrs.msg;
     }
 
