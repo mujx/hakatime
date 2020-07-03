@@ -35,7 +35,8 @@ const Charts = {
           height: 350,
           type: "rangeBar",
           fontFamily: "Nunito",
-          toolbar: config.toolbar
+          toolbar: config.toolbar,
+          animations: { enabled: false }
         },
         plotOptions: {
           bar: {
@@ -71,6 +72,49 @@ const Charts = {
 
       return options;
     }
+  },
+  column: {
+    chart: null,
+    mkOpts: function(series) {
+      return {
+        chart: {
+          type: "bar",
+          fontFamily: "Nunito",
+          height: "250",
+          toolbar: config.toolbar,
+          animations: {
+            enabled: false
+          }
+        },
+        noData: config.noData,
+        series: [
+          {
+            name: "Coding time",
+            data: series
+          }
+        ],
+        xaxis: {
+          type: "datetime"
+        },
+        yaxis: {
+          title: {
+            text: "Hours"
+          }
+        },
+        dataLabels: {
+          enabled: false
+        },
+        plotOptions: {
+          bar: {
+            columnWidth: "40%",
+            endingShape: "rounded"
+          }
+        }
+      };
+    }
+  },
+  pieChart: {
+    chart: null
   }
 };
 
@@ -135,9 +179,17 @@ function mkTopStatRow() {
 }
 
 function pieChart() {
+  let _chart;
   return {
     view: () => {
       return m("div.chart");
+    },
+
+    onremove: () => {
+      if (_chart) {
+        _chart.destroy();
+        _chart = null;
+      }
     },
 
     oncreate: vnode => {
@@ -160,23 +212,31 @@ function pieChart() {
         noData: config.noData,
         chart: {
           fontFamily: "Nunito",
-          type: "donut"
+          type: "donut",
+          animations: { enabled: false }
         },
         labels: names
       };
 
-      const chart = new ApexCharts(vnode.dom, options);
-      chart.render();
+      _chart = new ApexCharts(vnode.dom, options);
+      _chart.render();
     }
   };
 }
 
 function columnChart() {
+  let _chart = null;
+
   return {
     view: () => {
       return m("div.chart");
     },
-
+    onremove: () => {
+      if (_chart) {
+        _chart.destroy();
+        _chart = null;
+      }
+    },
     oncreate: vnode => {
       if (State.obj == null) return;
 
@@ -185,41 +245,8 @@ function columnChart() {
         return { x: data[0], y: data[1] };
       });
 
-      const options = {
-        chart: {
-          type: "bar",
-          fontFamily: "Nunito",
-          height: "250",
-          toolbar: config.toolbar
-        },
-        noData: config.noData,
-        series: [
-          {
-            name: "Coding time",
-            data: series
-          }
-        ],
-        xaxis: {
-          type: "datetime"
-        },
-        yaxis: {
-          title: {
-            text: "Hours"
-          }
-        },
-        dataLabels: {
-          enabled: false
-        },
-        plotOptions: {
-          bar: {
-            columnWidth: "40%",
-            endingShape: "rounded"
-          }
-        }
-      };
-
-      const myChart = new ApexCharts(vnode.dom, options);
-      myChart.render();
+      _chart = new ApexCharts(vnode.dom, Charts.column.mkOpts(series));
+      _chart.render();
     }
   };
 }
@@ -259,8 +286,9 @@ function mkTimeline() {
           Charts.timelineChart.chart.updateSeries(mkTimelineSeries(res));
       });
     },
-    onbeforedestroy: () => {
+    onremove: () => {
       if (picker) picker.destroy();
+      if (Charts.timelineChart.chart) Charts.timelineChart.chart.destroy();
     },
     oncreate: () => {
       picker = new Litepicker({
@@ -287,6 +315,13 @@ function timelineChart() {
   return {
     view: () => {
       return m("div.chart");
+    },
+
+    onremove: () => {
+      if (Charts.timelineChart.chart) {
+        Charts.timelineChart.chart.destroy();
+        Charts.timelineChart.chart = null;
+      }
     },
 
     oncreate: vnode => {
@@ -362,9 +397,17 @@ function heatmapDataForLangs(state, num = 7) {
 }
 
 function heatmapChart(mkDataFn) {
+  let _chart = null;
+
   return {
     view: () => {
       return m("div.chart");
+    },
+    onremove: () => {
+      if (_chart) {
+        _chart.destroy();
+        _chart = null;
+      }
     },
     oncreate: vnode => {
       if (State.obj == null) return;
@@ -388,15 +431,16 @@ function heatmapChart(mkDataFn) {
           type: "heatmap",
           fontFamily: "Nunito",
           height: 250,
-          toolbar: config.toolbar
+          toolbar: config.toolbar,
+          animations: { enabled: false }
         },
         xaxis: {
           type: "datetime"
         }
       };
 
-      const chart = new ApexCharts(vnode.dom, options);
-      chart.render();
+      _chart = new ApexCharts(vnode.dom, options);
+      _chart.render();
     }
   };
 }

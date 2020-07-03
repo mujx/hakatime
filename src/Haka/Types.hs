@@ -7,6 +7,7 @@
 module Haka.Types
   ( HeartbeatApiResponse (..),
     HearbeatData (..),
+    StoredApiToken (..),
     RegistrationStatus (..),
     ServerSettings (..),
     BulkHeartbeatData (..),
@@ -74,6 +75,20 @@ data ServerSettings = ServerSettings
     -- | Whether the registration is enabled.
     hakaEnableRegistration :: RegistrationStatus
   }
+
+data StoredApiToken = StoredApiToken
+  { -- Raw value of the token.
+    tknValue :: Text,
+    -- When the token was used.
+    lastUsage :: UTCTime,
+    -- Some characters to identify a token.
+    tknId :: Text
+  }
+  deriving (Show, Generic)
+
+instance FromJSON StoredApiToken
+
+instance ToJSON StoredApiToken
 
 -- Data needed to generate a new auth token pair in the database.
 data TokenData = TokenData

@@ -38,10 +38,20 @@ function mkHourDistribution() {
 }
 
 function hourDistribution() {
+  let _chart = null;
+
   return {
     view: () => {
       return m("div.chart");
     },
+
+    onremove: () => {
+      if (_chart) {
+        _chart.destroy();
+        _chart = null;
+      }
+    },
+
     oncreate: vnode => {
       if (LocalState.obj == null || LocalState.obj.totalSeconds === 0) return;
 
@@ -71,7 +81,8 @@ function hourDistribution() {
         chart: {
           type: "bar",
           height: "300",
-          toolbar: config.toolbar
+          toolbar: config.toolbar,
+          animations: { enabled: false }
         },
         plotOptions: {
           bar: {
@@ -89,17 +100,27 @@ function hourDistribution() {
         }
       };
 
-      const chart = new ApexCharts(vnode.dom, options);
-      chart.render();
+      _chart = new ApexCharts(vnode.dom, options);
+      _chart.render();
     }
   };
 }
 
 function dayRadarChart() {
+  let _chart = null;
+
   return {
     view: () => {
       return m("div.chart");
     },
+
+    onremove: () => {
+      if (_chart) {
+        _chart.destroy();
+        _chart = null;
+      }
+    },
+
     oncreate: vnode => {
       if (LocalState.obj == null) return;
 
@@ -129,7 +150,8 @@ function dayRadarChart() {
         chart: {
           type: "radar",
           height: "300",
-          toolbar: config.toolbar
+          toolbar: config.toolbar,
+          animations: { enabled: false }
         },
         plotOptions: {
           radar: {
@@ -158,16 +180,24 @@ function dayRadarChart() {
         }
       };
 
-      const chart = new ApexCharts(vnode.dom, options);
-      chart.render();
+      _chart = new ApexCharts(vnode.dom, options);
+      _chart.render();
     }
   };
 }
 
 function pieChart() {
+  let _chart = null;
   return {
     view: () => {
       return m("div.chart");
+    },
+
+    onremove: () => {
+      if (_chart) {
+        _chart.destroy();
+        _chart = null;
+      }
     },
 
     oncreate: vnode => {
@@ -188,13 +218,14 @@ function pieChart() {
         noData: config.noData,
         chart: {
           type: "donut",
-          height: "260"
+          height: "260",
+          animations: { enabled: false }
         },
         labels: names
       };
 
-      const chart = new ApexCharts(vnode.dom, options);
-      chart.render();
+      _chart = new ApexCharts(vnode.dom, options);
+      _chart.render();
     }
   };
 }
@@ -236,9 +267,17 @@ function mkTopStatRow() {
 }
 
 function fileChart() {
+  let _chart = null;
   return {
     view: () => {
       return m("div.chart");
+    },
+
+    onremove: () => {
+      if (_chart) {
+        _chart.destroy();
+        _chart = null;
+      }
     },
 
     oncreate: vnode => {
@@ -271,7 +310,8 @@ function fileChart() {
         chart: {
           type: "bar",
           height: 360,
-          toolbar: config.toolbar
+          toolbar: config.toolbar,
+          animations: { enabled: false }
         },
         plotOptions: {
           bar: {
@@ -326,16 +366,25 @@ function fileChart() {
         }
       };
 
-      const myChart = new ApexCharts(vnode.dom, options);
-      myChart.render();
+      _chart = new ApexCharts(vnode.dom, options);
+      _chart.render();
     }
   };
 }
 
 function barChart() {
+  let _chart = null;
+
   return {
     view: () => {
       return m("div.chart");
+    },
+
+    onremove: () => {
+      if (_chart) {
+        _chart.destroy();
+        _chart = null;
+      }
     },
 
     oncreate: vnode => {
@@ -351,7 +400,8 @@ function barChart() {
         chart: {
           type: "bar",
           height: "250",
-          toolbar: config.toolbar
+          toolbar: config.toolbar,
+          animations: { enabled: false }
         },
         series: [
           {
@@ -386,8 +436,8 @@ function barChart() {
         }
       };
 
-      const myChart = new ApexCharts(vnode.dom, options);
-      myChart.render();
+      _chart = new ApexCharts(vnode.dom, options);
+      _chart.render();
     }
   };
 }
@@ -400,6 +450,14 @@ export default {
   },
   view: () => {
     document.title = "Hakatime | Projects";
+
+    if (LocalState.obj == null) {
+      return m("div.spinner", [
+        m("div.bounce1"),
+        m("div.bounce2"),
+        m("div.bounce3")
+      ]);
+    }
 
     const ranges = [7, 15, 30, 45, 90];
     const toolbar = m("div.d-sm-flex.mb-4", [
@@ -484,14 +542,6 @@ export default {
         )
       ])
     ]);
-
-    if (LocalState.obj == null) {
-      return m("div.spinner", [
-        m("div.bounce1"),
-        m("div.bounce2"),
-        m("div.bounce3")
-      ]);
-    }
 
     return [
       toolbar,

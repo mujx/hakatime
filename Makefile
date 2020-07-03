@@ -9,7 +9,7 @@ clean:
 	@git clean -xdf
 
 shell:
-	nix-shell -p ghc cabal-install zlib postgresql
+	@nix-shell
 
 ui:
 	cd ./dashboard && yarn install && yarn run prod && yarn run lint

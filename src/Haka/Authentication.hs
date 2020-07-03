@@ -21,7 +21,7 @@ import Data.Time.Clock (UTCTime (..), getCurrentTime)
 import GHC.Generics
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
-import Haka.Types (ApiToken, AppCtx (..), AppM, RegistrationStatus (..), TokenData (..))
+import Haka.Types (ApiToken, AppCtx (..), AppM, RegistrationStatus (..), StoredApiToken, TokenData (..))
 import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
@@ -93,12 +93,34 @@ type CreateAPIToken =
     :> Header "Authorization" ApiToken
     :> Post '[JSON] TokenResponse
 
+type ListAPITokens =
+  "auth"
+    :> "tokens"
+    :> Header "Authorization" ApiToken
+    :> Get '[JSON] [StoredApiToken]
+
 type API =
   Login
     :<|> RefreshToken
     :<|> CreateAPIToken
+    :<|> ListAPITokens
     :<|> Logout
     :<|> Register
+
+getStoredApiTokensHandler :: Maybe ApiToken -> AppM [StoredApiToken]
+getStoredApiTokensHandler Nothing = throw Err.missingAuthError
+getStoredApiTokensHandler (Just tkn) = do
+  dbPool <- asks pool
+  res <-
+    runM
+      . embedToMonadIO
+      . runError
+      $ DbOps.interpretDatabaseIO $ DbOps.getApiTokens dbPool tkn
+  case res of
+    Left e -> do
+      $(logTM) ErrorS (logStr $ show e)
+      throw (DbOps.toJSONError e)
+    Right v -> pure v
 
 mkRefreshTokenCookie :: TokenData -> SetCookie
 mkRefreshTokenCookie tknData =
@@ -133,17 +155,17 @@ loginHandler creds = do
     runM
       . embedToMonadIO
       . runError
-      $ DbOps.interpretDatabaseIO
-      $ DbOps.createAuthTokens (username creds) (password creds) dbPool
+      $ DbOps.interpretDatabaseIO $
+        DbOps.createAuthTokens (username creds) (password creds) dbPool
   case res of
     Left e -> do
       $(logTM) ErrorS (logStr $ show e)
       throw (DbOps.toJSONError e)
     Right tknData -> do
       let cookie = mkRefreshTokenCookie tknData
-      return
-        $ addHeader cookie
-        $ mkLoginResponse tknData now
+      return $
+        addHeader cookie $
+          mkLoginResponse tknData now
 
 registerHandler :: RegistrationStatus -> AuthRequest -> AppM LoginResponse'
 registerHandler DisabledRegistration _ = throw Err.disabledRegistration
@@ -154,17 +176,17 @@ registerHandler EnabledRegistration creds = do
     runM
       . embedToMonadIO
       . runError
-      $ DbOps.interpretDatabaseIO
-      $ DbOps.registerUser dbPool (username creds) (password creds)
+      $ DbOps.interpretDatabaseIO $
+        DbOps.registerUser dbPool (username creds) (password creds)
   case res of
     Left e -> do
       $(logTM) ErrorS (logStr $ show e)
       throw (DbOps.toJSONError e)
     Right tknData -> do
       let cookie = mkRefreshTokenCookie tknData
-      return
-        $ addHeader cookie
-        $ mkLoginResponse tknData now
+      return $
+        addHeader cookie $
+          mkLoginResponse tknData now
 
 refreshTokenHandler :: Maybe Text -> AppM LoginResponse'
 refreshTokenHandler Nothing = throw Err.missingRefreshTokenCookie
@@ -175,17 +197,17 @@ refreshTokenHandler (Just cookies) = do
     runM
       . embedToMonadIO
       . runError
-      $ DbOps.interpretDatabaseIO
-      $ DbOps.refreshAuthTokens (getRefreshToken (encodeUtf8 cookies)) dbPool
+      $ DbOps.interpretDatabaseIO $
+        DbOps.refreshAuthTokens (getRefreshToken (encodeUtf8 cookies)) dbPool
   case res of
     Left e -> do
       $(logTM) ErrorS (logStr $ show e)
       throw (DbOps.toJSONError e)
     Right tknData -> do
       let cookie = mkRefreshTokenCookie tknData
-      return
-        $ addHeader cookie
-        $ mkLoginResponse tknData now
+      return $
+        addHeader cookie $
+          mkLoginResponse tknData now
 
 logoutHandler :: Maybe ApiToken -> Maybe Text -> AppM NoContent
 logoutHandler Nothing _ = throw Err.missingAuthError
@@ -197,8 +219,8 @@ logoutHandler (Just tkn) (Just cookies) =
       runM
         . embedToMonadIO
         . runError
-        $ DbOps.interpretDatabaseIO
-        $ DbOps.clearTokens tkn (getRefreshToken (encodeUtf8 cookies)) dbPool
+        $ DbOps.interpretDatabaseIO $
+          DbOps.clearTokens tkn (getRefreshToken (encodeUtf8 cookies)) dbPool
     case res of
       Left e -> do
         $(logTM) ErrorS (logStr $ show e)
@@ -214,8 +236,8 @@ createAPITokenHandler (Just tkn) =
       runM
         . embedToMonadIO
         . runError
-        $ DbOps.interpretDatabaseIO
-        $ DbOps.createNewApiToken dbPool tkn
+        $ DbOps.interpretDatabaseIO $
+          DbOps.createNewApiToken dbPool tkn
     case res of
       Left e -> do
         $(logTM) ErrorS (logStr $ show e)
@@ -226,5 +248,6 @@ server settings =
   loginHandler
     :<|> refreshTokenHandler
     :<|> createAPITokenHandler
+    :<|> getStoredApiTokensHandler
     :<|> logoutHandler
     :<|> registerHandler settings

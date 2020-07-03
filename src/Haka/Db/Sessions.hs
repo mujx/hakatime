@@ -2,6 +2,7 @@ module Haka.Db.Sessions
   ( getUser,
     getUserByRefreshToken,
     createAPIToken,
+    listApiTokens,
     saveHeartbeats,
     getTotalStats,
     getTimeline,
@@ -28,6 +29,7 @@ import Haka.Types
     ProjectStatRow (..),
     RegisteredUser (..),
     StatRow (..),
+    StoredApiToken,
     TimelineRow (..),
     TokenData (..),
   )
@@ -35,6 +37,9 @@ import qualified Haka.Utils as Utils
 import Hasql.Session (Session, statement)
 import qualified Hasql.Transaction as Transaction
 import Hasql.Transaction.Sessions (IsolationLevel (..), Mode (..), transaction)
+
+listApiTokens :: Text -> Session [StoredApiToken]
+listApiTokens usr = statement usr Statements.listApiTokens
 
 getUser :: ApiToken -> Session (Maybe Text)
 getUser (ApiToken token) = do
@@ -98,9 +103,9 @@ validateUser validate name pass = do
     Just savedUser ->
       case validate savedUser name pass of
         Left e -> do
-          liftIO
-            $ putStrLn
-            $ "failed to validate user password (" <> show name <> "): " <> show e
+          liftIO $
+            putStrLn $
+              "failed to validate user password (" <> show name <> "): " <> show e
           pure False
         Right v -> pure v
 

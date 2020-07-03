@@ -4,6 +4,7 @@
 module Haka.Db.Statements
   ( insertHeartBeat,
     createAPIToken,
+    listApiTokens,
     insertProject,
     getTimeline,
     getUserByToken,
@@ -34,6 +35,7 @@ import Haka.Types
     ProjectStatRow (..),
     RegisteredUser (..),
     StatRow (..),
+    StoredApiToken (..),
     TimelineRow (..),
     TokenData (..),
   )
@@ -41,6 +43,29 @@ import qualified Hasql.Decoders as D
 import qualified Hasql.Encoders as E
 import Hasql.Statement
 import Text.RawString.QQ (r)
+
+listApiTokens :: Statement Text [StoredApiToken]
+listApiTokens = Statement query params result True
+  where
+    query :: Bs.ByteString
+    query =
+      [r| 
+      select decode(token, 'base64'), coalesce(last_usage, now()), left(token, 6) 
+      from auth_tokens where owner = $1 and token_expiry is null
+      |]
+
+    params :: E.Params Text
+    params = E.param (E.nonNullable E.text)
+
+    storedApiToken :: D.Row StoredApiToken
+    storedApiToken =
+      StoredApiToken
+        <$> (D.column . D.nonNullable) D.text
+        <*> (D.column . D.nonNullable) D.timestamptz
+        <*> (D.column . D.nonNullable) D.text
+
+    result :: D.Result [StoredApiToken]
+    result = D.rowList storedApiToken
 
 createAPIToken :: Statement (Text, Text) ()
 createAPIToken = Statement query params D.noResult True

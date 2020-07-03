@@ -5,6 +5,7 @@
 module Haka.DatabaseOperations
   ( processHeartbeatRequest,
     interpretDatabaseIO,
+    getApiTokens,
     genProjectStatistics,
     getTimeline,
     registerUser,
@@ -30,6 +31,7 @@ import Haka.Types
     ProjectStatRow (..),
     RequestConfig (..),
     StatRow (..),
+    StoredApiToken,
     TimelineRow (..),
     TokenData (..),
   )
@@ -91,6 +93,8 @@ data Database m a where
   DeleteTokens :: HqPool.Pool -> ApiToken -> Text -> Database m Int64
   -- | Create a new API token that can be used on the client (no expiry date).
   CreateAPIToken :: HqPool.Pool -> Text -> Database m Text
+  -- | Return a list of active API tokens.
+  ListApiTokens :: HqPool.Pool -> Text -> Database m [StoredApiToken]
 
 mkTokenData :: Text -> IO TokenData
 mkTokenData user = do
@@ -158,6 +162,9 @@ interpretDatabaseIO =
             Right _ -> do
               res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens tknData)
               either (throw . SessionException) (\_ -> pure tknData) res
+    ListApiTokens pool user -> do
+      res <- liftIO $ HqPool.use pool (Sessions.listApiTokens user)
+      either (throw . SessionException) pure res
 
 makeSem ''Database
 
@@ -308,3 +315,17 @@ clearTokens token (Just refreshToken) pool = do
     1 -> throw InvalidCredentials
     2 -> pure ()
     _ -> throw (OperationException "failed to delete all the tokens while logout")
+
+getApiTokens ::
+  forall r.
+  ( Member Database r,
+    Member (Error DatabaseException) r
+  ) =>
+  HqPool.Pool ->
+  ApiToken ->
+  Sem r [StoredApiToken]
+getApiTokens pool token = do
+  retrievedUser <- getUser pool token
+  case retrievedUser of
+    Nothing -> throw UserNotFound
+    Just username -> listApiTokens pool username
