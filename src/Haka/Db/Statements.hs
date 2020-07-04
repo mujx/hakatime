@@ -70,7 +70,7 @@ listApiTokens = Statement query params result True
         auth_tokens
       where
         owner = $1 and
-        token_expiry is nul
+        token_expiry is null
       |]
 
     params :: E.Params Text
