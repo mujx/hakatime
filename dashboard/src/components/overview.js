@@ -183,7 +183,7 @@ function pieChart() {
       return m("div.chart");
     },
 
-    onremove: () => {
+    onbeforeremove: () => {
       if (_chart) {
         _chart.destroy();
         _chart = null;
@@ -229,7 +229,7 @@ function columnChart() {
     view: () => {
       return m("div.chart");
     },
-    onremove: () => {
+    onbeforeremove: () => {
       if (_chart) {
         _chart.destroy();
         _chart = null;
@@ -284,9 +284,13 @@ function mkTimeline() {
           Charts.timelineChart.chart.updateSeries(mkTimelineSeries(res));
       });
     },
-    onremove: () => {
-      if (picker) picker.destroy();
-      if (Charts.timelineChart.chart) Charts.timelineChart.chart.destroy();
+    onbeforeremove: () => {
+      if (picker) {
+        picker.destroy();
+      }
+      if (Charts.timelineChart.chart) {
+        Charts.timelineChart.chart.destroy();
+      }
     },
     oncreate: () => {
       picker = new Litepicker({
@@ -315,7 +319,7 @@ function timelineChart() {
       return m("div.chart");
     },
 
-    onremove: () => {
+    onbeforeremove: () => {
       if (Charts.timelineChart.chart) {
         Charts.timelineChart.chart.destroy();
         Charts.timelineChart.chart = null;
@@ -401,7 +405,7 @@ function heatmapChart(mkDataFn) {
     view: () => {
       return m("div.chart");
     },
-    onremove: () => {
+    onbeforeremove: () => {
       if (_chart) {
         _chart.destroy();
         _chart = null;

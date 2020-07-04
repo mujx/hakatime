@@ -45,7 +45,7 @@ function hourDistribution() {
       return m("div.chart");
     },
 
-    onremove: () => {
+    onbeforeremove: () => {
       if (_chart) {
         _chart.destroy();
         _chart = null;
@@ -114,7 +114,7 @@ function dayRadarChart() {
       return m("div.chart");
     },
 
-    onremove: () => {
+    onbeforeremove: () => {
       if (_chart) {
         _chart.destroy();
         _chart = null;
@@ -193,7 +193,7 @@ function pieChart() {
       return m("div.chart");
     },
 
-    onremove: () => {
+    onbeforeremove: () => {
       if (_chart) {
         _chart.destroy();
         _chart = null;
@@ -273,7 +273,7 @@ function fileChart() {
       return m("div.chart");
     },
 
-    onremove: () => {
+    onbeforeremove: () => {
       if (_chart) {
         _chart.destroy();
         _chart = null;
@@ -380,7 +380,7 @@ function barChart() {
       return m("div.chart");
     },
 
-    onremove: () => {
+    onbeforeremove: () => {
       if (_chart) {
         _chart.destroy();
         _chart = null;
