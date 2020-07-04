@@ -1,6 +1,20 @@
 import _ from "lodash";
 
 export default {
+  copyToCliboard: function(v) {
+    const elem = document.createElement("textarea");
+
+    elem.value = v;
+    elem.setAttribute("readonly", "");
+    elem.style.position = "absolute";
+    elem.style.left = "-99999px";
+
+    document.body.appendChild(elem);
+    elem.select();
+
+    document.execCommand("copy");
+    document.body.removeChild(elem);
+  },
   removeHours: function(d, num) {
     const d1 = new Date(d);
     d1.setHours(d.getHours() - num);
@@ -61,5 +75,10 @@ export default {
     const res = _.orderBy(obj.languages, ["totalSeconds"], ["desc"])[0];
     if (res) return res.name;
     else return "-";
+  },
+
+  formatDate: function(d) {
+    console.log(d);
+    return new Date(d).toISOString().slice(0, 10);
   }
 };

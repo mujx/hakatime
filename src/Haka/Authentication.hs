@@ -99,11 +99,19 @@ type ListAPITokens =
     :> Header "Authorization" ApiToken
     :> Get '[JSON] [StoredApiToken]
 
+type DeleteToken =
+  "auth"
+    :> "token"
+    :> Capture "id" Text
+    :> Header "Authorization" ApiToken
+    :> DeleteNoContent
+
 type API =
   Login
     :<|> RefreshToken
     :<|> CreateAPIToken
     :<|> ListAPITokens
+    :<|> DeleteToken
     :<|> Logout
     :<|> Register
 
@@ -244,10 +252,26 @@ createAPITokenHandler (Just tkn) =
         throw (DbOps.toJSONError e)
       Right t -> return $ TokenResponse {apiToken = t}
 
+deleteTokenHandler :: Text -> Maybe ApiToken -> AppM NoContent
+deleteTokenHandler _ Nothing = throw Err.missingAuthError
+deleteTokenHandler tokenId (Just tkn) = do
+  dbPool <- asks pool
+  res <-
+    runM
+      . embedToMonadIO
+      . runError
+      $ DbOps.interpretDatabaseIO $ DbOps.deleteApiToken dbPool tkn tokenId
+  case res of
+    Left e -> do
+      $(logTM) ErrorS (logStr $ show e)
+      throw (DbOps.toJSONError e)
+    Right _ -> return NoContent
+
 server settings =
   loginHandler
     :<|> refreshTokenHandler
     :<|> createAPITokenHandler
     :<|> getStoredApiTokensHandler
+    :<|> deleteTokenHandler
     :<|> logoutHandler
     :<|> registerHandler settings

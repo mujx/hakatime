@@ -77,12 +77,10 @@ data ServerSettings = ServerSettings
   }
 
 data StoredApiToken = StoredApiToken
-  { -- Raw value of the token.
-    tknValue :: Text,
+  { -- Some characters to identify a token.
+    tknId :: Text,
     -- When the token was used.
-    lastUsage :: UTCTime,
-    -- Some characters to identify a token.
-    tknId :: Text
+    lastUsage :: Maybe UTCTime
   }
   deriving (Show, Generic)
 

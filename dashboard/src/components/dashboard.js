@@ -2,6 +2,7 @@ import m from "mithril";
 import $ from "jquery";
 
 import * as auth from "../auth";
+import utils from "../utils";
 
 const MODAL_ID = "api-token-modal";
 const MODAL_TOKEN_LIST_ID = "api-token-list-modal";
@@ -10,19 +11,7 @@ const ApiToken = {
   value: null,
   copyToCliboard: function(e) {
     e.redraw = false;
-
-    const elem = document.createElement("textarea");
-
-    elem.value = ApiToken.value;
-    elem.setAttribute("readonly", "");
-    elem.style.position = "absolute";
-    elem.style.left = "-99999px";
-
-    document.body.appendChild(elem);
-    elem.select();
-
-    document.execCommand("copy");
-    document.body.removeChild(elem);
+    utils.copyToCliboard(ApiToken.value);
   },
   openModal: function() {
     let modal = document.getElementById(MODAL_ID);
@@ -41,9 +30,7 @@ const ApiToken = {
 };
 
 const ApiTokenList = {
-  tokens: [],
-  openModal: function(e) {
-    e.redraw = false;
+  renderModal: function(tokens = []) {
     let modal = document.getElementById(MODAL_TOKEN_LIST_ID);
 
     if (!modal) {
@@ -51,6 +38,11 @@ const ApiTokenList = {
       modal.id = MODAL_TOKEN_LIST_ID;
       document.body.appendChild(modal);
     }
+
+    m.render(modal, m(TokenListModal(tokens)));
+  },
+  openModal: function(e) {
+    e.redraw = false;
 
     m.request({
       method: "GET",
@@ -60,11 +52,9 @@ const ApiTokenList = {
         authorization: auth.getHeaderToken()
       }
     })
-      .then(function(r) {
-        ApiTokenList.tokens = r;
-        m.render(modal, m(TokenListModal));
-      })
+      .then(ApiTokenList.renderModal)
       .catch(function(e) {
+        // TODO: Notify the user about the error.
         if (e && e.response) {
           console.log(e.response);
           return;
@@ -75,108 +65,154 @@ const ApiTokenList = {
   },
   closeModal: function(e) {
     e.redraw = false;
-    ApiTokenList.tokens = [];
     m.render(document.getElementById(MODAL_TOKEN_LIST_ID), null);
   },
   deleteToken: function(t) {
-    console.log("deleteToken", t);
+    m.request({
+      method: "DELETE",
+      url: "/auth/token/" + t.tknId,
+      background: true,
+      headers: {
+        authorization: auth.getHeaderToken()
+      }
+    })
+      .then(function() {
+        return m.request({
+          method: "GET",
+          url: "/auth/tokens",
+          background: true,
+          headers: {
+            authorization: auth.getHeaderToken()
+          }
+        });
+      })
+      .then(function(tokens) {
+        $('[data-toggle="tooltip"]').tooltip("dispose");
+
+        let modal = document.getElementById(MODAL_TOKEN_LIST_ID);
+
+        if (!modal) {
+          modal = document.createElement("div");
+          modal.id = MODAL_TOKEN_LIST_ID;
+          document.body.appendChild(modal);
+        }
+        m.render(modal, m(TokenListModal(tokens)));
+      })
+      .catch(function(e) {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+
+        if (e && e.response) {
+          console.log(e.response);
+          return;
+        }
+
+        console.log(e);
+      });
   },
   copyTokenToClipbard: function(t) {
-    console.log("copyTokenToClipbard", t.tknValue);
+    $('[data-toggle="tooltip"]').tooltip("hide");
+    utils.copyToCliboard(atob(t.tknId));
   }
 };
 
-const TokenListModal = {
-  oncreate: () => {
-    $('[data-toggle="tooltip"]').tooltip();
-  },
-  view: () => {
-    return m(
-      "div.modal.fade.show",
-      {
-        tabindex: "-1",
-        role: "dialog",
-        style: "display:block; background-color:rgba(0, 0, 0, 0.3);"
-      },
-      m(
-        "div.modal-dialog.modal-lg.modal-dialog-centered[role=document]",
-        m("div.modal-content", [
-          m(
-            "div.modal-header",
-            m("h5.modal-title", "Active API tokens"),
+function TokenListModal(tokens = []) {
+  return {
+    oncreate: () => {
+      $('[data-toggle="tooltip"]').tooltip();
+    },
+    view: () => {
+      return m(
+        "div.modal.fade.show",
+        {
+          tabindex: "-1",
+          role: "dialog",
+          style: "display:block; background-color:rgba(0, 0, 0, 0.3);"
+        },
+        m(
+          "div.modal-dialog.modal-lg.modal-dialog-centered[role=document]",
+          m("div.modal-content", [
             m(
-              "button.close[aria-label=Close]",
+              "div.modal-header",
+              m("h5.modal-title", "Active API tokens"),
+              m(
+                "button.close[aria-label=Close]",
+                {
+                  style: "outline: 0;",
+                  onclick: ApiTokenList.closeModal
+                },
+                m("span[aria-hidden=true]", "×")
+              )
+            ),
+            m(
+              "div.modal-body",
               {
-                style: "outline: 0;",
-                onclick: ApiTokenList.closeModal
+                style: "height: 350px; overflow-y: auto;"
               },
-              m("span[aria-hidden=true]", "×")
-            )
-          ),
-          m(
-            "div.modal-body",
-            {
-              style: "height: 350px; overflow-y: auto;"
-            },
-            [
-              m("table.table.table-borderless", [
-                m(
-                  "thead",
-                  m("tr", [
-                    m("th", { scope: "col" }, "ID"),
-                    m("th", { scope: "col" }, "Last usage"),
-                    m("th", { scope: "col" }, "")
-                  ])
-                ),
-                m(
-                  "tbody",
-                  ApiTokenList.tokens.map(t => {
-                    return m("tr", [
-                      m("td", { scope: "row" }, t.tknId),
-                      m("td", t.lastUsage.toLocaleString()),
-                      m("td", [
+              [
+                m("table.table.table-borderless", [
+                  m(
+                    "thead",
+                    m("tr", [
+                      m("th", { scope: "col" }, "ID"),
+                      m("th", { scope: "col" }, "Last usage"),
+                      m("th", { scope: "col" }, "")
+                    ])
+                  ),
+                  m(
+                    "tbody",
+                    tokens.map(t => {
+                      return m("tr", [
+                        m("td", { scope: "row" }, t.tknId.substring(0, 6)),
                         m(
-                          "button.btn.btn-sm.btn-success.mr-2[data-toggle=tooltip][title='Copy to clipboard']",
-                          {
-                            type: "button",
-                            onclick: function(e) {
-                              e.redraw = false;
-                              ApiTokenList.copyTokenToClipbard(t);
-                            }
-                          },
-                          m("i.fas.fa-clipboard")
+                          "td",
+                          t.lastUsage
+                            ? utils.formatDate(t.lastUsage)
+                            : "Not used"
                         ),
-                        m(
-                          "button.btn.btn-sm.btn-danger[data-toggle=tooltip][title='Delete token']",
-                          {
-                            type: "button",
-                            tabindex: "0",
-                            onclick: function(e) {
-                              e.redraw = false;
-                              ApiTokenList.deleteToken(t);
-                            }
-                          },
-                          m("i.fas.fa-trash")
-                        )
-                      ])
-                    ]);
-                  })
-                )
-              ])
-            ]
-          ),
-          m("div.modal-footer", [
-            m(
-              "button.btn.btn-secondary[type=button]",
-              { onclick: ApiTokenList.closeModal },
-              "Close"
-            )
+                        m("td", [
+                          m(
+                            "button.btn.btn-sm.btn-success.mr-2[data-toggle=tooltip][title='Copy to clipboard']",
+                            {
+                              type: "button",
+                              onclick: function(e) {
+                                e.redraw = false;
+                                ApiTokenList.copyTokenToClipbard(t);
+                              }
+                            },
+                            m("i.fas.fa-clipboard")
+                          ),
+                          m(
+                            "button.btn.btn-sm.btn-danger[data-toggle=tooltip][title='Delete token']",
+                            {
+                              type: "button",
+                              tabindex: "0",
+                              onclick: function(e) {
+                                e.redraw = false;
+                                ApiTokenList.deleteToken(t);
+                              }
+                            },
+                            m("i.fas.fa-trash")
+                          )
+                        ])
+                      ]);
+                    })
+                  )
+                ])
+              ]
+            ),
+            m("div.modal-footer", [
+              m(
+                "button.btn.btn-secondary[type=button]",
+                { onclick: ApiTokenList.closeModal },
+                "Close"
+              )
+            ])
           ])
-        ])
-      )
-    );
-  }
-};
+        )
+      );
+    }
+  };
+}
 
 function createApiTokenDialog(event) {
   event.redraw = false;

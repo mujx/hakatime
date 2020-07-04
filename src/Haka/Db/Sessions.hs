@@ -1,6 +1,8 @@
 module Haka.Db.Sessions
   ( getUser,
     getUserByRefreshToken,
+    updateTokenUsage,
+    deleteToken,
     createAPIToken,
     listApiTokens,
     saveHeartbeats,
@@ -38,6 +40,9 @@ import Hasql.Session (Session, statement)
 import qualified Hasql.Transaction as Transaction
 import Hasql.Transaction.Sessions (IsolationLevel (..), Mode (..), transaction)
 
+updateTokenUsage :: Text -> Session ()
+updateTokenUsage tkn = statement tkn Statements.updateTokenUsage
+
 listApiTokens :: Text -> Session [StoredApiToken]
 listApiTokens usr = statement usr Statements.listApiTokens
 
@@ -50,6 +55,11 @@ getUserByRefreshToken :: Text -> Session (Maybe Text)
 getUserByRefreshToken token = do
   now <- liftIO getCurrentTime
   statement (token, now) Statements.getUserByRefreshToken
+
+deleteToken :: ApiToken -> Session ()
+deleteToken (ApiToken token) = do
+  _ <- statement token Statements.deleteAuthToken
+  pure ()
 
 deleteTokens :: ApiToken -> Text -> Session Int64
 deleteTokens (ApiToken token) refreshToken = do

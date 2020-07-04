@@ -126,6 +126,19 @@ type TotalStats =
 
 type API = TotalStats :<|> TimelineStats
 
+server ::
+  ( Maybe UTCTime ->
+    Maybe UTCTime ->
+    Maybe Int64 ->
+    Maybe ApiToken ->
+    AppM StatsPayload
+  )
+    :<|> ( Maybe UTCTime ->
+           Maybe UTCTime ->
+           Maybe Int64 ->
+           Maybe ApiToken ->
+           AppM TimelinePayload
+         )
 server = statsHandler :<|> timelineStatsHandler
 
 defaultTimeRange :: Maybe UTCTime -> Maybe UTCTime -> IO (UTCTime, UTCTime)
@@ -168,8 +181,8 @@ timelineStatsHandler t0Param t1Param timeLimit (Just token) = do
     runM
       . embedToMonadIO
       . runError
-      $ DbOps.interpretDatabaseIO
-      $ DbOps.getTimeline p token (fromMaybe defaultLimit timeLimit) (t0, t1)
+      $ DbOps.interpretDatabaseIO $
+        DbOps.getTimeline p token (fromMaybe defaultLimit timeLimit) (t0, t1)
   case res of
     Left e -> do
       $(logTM) ErrorS (logStr $ show e)
@@ -215,8 +228,8 @@ statsHandler t0Param t1Param timeLimit (Just token) = do
     runM
       . embedToMonadIO
       . runError
-      $ DbOps.interpretDatabaseIO
-      $ DbOps.generateStatistics p token (fromMaybe defaultLimit timeLimit) (t0, t1)
+      $ DbOps.interpretDatabaseIO $
+        DbOps.generateStatistics p token (fromMaybe defaultLimit timeLimit) (t0, t1)
   case res of
     Left e -> do
       $(logTM) ErrorS (logStr $ show e)

@@ -6,6 +6,7 @@ module Haka.DatabaseOperations
   ( processHeartbeatRequest,
     interpretDatabaseIO,
     getApiTokens,
+    deleteApiToken,
     genProjectStatistics,
     getTimeline,
     registerUser,
@@ -95,6 +96,10 @@ data Database m a where
   CreateAPIToken :: HqPool.Pool -> Text -> Database m Text
   -- | Return a list of active API tokens.
   ListApiTokens :: HqPool.Pool -> Text -> Database m [StoredApiToken]
+  -- | Delete an API token.
+  DeleteToken :: HqPool.Pool -> ApiToken -> Database m ()
+  -- | Update the last used timestamp for the token.
+  UpdateTokenUsage :: HqPool.Pool -> ApiToken -> Database m ()
 
 mkTokenData :: Text -> IO TokenData
 mkTokenData user = do
@@ -165,6 +170,12 @@ interpretDatabaseIO =
     ListApiTokens pool user -> do
       res <- liftIO $ HqPool.use pool (Sessions.listApiTokens user)
       either (throw . SessionException) pure res
+    DeleteToken pool tkn -> do
+      res <- liftIO $ HqPool.use pool (Sessions.deleteToken tkn)
+      either (throw . SessionException) pure res
+    UpdateTokenUsage pool (ApiToken tkn) -> do
+      res <- liftIO $ HqPool.use pool (Sessions.updateTokenUsage tkn)
+      either (throw . SessionException) pure res
 
 makeSem ''Database
 
@@ -184,7 +195,9 @@ processHeartbeatRequest heartbeats = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UserNotFound
-    Just userName -> saveHeartbeats pool (updateHeartbeats userName machineId)
+    Just userName -> do
+      updateTokenUsage pool token
+      saveHeartbeats pool (updateHeartbeats userName machineId)
   where
     editorInfo :: [Utils.EditorInfo]
     editorInfo = map (Utils.userAgentInfo . user_agent) heartbeats
@@ -329,3 +342,18 @@ getApiTokens pool token = do
   case retrievedUser of
     Nothing -> throw UserNotFound
     Just username -> listApiTokens pool username
+
+deleteApiToken ::
+  forall r.
+  ( Member Database r,
+    Member (Error DatabaseException) r
+  ) =>
+  HqPool.Pool ->
+  ApiToken ->
+  Text ->
+  Sem r ()
+deleteApiToken pool token tokenId = do
+  retrievedUser <- getUser pool token
+  case retrievedUser of
+    Nothing -> throw UserNotFound
+    Just _ -> deleteToken pool (ApiToken tokenId)
