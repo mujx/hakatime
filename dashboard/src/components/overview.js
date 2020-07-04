@@ -285,12 +285,7 @@ function mkTimeline() {
       });
     },
     onbeforeremove: () => {
-      if (picker) {
-        picker.destroy();
-      }
-      if (Charts.timelineChart.chart) {
-        Charts.timelineChart.chart.destroy();
-      }
+      if (picker) picker.destroy();
     },
     oncreate: () => {
       picker = new Litepicker({
