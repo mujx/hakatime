@@ -8,19 +8,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "startbootstrap-sb-admin-2/css/sb-admin-2.min.css";
 
 import { main } from "../src/index.js";
+import config from "../src/config.js";
 
 function loadEnv() {
-  /*
-    Here we could add variables such as
-
-    var baseUrl = process.env.BASE_URL;
-
-    Parcel will replace `process.env.BASE_URL`
-    with the string contents of the BASE_URL environment
-    variable at bundle/build time.
-    A .env file can also be used to override shell variables
-    for more information, see https://en.parceljs.org/env.html
-  */
+  if (process.env.ENABLE_ANIMATION) {
+    config.animations.enabled = process.env.ENABLE_ANIMATION === "true";
+  }
 
   main();
 }

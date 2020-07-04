@@ -82,7 +82,7 @@ function hourDistribution() {
           type: "bar",
           height: "300",
           toolbar: config.toolbar,
-          animations: { enabled: false }
+          animations: config.animations
         },
         plotOptions: {
           bar: {
@@ -151,7 +151,7 @@ function dayRadarChart() {
           type: "radar",
           height: "300",
           toolbar: config.toolbar,
-          animations: { enabled: false }
+          animations: config.animations
         },
         plotOptions: {
           radar: {
@@ -219,7 +219,7 @@ function pieChart() {
         chart: {
           type: "donut",
           height: "260",
-          animations: { enabled: false }
+          animations: config.animations
         },
         labels: names
       };
@@ -311,7 +311,7 @@ function fileChart() {
           type: "bar",
           height: 360,
           toolbar: config.toolbar,
-          animations: { enabled: false }
+          animations: config.animations
         },
         plotOptions: {
           bar: {
@@ -401,7 +401,7 @@ function barChart() {
           type: "bar",
           height: "250",
           toolbar: config.toolbar,
-          animations: { enabled: false }
+          animations: config.animations
         },
         series: [
           {

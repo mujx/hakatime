@@ -8,5 +8,8 @@ export default {
   },
   toolbar: {
     show: false
+  },
+  animations: {
+    enabled: true
   }
 };

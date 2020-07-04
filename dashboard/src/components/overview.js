@@ -36,7 +36,7 @@ const Charts = {
           type: "rangeBar",
           fontFamily: "Nunito",
           toolbar: config.toolbar,
-          animations: { enabled: false }
+          animations: config.animations
         },
         plotOptions: {
           bar: {
@@ -82,9 +82,7 @@ const Charts = {
           fontFamily: "Nunito",
           height: "250",
           toolbar: config.toolbar,
-          animations: {
-            enabled: false
-          }
+          animations: config.animations
         },
         noData: config.noData,
         series: [
@@ -213,7 +211,7 @@ function pieChart() {
         chart: {
           fontFamily: "Nunito",
           type: "donut",
-          animations: { enabled: false }
+          animations: config.animations
         },
         labels: names
       };
@@ -432,7 +430,7 @@ function heatmapChart(mkDataFn) {
           fontFamily: "Nunito",
           height: 250,
           toolbar: config.toolbar,
-          animations: { enabled: false }
+          animations: config.animations
         },
         xaxis: {
           type: "datetime"
