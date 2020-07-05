@@ -4,6 +4,7 @@
 module Haka.Db.Statements
   ( insertHeartBeat,
     createAPIToken,
+    isUserAvailable,
     updateTokenUsage,
     listApiTokens,
     insertProject,
@@ -49,7 +50,8 @@ updateTokenUsage :: Statement Text ()
 updateTokenUsage = Statement query params D.noResult True
   where
     query :: Bs.ByteString
-    query = [r|
+    query =
+      [r|
       UPDATE auth_tokens
       SET last_usage = now()::timestamp
       WHERE token = $1
@@ -212,6 +214,22 @@ insertUser = Statement query params D.noResult True
         )
         VALUES ( $1, $2, $3 );
       |]
+
+isUserAvailable :: Statement Text (Maybe RegisteredUser)
+isUserAvailable = Statement query (E.param (E.nonNullable E.text)) userDecoder True
+  where
+    query :: Bs.ByteString
+    query = [r| SELECT * FROM users WHERE username = $1 |]
+
+    userDecoder :: D.Result (Maybe RegisteredUser)
+    userDecoder = D.rowMaybe user
+      where
+        user :: D.Row RegisteredUser
+        user =
+          RegisteredUser
+            <$> (D.column . D.nonNullable) D.text
+            <*> (D.column . D.nonNullable) D.bytea
+            <*> (D.column . D.nonNullable) D.bytea
 
 getUserByToken :: Statement (Text, UTCTime) (Maybe Text)
 getUserByToken =

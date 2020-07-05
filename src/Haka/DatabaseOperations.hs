@@ -163,10 +163,13 @@ interpretDatabaseIO =
         Right hashUser' -> do
           u <- liftIO $ createUser pool hashUser'
           case u of
-            Left e -> throw $ UsernameExists (Utils.toStrError e)
-            Right _ -> do
-              res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens tknData)
-              either (throw . SessionException) (\_ -> pure tknData) res
+            Left e -> throw $ OperationException (Utils.toStrError e)
+            Right userCreated ->
+              if userCreated
+                then do
+                  res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens tknData)
+                  either (throw . SessionException) (\_ -> pure tknData) res
+                else throw $ UsernameExists "Username already exists"
     ListApiTokens pool user -> do
       res <- liftIO $ HqPool.use pool (Sessions.listApiTokens user)
       either (throw . SessionException) pure res

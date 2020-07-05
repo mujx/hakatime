@@ -98,8 +98,14 @@ getProjectStats :: Text -> Text -> (UTCTime, UTCTime) -> Int64 -> Session [Proje
 getProjectStats user proj (startDate, endDate) cutOffLimit =
   statement (user, proj, startDate, endDate, cutOffLimit) Statements.getProjectStats
 
-insertUser :: RegisteredUser -> Session ()
-insertUser aUser = statement aUser Statements.insertUser
+insertUser :: RegisteredUser -> Session Bool
+insertUser aUser = do
+  r <- statement (username aUser) Statements.isUserAvailable
+  case r of
+    Just _ -> pure False
+    Nothing -> do
+      statement aUser Statements.insertUser
+      pure True
 
 validateUser ::
   (RegisteredUser -> Text -> Text -> Either CErr.CryptoError Bool) ->

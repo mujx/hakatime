@@ -36,12 +36,13 @@ mkUser name pass = do
   case argonHash salt pass of
     CErr.CryptoFailed e -> pure $ Left e
     CErr.CryptoPassed v ->
-      pure $ Right $
-        RegisteredUser
-          { username = name,
-            hashedPassword = v,
-            saltUsed = salt
-          }
+      pure $
+        Right $
+          RegisteredUser
+            { username = name,
+              hashedPassword = v,
+              saltUsed = salt
+            }
 
 validatePassword :: RegisteredUser -> T.Text -> T.Text -> Either CErr.CryptoError Bool
 validatePassword savedUser name password =
@@ -52,7 +53,10 @@ validatePassword savedUser name password =
       CErr.CryptoPassed v -> Right (hashedPassword savedUser == v)
 
 -- / Insert the user's credentials.
-createUser :: HasqlPool.Pool -> RegisteredUser -> IO (Either HasqlPool.UsageError ())
+createUser ::
+  HasqlPool.Pool ->
+  RegisteredUser ->
+  IO (Either HasqlPool.UsageError Bool)
 createUser pool user = HasqlPool.use pool (Sessions.insertUser user)
 
 -- / Validate the user credentials and generate a token for it if successful.
