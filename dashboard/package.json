@@ -18,7 +18,7 @@
     "dev": "parcel index.html --no-source-maps",
     "prod": "parcel build index.html --detailed-report --no-source-maps",
     "lint": "eslint --ext js src",
-    "fmt": "prettier --write src/**/*.js"
+    "fmt": "prettier --write src/**/*.js src/*.js"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.13.0",
