@@ -26,7 +26,7 @@
     "bootstrap": "^4.5.0",
     "jquery": "^3.5.1",
     "litepicker": "^1.5.5",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "mithril": "^2.0.4",
     "popper.js": "^1.16.1",
     "startbootstrap-sb-admin-2": "^4.0.7",
