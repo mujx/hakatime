@@ -1,9 +1,9 @@
-cabal-version:       2.0
+cabal-version:       3.0
 name:                hakatime
 version:             0.1.0
 synopsis:            Wakatime API server implementation / Dashboard UI
-description:         Wakatime API server implementation / Dashboard UI
-license:             PublicDomain
+description:         Wakatime compatible server with an analytics dashboard.
+license:             Unlicense
 license-file:        UNLICENSE
 author:              Konstantinos Sideris
 maintainer:          siderisk@auth.gr
@@ -12,15 +12,14 @@ build-type:          Simple
 extra-doc-files:     README.md
 tested-with:         GHC == 8.8.3
 
-Flag dev
-  Description: Build without optimizations.
-  Default:     False
-  Manual:      True
+source-repository head
+  type:     git
+  location: https://github.com/mujx/hakatime
 
 executable haka-data
   hs-source-dirs:      tools
   main-is:             Main.hs
-  build-depends:       base
+  build-depends:       base                 >= 4.9 && < 4.14
                      , aeson                == 1.4.*
                      , base64-bytestring
                      , bytestring
@@ -41,11 +40,6 @@ executable haka-data
   default-extensions:  OverloadedStrings
                      , DataKinds
                      , TypeOperators
-
-  if flag(dev)
-    ghc-options:       -O0
-  else
-    ghc-options:       -O2
 
   ghc-options:         -Wall
                        -threaded
@@ -71,7 +65,9 @@ library libhaka
                      , Haka.Utils
                      , Paths_hakatime
 
-  build-depends:       base
+  autogen-modules:     Paths_hakatime
+
+  build-depends:       base                 >= 4.9 && < 4.14
                      , aeson                == 1.4.*
                      , base64-bytestring
                      , bits
@@ -103,11 +99,6 @@ library libhaka
                      -- https://github.com/Soostone/katip/issues/117
                      , unliftio-core        >= 0.1 && < 0.2
                      , uuid
-
-  if flag(dev)
-    ghc-options:       -O0
-  else
-    ghc-options:       -O2
 
   ghc-options:         -Wall
                        -Wcompat
@@ -144,7 +135,7 @@ executable hakatime
   hs-source-dirs:      app
   main-is:             Main.hs
 
-  build-depends:       base
+  build-depends:       base                 >= 4.9 && < 4.14
                      , bytestring
                      , hasql-pool           == 0.5.1
                      , katip                == 0.8.*
@@ -161,11 +152,6 @@ executable hakatime
                      , wai-extra
                      , wai-logger           == 2.3.*
                      , warp                 == 3.3.10
-
-  if flag(dev)
-    ghc-options:       -O0
-  else
-    ghc-options:       -O2
 
   ghc-options:         -Wall
                        -threaded

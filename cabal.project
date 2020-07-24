@@ -1,0 +1,4 @@
+packages: *.cabal
+
+package hakatime
+  optimization: 2
