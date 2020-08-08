@@ -73,7 +73,9 @@ data ServerSettings = ServerSettings
     -- | Where to look for dashboard's static files.
     hakaDashboardPath :: FilePath,
     -- | Whether the registration is enabled.
-    hakaEnableRegistration :: RegistrationStatus
+    hakaEnableRegistration :: RegistrationStatus,
+    -- | Maximum duration of the dashboard session without activity.
+    hakaSessionExpiry :: Int64
   }
 
 data StoredApiToken = StoredApiToken
@@ -106,7 +108,8 @@ data LogState = LogState
 
 data AppCtx = AppCtx
   { pool :: HqPool.Pool,
-    logState :: LogState
+    logState :: LogState,
+    srvSettings :: ServerSettings
   }
 
 newtype AppT m a = AppT

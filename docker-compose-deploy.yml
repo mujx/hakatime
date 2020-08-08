@@ -14,6 +14,8 @@ services:
       HAKA_CORS_URL: "http://localhost:8080"
       HAKA_PORT: 8080
       HAKA_ENABLE_REGISTRATION: "true" # Toggle after you've created your account.
+      # Number of hours after which inactive browser sessions will expire (login required).
+      HAKA_SESSION_EXPIRY: "24"
     ports:
       - "127.0.0.1:8080:8080"
   haka_db:

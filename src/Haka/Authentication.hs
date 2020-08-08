@@ -21,7 +21,15 @@ import Data.Time.Clock (UTCTime (..), getCurrentTime)
 import GHC.Generics
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
-import Haka.Types (ApiToken, AppCtx (..), AppM, RegistrationStatus (..), StoredApiToken, TokenData (..))
+import Haka.Types
+  ( ApiToken,
+    AppCtx (..),
+    AppM,
+    RegistrationStatus (..),
+    ServerSettings (..),
+    StoredApiToken,
+    TokenData (..),
+  )
 import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
@@ -159,12 +167,17 @@ loginHandler :: AuthRequest -> AppM LoginResponse'
 loginHandler creds = do
   now <- liftIO getCurrentTime
   dbPool <- asks pool
+  ss <- asks srvSettings
   res <-
     runM
       . embedToMonadIO
       . runError
       $ DbOps.interpretDatabaseIO $
-        DbOps.createAuthTokens (username creds) (password creds) dbPool
+        DbOps.createAuthTokens
+          (username creds)
+          (password creds)
+          dbPool
+          (hakaSessionExpiry ss)
   case res of
     Left e -> do
       $(logTM) ErrorS (logStr $ show e)
@@ -180,12 +193,13 @@ registerHandler DisabledRegistration _ = throw Err.disabledRegistration
 registerHandler EnabledRegistration creds = do
   now <- liftIO getCurrentTime
   dbPool <- asks pool
+  ss <- asks srvSettings
   res <-
     runM
       . embedToMonadIO
       . runError
       $ DbOps.interpretDatabaseIO $
-        DbOps.registerUser dbPool (username creds) (password creds)
+        DbOps.registerUser dbPool (username creds) (password creds) (hakaSessionExpiry ss)
   case res of
     Left e -> do
       $(logTM) ErrorS (logStr $ show e)
@@ -201,12 +215,16 @@ refreshTokenHandler Nothing = throw Err.missingRefreshTokenCookie
 refreshTokenHandler (Just cookies) = do
   now <- liftIO getCurrentTime
   dbPool <- asks pool
+  ss <- asks srvSettings
   res <-
     runM
       . embedToMonadIO
       . runError
       $ DbOps.interpretDatabaseIO $
-        DbOps.refreshAuthTokens (getRefreshToken (encodeUtf8 cookies)) dbPool
+        DbOps.refreshAuthTokens
+          (getRefreshToken (encodeUtf8 cookies))
+          dbPool
+          (hakaSessionExpiry ss)
   case res of
     Left e -> do
       $(logTM) ErrorS (logStr $ show e)

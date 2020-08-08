@@ -130,12 +130,12 @@ validateUser validate name pass = do
 insertToken :: Text -> Text -> Session ()
 insertToken token name = statement (token, name) Statements.insertToken
 
-createAccessTokens :: TokenData -> Session ()
-createAccessTokens tknData = do
+createAccessTokens :: Int64 -> TokenData -> Session ()
+createAccessTokens refreshTokenExpiryHours tknData = do
   transaction
     Serializable
     Write
-    (Transaction.statement tknData Statements.createAccessTokens)
+    (Transaction.statement tknData (Statements.createAccessTokens refreshTokenExpiryHours))
   transaction
     Serializable
     Write

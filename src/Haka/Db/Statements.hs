@@ -95,14 +95,15 @@ createAPIToken = Statement query params D.noResult True
     query :: Bs.ByteString
     query = [r| INSERT INTO auth_tokens(owner, token) values($1, $2); |]
 
-createAccessTokens :: Statement TokenData ()
-createAccessTokens = Statement query params D.noResult True
+createAccessTokens :: Int64 -> Statement TokenData ()
+createAccessTokens refreshTokenExpiryHours = Statement query params D.noResult True
   where
     params :: E.Params TokenData
     params =
       (tknOwner >$< E.param (E.nonNullable E.text))
         <> (tknToken >$< E.param (E.nonNullable E.text))
         <> (tknRefreshToken >$< E.param (E.nonNullable E.text))
+        <> (const refreshTokenExpiryHours >$< E.param (E.nonNullable E.int8))
     query :: Bs.ByteString
     query =
       [r|
@@ -117,7 +118,7 @@ createAccessTokens = Statement query params D.noResult True
         owner,
         refresh_token,
         token_expiry
-      ) values($1, $3, NOW() + interval '60 minutes');
+      ) values($1, $3, NOW() + interval '1' hour * $4);
       |]
 
 deleteExpiredTokens :: Statement TokenData ()

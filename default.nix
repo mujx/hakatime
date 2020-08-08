@@ -33,5 +33,5 @@ mkDerivation {
   doHaddock = false;
   doCheck = false;
   description = "Wakatime API server implementation / Dashboard UI";
-  license = stdenv.lib.licenses.publicDomain;
+  license = stdenv.lib.licenses.unlicense;
 }

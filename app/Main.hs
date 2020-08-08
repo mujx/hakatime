@@ -4,6 +4,7 @@ module Main
 where
 
 import Control.Exception (try)
+import Control.Monad (when)
 import Control.Monad.Trans.Except (ExceptT (..))
 import qualified Data.ByteString.Char8 as Bs
 import qualified Haka.Api as Api
@@ -33,9 +34,9 @@ nt ctx = Handler . ExceptT . try . runAppT ctx
 
 app :: ServerSettings -> AppCtx -> Application
 app settings conf =
-  cors (const $ Just policy)
-    $ serve Api.api
-    $ hoistServer Api.api (nt conf) (Api.server settings)
+  cors (const $ Just policy) $
+    serve Api.api $
+      hoistServer Api.api (nt conf) (Api.server settings)
   where
     policy =
       simpleCorsResourcePolicy
@@ -69,7 +70,8 @@ initApp settings unApp = do
       ( unApp
           AppCtx
             { pool = dbPool,
-              logState = logState'
+              logState = logState',
+              srvSettings = settings
             }
       )
 
@@ -79,16 +81,22 @@ getServerSettings = do
   corsUrl <- Bs.pack <$> envAsString "HAKA_CORS_URL" "http://localhost:8080"
   dashboardPath <- envAsString "HAKA_DASHBOARD_PATH" "./dashboard/dist"
   enableRegistration <- envAsBool "HAKA_ENABLE_REGISTRATION" True
+  sessionExpiry <- envAsInt "HAKA_SESSION_EXPIRY" 24
+  when (sessionExpiry <= 0) (error "Session expiry should be a positive integer")
   return $
     ServerSettings
       { hakaPort = p,
         hakaCorsUrl = corsUrl,
         hakaDashboardPath = dashboardPath,
-        hakaEnableRegistration = if enableRegistration then EnabledRegistration else DisabledRegistration
+        hakaEnableRegistration =
+          if enableRegistration
+            then EnabledRegistration
+            else DisabledRegistration,
+        hakaSessionExpiry = fromIntegral sessionExpiry
       }
 
 main :: IO ()
 main = do
   parsedOpts <- Opt.execParser Cli.opts
-  srvSettings <- getServerSettings
-  Cli.handleCommand (Cli.serverCmd parsedOpts) (initApp srvSettings (app srvSettings))
+  s <- getServerSettings
+  Cli.handleCommand (Cli.serverCmd parsedOpts) (initApp s (app s))

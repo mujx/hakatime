@@ -87,9 +87,9 @@ data Database m a where
   -- | Retrieve a list of statistics within the given time range.
   GetProjectStats :: HqPool.Pool -> Text -> Text -> (UTCTime, UTCTime) -> Int64 -> Database m [ProjectStatRow]
   -- | Create a pair of an access token a refresh token for use on web interface.
-  CreateWebToken :: HqPool.Pool -> Text -> Database m TokenData
+  CreateWebToken :: HqPool.Pool -> Text -> Int64 -> Database m TokenData
   -- | Register a new user.
-  RegisterUser :: HqPool.Pool -> Text -> Text -> Database m TokenData
+  RegisterUser :: HqPool.Pool -> Text -> Text -> Int64 -> Database m TokenData
   -- | Delete the given auth and refresh tokens from the database.
   DeleteTokens :: HqPool.Pool -> ApiToken -> Text -> Database m Int64
   -- | Create a new API token that can be used on the client (no expiry date).
@@ -151,11 +151,11 @@ interpretDatabaseIO =
     CreateAPIToken pool user -> do
       res <- liftIO $ HqPool.use pool (Sessions.createAPIToken user)
       either (throw . SessionException) pure res
-    CreateWebToken pool user -> do
+    CreateWebToken pool user expiry -> do
       tknData <- liftIO $ mkTokenData user
-      res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens tknData)
+      res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens expiry tknData)
       either (throw . SessionException) (\_ -> pure tknData) res
-    RegisterUser pool user pass -> do
+    RegisterUser pool user pass expiry -> do
       tknData <- liftIO $ mkTokenData user
       hashUser <- liftIO $ mkUser user pass
       case hashUser of
@@ -167,7 +167,7 @@ interpretDatabaseIO =
             Right userCreated ->
               if userCreated
                 then do
-                  res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens tknData)
+                  res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens expiry tknData)
                   either (throw . SessionException) (\_ -> pure tknData) res
                 else throw $ UsernameExists "Username already exists"
     ListApiTokens pool user -> do
@@ -291,12 +291,13 @@ createAuthTokens ::
   Text ->
   Text ->
   HqPool.Pool ->
+  Int64 ->
   Sem r TokenData
-createAuthTokens user pass pool = do
+createAuthTokens user pass pool expiry = do
   res <- validateCredentials pool user pass
   case res of
     Nothing -> throw InvalidCredentials
-    Just u -> createWebToken pool u
+    Just u -> createWebToken pool u expiry
 
 refreshAuthTokens ::
   forall r.
@@ -305,13 +306,14 @@ refreshAuthTokens ::
   ) =>
   Maybe Text ->
   HqPool.Pool ->
+  Int64 ->
   Sem r TokenData
-refreshAuthTokens Nothing _ = throw MissingRefreshTokenCookie
-refreshAuthTokens (Just refreshToken) pool = do
+refreshAuthTokens Nothing _ _ = throw MissingRefreshTokenCookie
+refreshAuthTokens (Just refreshToken) pool expiry = do
   res <- getUserByRefreshToken pool refreshToken
   case res of
     Nothing -> throw ExpiredToken
-    Just u -> createWebToken pool u
+    Just u -> createWebToken pool u expiry
 
 clearTokens ::
   forall r.
