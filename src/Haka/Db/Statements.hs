@@ -4,6 +4,9 @@
 module Haka.Db.Statements
   ( insertHeartBeat,
     createAPIToken,
+    createBadgeLink,
+    getBadgeLinkInfo,
+    getTotalActivityTime,
     isUserAvailable,
     updateTokenUsage,
     listApiTokens,
@@ -23,7 +26,7 @@ module Haka.Db.Statements
   )
 where
 
-import Contravariant.Extras.Contrazip (contrazip4, contrazip5)
+import Contravariant.Extras.Contrazip (contrazip3, contrazip4, contrazip5)
 import qualified Data.ByteString as Bs
 import Data.FileEmbed
 import Data.Functor.Contravariant ((>$<))
@@ -32,7 +35,8 @@ import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Haka.Types
-  ( EntityType (..),
+  ( BadgeRow (..),
+    EntityType (..),
     HeartbeatPayload (..),
     ProjectStatRow (..),
     RegisteredUser (..),
@@ -44,6 +48,7 @@ import Haka.Types
 import qualified Hasql.Decoders as D
 import qualified Hasql.Encoders as E
 import Hasql.Statement
+import PostgreSQL.Binary.Data (UUID)
 import Text.RawString.QQ (r)
 
 updateTokenUsage :: Statement Text ()
@@ -194,6 +199,20 @@ getUserByName = Statement query (E.param (E.nonNullable E.text)) userDecoder Tru
             <*> (D.column . D.nonNullable) D.bytea
             <*> (D.column . D.nonNullable) D.bytea
 
+getTotalActivityTime :: Statement (Text, Int64, Text) Int64
+getTotalActivityTime = Statement query params result True
+  where
+    params :: E.Params (Text, Int64, Text)
+    params =
+      contrazip3
+        (E.param (E.nonNullable E.text))
+        (E.param (E.nonNullable E.int8))
+        (E.param (E.nonNullable E.text))
+    query :: Bs.ByteString
+    query = $(embedFile "sql/get_total_project_time.sql")
+    result :: D.Result Int64
+    result = D.singleRow $ (D.column . D.nonNullable) D.int8
+
 insertUser :: Statement RegisteredUser ()
 insertUser = Statement query params D.noResult True
   where
@@ -282,6 +301,35 @@ insertProject = Statement query (E.param (E.nonNullable E.text)) D.noResult True
       [r|
         INSERT INTO projects (name) VALUES ( $1 ) ON CONFLICT DO NOTHING;
       |]
+
+createBadgeLink :: Statement (Text, Text) UUID
+createBadgeLink = Statement query params result True
+  where
+    params :: E.Params (Text, Text)
+    params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
+    result :: D.Result UUID
+    result = D.singleRow (D.column (D.nonNullable D.uuid))
+    query :: Bs.ByteString
+    query =
+      [r|
+        INSERT INTO badges(username, project) values($1, $2)
+        ON CONFLICT (username, project) DO UPDATE SET username=EXCLUDED.username
+        RETURNING link_id;
+     |]
+
+getBadgeLinkInfo :: Statement UUID BadgeRow
+getBadgeLinkInfo = Statement query params result True
+  where
+    params :: E.Params UUID
+    params = E.param (E.nonNullable E.uuid)
+    result :: D.Result BadgeRow
+    result =
+      D.singleRow
+        ( BadgeRow <$> (D.column . D.nonNullable) D.text
+            <*> (D.column . D.nonNullable) D.text
+        )
+    query :: Bs.ByteString
+    query = [r| SELECT username, project FROM badges WHERE link_id = $1; |]
 
 insertHeartBeat :: Statement HeartbeatPayload Int64
 insertHeartBeat = Statement query params result True

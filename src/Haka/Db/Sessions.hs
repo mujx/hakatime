@@ -1,6 +1,8 @@
 module Haka.Db.Sessions
   ( getUser,
     getUserByRefreshToken,
+    createBadgeLink,
+    getTotalActivityTime,
     updateTokenUsage,
     deleteToken,
     createAPIToken,
@@ -13,6 +15,7 @@ module Haka.Db.Sessions
     insertUser,
     validateUser,
     deleteTokens,
+    getBadgeLinkInfo,
     createAccessTokens,
   )
 where
@@ -27,6 +30,7 @@ import Data.Time.Clock (UTCTime, getCurrentTime)
 import qualified Haka.Db.Statements as Statements
 import Haka.Types
   ( ApiToken (..),
+    BadgeRow (..),
     HeartbeatPayload (..),
     ProjectStatRow (..),
     RegisteredUser (..),
@@ -39,6 +43,7 @@ import qualified Haka.Utils as Utils
 import Hasql.Session (Session, statement)
 import qualified Hasql.Transaction as Transaction
 import Hasql.Transaction.Sessions (IsolationLevel (..), Mode (..), transaction)
+import PostgreSQL.Binary.Data (UUID)
 
 updateTokenUsage :: Text -> Session ()
 updateTokenUsage tkn = statement tkn Statements.updateTokenUsage
@@ -83,6 +88,15 @@ saveHeartbeats payloadData = do
   mapM (`statement` Statements.insertHeartBeat) payloadData
   where
     uniqueProjects = nub $ mapMaybe project payloadData
+
+getTotalActivityTime :: Text -> Int64 -> Text -> Session Int64
+getTotalActivityTime user days proj = statement (user, days, proj) Statements.getTotalActivityTime
+
+createBadgeLink :: Text -> Text -> Session UUID
+createBadgeLink user proj = statement (user, proj) Statements.createBadgeLink
+
+getBadgeLinkInfo :: UUID -> Session BadgeRow
+getBadgeLinkInfo badgeId = statement badgeId Statements.getBadgeLinkInfo
 
 -- | TODO: Impose a max limit
 -- | Retrieve computed statistics for a given range.

@@ -5,6 +5,9 @@
 module Haka.DatabaseOperations
   ( processHeartbeatRequest,
     interpretDatabaseIO,
+    getBadgeLinkInfo,
+    getTotalActivityTime,
+    mkBadgeLink,
     getApiTokens,
     deleteApiToken,
     genProjectStatistics,
@@ -28,6 +31,7 @@ import qualified Haka.Db.Sessions as Sessions
 import qualified Haka.Errors as Err
 import Haka.Types
   ( ApiToken (..),
+    BadgeRow (..),
     HeartbeatPayload (..),
     ProjectStatRow (..),
     RequestConfig (..),
@@ -42,6 +46,7 @@ import qualified Hasql.Pool as HqPool
 import Polysemy
 import Polysemy.Error
 import Polysemy.Reader
+import PostgreSQL.Binary.Data (UUID)
 import Servant (ServerError (..))
 
 data OperationError = UsageError | Text
@@ -100,6 +105,12 @@ data Database m a where
   DeleteToken :: HqPool.Pool -> ApiToken -> Database m ()
   -- | Update the last used timestamp for the token.
   UpdateTokenUsage :: HqPool.Pool -> ApiToken -> Database m ()
+  -- | Get the total number of seconds spent on a given user/project combination.
+  GetTotalActivityTime :: HqPool.Pool -> Text -> Int64 -> Text -> Database m Int64
+  -- | Create a unique badge link for the user/project combination.
+  CreateBadgeLink :: HqPool.Pool -> Text -> Text -> Database m UUID
+  -- | Find the user/project combination from the badge id.
+  GetBadgeLinkInfo :: HqPool.Pool -> UUID -> Database m BadgeRow
 
 mkTokenData :: Text -> IO TokenData
 mkTokenData user = do
@@ -178,6 +189,15 @@ interpretDatabaseIO =
       either (throw . SessionException) pure res
     UpdateTokenUsage pool (ApiToken tkn) -> do
       res <- liftIO $ HqPool.use pool (Sessions.updateTokenUsage tkn)
+      either (throw . SessionException) pure res
+    GetTotalActivityTime pool user days proj -> do
+      res <- liftIO $ HqPool.use pool (Sessions.getTotalActivityTime user days proj)
+      either (throw . SessionException) pure res
+    CreateBadgeLink pool user proj -> do
+      res <- liftIO $ HqPool.use pool (Sessions.createBadgeLink user proj)
+      either (throw . SessionException) pure res
+    GetBadgeLinkInfo pool badgeId -> do
+      res <- liftIO $ HqPool.use pool (Sessions.getBadgeLinkInfo badgeId)
       either (throw . SessionException) pure res
 
 makeSem ''Database
@@ -362,3 +382,18 @@ deleteApiToken pool token tokenId = do
   case retrievedUser of
     Nothing -> throw UserNotFound
     Just _ -> deleteToken pool (ApiToken tokenId)
+
+mkBadgeLink ::
+  forall r.
+  ( Member Database r,
+    Member (Error DatabaseException) r
+  ) =>
+  HqPool.Pool ->
+  Text ->
+  ApiToken ->
+  Sem r UUID
+mkBadgeLink pool proj token = do
+  retrievedUser <- getUser pool token
+  case retrievedUser of
+    Nothing -> throw UserNotFound
+    Just user -> createBadgeLink pool user proj

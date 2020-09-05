@@ -6,6 +6,7 @@ module Haka.Api
 where
 
 import qualified Haka.Authentication as Auth
+import qualified Haka.Badges as Badges
 import qualified Haka.Heartbeats as Heartbeats
 import qualified Haka.Projects as Projects
 import qualified Haka.Stats as Stats
@@ -23,6 +24,7 @@ type HakaAPI =
     :<|> Stats.API
     :<|> Projects.API
     :<|> Auth.API
+    :<|> Badges.API
     :<|> Static
 
 api :: Proxy HakaAPI
@@ -35,4 +37,5 @@ server settings =
     :<|> Stats.server
     :<|> Projects.server
     :<|> Auth.server (hakaEnableRegistration settings)
+    :<|> Badges.server
     :<|> serveDirectoryFileServer (hakaDashboardPath settings)

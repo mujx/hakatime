@@ -8,6 +8,7 @@ module Haka.Types
   ( HeartbeatApiResponse (..),
     HearbeatData (..),
     StoredApiToken (..),
+    BadgeRow (..),
     RegistrationStatus (..),
     ServerSettings (..),
     BulkHeartbeatData (..),
@@ -36,13 +37,13 @@ import Control.Exception.Safe (MonadThrow)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader (MonadReader, asks, local)
 import Control.Monad.Trans.Reader (ReaderT (..), runReaderT)
-import qualified Data.Aeson as A
 import Data.Aeson
   ( FromJSON,
     ToJSON (..),
     genericParseJSON,
     genericToJSON,
   )
+import qualified Data.Aeson as A
 import qualified Data.ByteString as Bs
 import Data.Int (Int64)
 import Data.Text (Text, strip)
@@ -262,6 +263,11 @@ data StatRow = StatRow
     rDailyPct :: Scientific
   }
   deriving (Eq, Show)
+
+data BadgeRow = BadgeRow
+  { badgeUsername :: Text,
+    badgeProject :: Text
+  }
 
 newtype ApiToken = ApiToken Text
   deriving (Show, Generic)
