@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 
 COPY dashboard ./
 
-RUN npm install && npm run prod
+RUN yarn install && yarn run prod
 
 RUN cat dist/index.html
 RUN ls dist/css
