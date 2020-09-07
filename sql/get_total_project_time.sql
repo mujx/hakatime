@@ -1,5 +1,5 @@
 SELECT
-    sum(_b.total_seconds)::integer
+    CAST(sum(_b.total_seconds) AS bigint)
 FROM (
     SELECT
         _a.day,

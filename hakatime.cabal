@@ -77,10 +77,10 @@ library libhaka
                      , containers
                      , contravariant-extras
                      , cookie               == 0.4.5
-                     , cryptonite           >= 0.27
+                     , cryptonite           >= 0.26
                      , file-embed
                      , hasql                == 1.4.*
-                     , hasql-pool           == 0.5.2
+                     , hasql-pool           == 0.5.*
                      , http-media
                      , http-client
                      , http-client-tls
@@ -142,7 +142,7 @@ executable hakatime
 
   build-depends:       base                 >= 4.9 && < 4.14
                      , bytestring
-                     , hasql-pool           == 0.5.2
+                     , hasql-pool           == 0.5.*
                      , katip                == 0.8.*
                      , libhaka
                      , mr-env               == 0.1.*
@@ -156,7 +156,7 @@ executable hakatime
                      , wai-cors
                      , wai-extra
                      , wai-logger           == 2.3.*
-                     , warp                 == 3.3.13
+                     , warp                 == 3.3.*
 
   ghc-options:         -Wall
                        -threaded
