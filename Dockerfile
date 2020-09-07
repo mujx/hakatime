@@ -9,10 +9,13 @@ COPY dashboard ./
 
 RUN npm install && npm run prod
 
+RUN cat dist/index.html
+RUN ls dist/css
+
 #
 # Build the server.
 #
-FROM alpine:edge as server-builder
+FROM alpine:3.12 as server-builder
 
 WORKDIR /build
 
@@ -45,7 +48,7 @@ RUN cabal build -j2 exe:hakatime && \
     mkdir -p /app/bin                && \
     cp /build/dist-newstyle/build/x86_64-linux/ghc-*/hakatime-*/x/hakatime/build/hakatime/hakatime /app/bin/hakatime
 
-FROM alpine:edge
+FROM alpine:3.12
 
 RUN apk add --no-cache \
         libffi-dev \

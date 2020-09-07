@@ -12,6 +12,14 @@ activity.
 It comes together with a simple dashboard which provides a graphical
 representation of the collected data.
 
+## Features
+
+- Total activity view.
+- Per project activity view.
+- User registration & login.
+- Badge generation for a project (using shields.io compatible endpoint).
+- API token management.
+
 ## Demo
 
 There is demo instance with fake data [here](https://hakatime-demo.mtx-dev.xyz).
@@ -56,6 +64,7 @@ services:
       # Server settings.
       HAKA_CORS_URL: "http://localhost:8080"
       HAKA_PORT: 8080
+      HAKA_SHIELDS_IO_URL: "https://img.shields.io"
       HAKA_ENABLE_REGISTRATION: "true" # Toggle after you've created your account.
       # Number of hours after which inactive browser sessions will expire (login required).
       HAKA_SESSION_EXPIRY: "24"
