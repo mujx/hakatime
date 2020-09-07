@@ -199,7 +199,7 @@ getUserByName = Statement query (E.param (E.nonNullable E.text)) userDecoder Tru
             <*> (D.column . D.nonNullable) D.bytea
             <*> (D.column . D.nonNullable) D.bytea
 
-getTotalActivityTime :: Statement (Text, Int64, Text) Int64
+getTotalActivityTime :: Statement (Text, Int64, Text) (Maybe Int64)
 getTotalActivityTime = Statement query params result True
   where
     params :: E.Params (Text, Int64, Text)
@@ -210,8 +210,8 @@ getTotalActivityTime = Statement query params result True
         (E.param (E.nonNullable E.text))
     query :: Bs.ByteString
     query = $(embedFile "sql/get_total_project_time.sql")
-    result :: D.Result Int64
-    result = D.singleRow $ (D.column . D.nonNullable) D.int8
+    result :: D.Result (Maybe Int64)
+    result = D.rowMaybe $ (D.column . D.nonNullable) D.int8
 
 insertUser :: Statement RegisteredUser ()
 insertUser = Statement query params D.noResult True

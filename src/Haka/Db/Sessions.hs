@@ -89,7 +89,7 @@ saveHeartbeats payloadData = do
   where
     uniqueProjects = nub $ mapMaybe project payloadData
 
-getTotalActivityTime :: Text -> Int64 -> Text -> Session Int64
+getTotalActivityTime :: Text -> Int64 -> Text -> Session (Maybe Int64)
 getTotalActivityTime user days proj = statement (user, days, proj) Statements.getTotalActivityTime
 
 createBadgeLink :: Text -> Text -> Session UUID

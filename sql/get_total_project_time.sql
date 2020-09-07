@@ -1,5 +1,5 @@
 SELECT
-    CAST(sum(_b.total_seconds) AS bigint)
+    CAST(coalesce(sum(_b.total_seconds), 0) AS bigint)
 FROM (
     SELECT
         _a.day,

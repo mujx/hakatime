@@ -106,7 +106,7 @@ data Database m a where
   -- | Update the last used timestamp for the token.
   UpdateTokenUsage :: HqPool.Pool -> ApiToken -> Database m ()
   -- | Get the total number of seconds spent on a given user/project combination.
-  GetTotalActivityTime :: HqPool.Pool -> Text -> Int64 -> Text -> Database m Int64
+  GetTotalActivityTime :: HqPool.Pool -> Text -> Int64 -> Text -> Database m (Maybe Int64)
   -- | Create a unique badge link for the user/project combination.
   CreateBadgeLink :: HqPool.Pool -> Text -> Text -> Database m UUID
   -- | Find the user/project combination from the badge id.

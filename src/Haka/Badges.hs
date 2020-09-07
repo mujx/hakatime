@@ -14,7 +14,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.ByteString as Bs
 import qualified Data.ByteString.Lazy as LBs
 import Data.Int (Int64)
-import Data.List (intercalate, mapAccumR)
+import Data.List (mapAccumR)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text, unpack)
 import Data.Text.Encoding (decodeUtf8)
@@ -127,7 +127,7 @@ badgeSvgHandler badgeId daysParam = do
   manager <- liftIO $ newManager tlsManagerSettings
   request <-
     parseRequest
-      ( (hakaShieldsIOUrl ss)
+      ( hakaShieldsIOUrl ss
           <> "/static/v1?"
           <> "label="
           <> unpack (badgeProject badgeRow)
@@ -148,10 +148,15 @@ n `reduceBy` xs = n' : ys where (n', ys) = mapAccumR quotRem n xs
 durLabs :: [(Int64, String)]
 durLabs = [(undefined, "wk"), (7, "day"), (24, "hrs"), (60, "min"), (60, "sec")]
 
-compdurs :: Int64 -> [(Int64, String)]
-compdurs t =
+computeDurations :: Int64 -> [(Int64, String)]
+computeDurations t =
   let ds = t `reduceBy` map fst (tail durLabs)
    in filter ((/= 0) . fst) $ zip ds (map snd durLabs)
 
-compoundDuration :: Int64 -> String
-compoundDuration = intercalate " " . map (uncurry $ printf "%d %s") . init . compdurs
+compoundDuration :: Maybe Int64 -> String
+compoundDuration Nothing = "no data"
+compoundDuration (Just v) =
+  let durations = computeDurations v
+   in if length durations > 0
+        then unwords $ map (uncurry $ printf "%d %s") $ init durations
+        else "no data"
