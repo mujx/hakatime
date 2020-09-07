@@ -128,11 +128,12 @@ badgeSvgHandler badgeId daysParam = do
   request <-
     parseRequest
       ( (hakaShieldsIOUrl ss)
-          <> "/badge/"
+          <> "/static/v1?"
+          <> "label="
           <> unpack (badgeProject badgeRow)
-          <> "-"
+          <> "&message="
           <> compoundDuration activityTime
-          <> "-blue"
+          <> "&color=blue"
       )
   response <- liftIO $ httpLbs request manager
 
