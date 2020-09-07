@@ -1,5 +1,5 @@
 SELECT
-    sum(_b.total_seconds)
+    sum(_b.total_seconds)::integer
 FROM (
     SELECT
         _a.day,
@@ -14,6 +14,7 @@ FROM (
             sender = $1
             AND project = $3
             AND time_sent >= (now() - interval '1' day * $2)
+            AND time_sent < now()
         ORDER BY
             time_sent) _a
     WHERE

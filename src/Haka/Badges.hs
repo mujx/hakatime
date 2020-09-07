@@ -7,7 +7,7 @@ module Haka.Badges
   )
 where
 
-import Control.Exception.Safe (throw)
+import Control.Exception.Safe (MonadThrow, throw)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
 import Data.Aeson (FromJSON, ToJSON)
@@ -84,15 +84,17 @@ badgeLinkHandler proj (Just tkn) = do
       $ DbOps.interpretDatabaseIO $
         DbOps.mkBadgeLink p proj tkn
 
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right badgeId -> do
-      return $
-        BadgeResponse
-          { badgeUrl = decodeUtf8 (hakaCorsUrl ss) <> "/badge/svg/" <> UUID.toText badgeId
-          }
+  badgeId <- either logError pure res
+
+  return $
+    BadgeResponse
+      { badgeUrl = decodeUtf8 (hakaCorsUrl ss) <> "/badge/svg/" <> UUID.toText badgeId
+      }
+
+logError :: (KatipContext m, MonadThrow m) => DbOps.DatabaseException -> m b
+logError e = do
+  $(logTM) ErrorS (logStr $ show e)
+  throw $ DbOps.toJSONError e
 
 badgeSvgHandler :: UUID.UUID -> Maybe Int64 -> AppM Bs.ByteString
 badgeSvgHandler badgeId daysParam = do
@@ -120,10 +122,13 @@ badgeSvgHandler badgeId daysParam = do
 
   activityTime <- either logError pure timeResult
 
+  ss <- asks srvSettings
+
   manager <- liftIO $ newManager tlsManagerSettings
   request <-
     parseRequest
-      ( "https://img.shields.io/badge/"
+      ( (hakaShieldsIOUrl ss)
+          <> "/badge/"
           <> unpack (badgeProject badgeRow)
           <> "-"
           <> compoundDuration activityTime
@@ -132,10 +137,6 @@ badgeSvgHandler badgeId daysParam = do
   response <- liftIO $ httpLbs request manager
 
   return $ LBs.toStrict $ responseBody response
-  where
-    logError e = do
-      $(logTM) ErrorS (logStr $ show e)
-      throw $ DbOps.toJSONError e
 
 -- TODO: the projects table should have (user, project) as primary key.
 --

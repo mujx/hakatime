@@ -76,7 +76,9 @@ data ServerSettings = ServerSettings
     -- | Whether the registration is enabled.
     hakaEnableRegistration :: RegistrationStatus,
     -- | Maximum duration of the dashboard session without activity.
-    hakaSessionExpiry :: Int64
+    hakaSessionExpiry :: Int64,
+    -- | A shields.io compatible endpoint to use for badge generation.
+    hakaShieldsIOUrl :: String
   }
 
 data StoredApiToken = StoredApiToken

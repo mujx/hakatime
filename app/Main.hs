@@ -80,6 +80,7 @@ getServerSettings = do
   p <- envAsInt "HAKA_PORT" 8080
   corsUrl <- Bs.pack <$> envAsString "HAKA_CORS_URL" "http://localhost:8080"
   dashboardPath <- envAsString "HAKA_DASHBOARD_PATH" "./dashboard/dist"
+  shieldsIOUrl <- envAsString "HAKA_SHIELDS_IO_URL" "https://img.shields.io"
   enableRegistration <- envAsBool "HAKA_ENABLE_REGISTRATION" True
   sessionExpiry <- envAsInt "HAKA_SESSION_EXPIRY" 24
   when (sessionExpiry <= 0) (error "Session expiry should be a positive integer")
@@ -88,6 +89,7 @@ getServerSettings = do
       { hakaPort = p,
         hakaCorsUrl = corsUrl,
         hakaDashboardPath = dashboardPath,
+        hakaShieldsIOUrl = shieldsIOUrl,
         hakaEnableRegistration =
           if enableRegistration
             then EnabledRegistration
