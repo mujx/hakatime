@@ -17,7 +17,7 @@ representation of the collected data.
 - Total activity view.
 - Per project activity view.
 - User registration & login.
-- Badge generation for a project (using shields.io compatible endpoint). [![my-app](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94)](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94)
+- Badge generation for a project (using shields.io compatible endpoint). [![my-app](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=7)](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94&days=7)
 - API token management.
 
 ## Demo
