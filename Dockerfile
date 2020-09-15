@@ -9,9 +9,6 @@ COPY dashboard ./
 
 RUN yarn install && yarn run prod
 
-RUN cat dist/index.html
-RUN ls dist/css
-
 #
 # Build the server.
 #

@@ -10,8 +10,9 @@
     "eslint": "7.8.1",
     "parcel": "^1.12.4",
     "parcel-bundler": "^1.12.4",
-    "parcel-plugin-custom-dist-structure": "^1.1.9",
-    "parcel-plugin-static-files-copy": "^2.4.2",
+    "parcel-plugin-custom-dist-structure": "1.1.14",
+    "parcel-plugin-inliner": "1.0.14",
+    "parcel-plugin-static-files-copy": "2.5.0",
     "prettier": "1.19.1"
   },
   "scripts": {
@@ -22,13 +23,13 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.14.0",
-    "apexcharts": "3.20.1",
+    "apexcharts": "3.20.2",
     "bootstrap": "4.5.2",
     "jquery": "3.5.1",
     "litepicker": "1.5.5",
     "lodash": "4.17.20",
     "mithril": "2.0.4",
-    "popper.js": "^1.16.1",
+    "popper.js": "1.16.1",
     "startbootstrap-sb-admin-2": "4.1.1",
     "typeface-nunito": "1.1.3"
   },
