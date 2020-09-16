@@ -47,7 +47,7 @@ const Model = {
         timeLimit: TimeRange.timeLimit
       }
     })
-      .then(function(obj) {
+      .then(function (obj) {
         Model.obj = obj;
         Model.dates = utils.getDaysBetween(
           new Date(obj.startDate),

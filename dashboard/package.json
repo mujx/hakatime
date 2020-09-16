@@ -7,13 +7,13 @@
   "license": "UNLICENSE",
   "private": true,
   "devDependencies": {
-    "eslint": "7.8.1",
+    "eslint": "7.9.0",
     "parcel": "^1.12.4",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-custom-dist-structure": "1.1.14",
     "parcel-plugin-inliner": "1.0.14",
     "parcel-plugin-static-files-copy": "2.5.0",
-    "prettier": "1.19.1"
+    "prettier": "2.1.2"
   },
   "scripts": {
     "dev": "parcel index.html --no-source-maps",
@@ -26,7 +26,7 @@
     "apexcharts": "3.20.2",
     "bootstrap": "4.5.2",
     "jquery": "3.5.1",
-    "litepicker": "1.5.5",
+    "litepicker": "1.5.7",
     "lodash": "4.17.20",
     "mithril": "2.0.4",
     "popper.js": "1.16.1",

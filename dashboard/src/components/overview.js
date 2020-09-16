@@ -19,7 +19,7 @@ import * as auth from "../auth.js";
 const Charts = {
   timelineChart: {
     chart: null,
-    mkOpts: function(series) {
+    mkOpts: function (series) {
       const options = {
         series: series,
         noData: config.noData,
@@ -75,7 +75,7 @@ const Charts = {
   },
   column: {
     chart: null,
-    mkOpts: function(series) {
+    mkOpts: function (series) {
       return {
         chart: {
           type: "bar",
@@ -118,7 +118,7 @@ const Charts = {
 
 // Convert data retrieved from the API server to a format suitable for the chart.
 function mkTimelineSeries(rawData) {
-  return _.keys(rawData.timelineLangs).map(function(k) {
+  return _.keys(rawData.timelineLangs).map(function (k) {
     return {
       name: k,
       data: rawData.timelineLangs[k].map(v => {
@@ -345,7 +345,7 @@ function heatmapDataForProjects(state, num = 7) {
   // Map for faster filtering.
   const projectMap = _.reduce(
     topProjects,
-    function(obj, p) {
+    function (obj, p) {
       obj[p] = true;
       return obj;
     },
@@ -374,7 +374,7 @@ function heatmapDataForLangs(state, num = 7) {
   // Map for faster filtering.
   const langMap = _.reduce(
     topLangs,
-    function(obj, p) {
+    function (obj, p) {
       obj[p] = true;
       return obj;
     },

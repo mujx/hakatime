@@ -29,7 +29,7 @@ export default {
     return m(
       "form.form-signin",
       {
-        onsubmit: function(e) {
+        onsubmit: function (e) {
           e.preventDefault();
 
           if (User.password.length < 8) {
@@ -50,14 +50,14 @@ export default {
               password: User.password
             }
           })
-            .then(function(creds) {
+            .then(function (creds) {
               login(creds);
 
               ErrMsg.error = "";
 
               m.route.set("/app");
             })
-            .catch(function(e) {
+            .catch(function (e) {
               if (e.response && e.response.error) {
                 ErrMsg.error = `Registration failed: ${e.response.error}`;
                 return;
@@ -76,7 +76,7 @@ export default {
           m("input.form-control[type=text][placeholder=Username]", {
             id: "inputUsername",
             required: "required",
-            oninput: function(e) {
+            oninput: function (e) {
               User.username = e.target.value;
             }
           }),
@@ -86,7 +86,7 @@ export default {
           m("input.form-control[type=password][placeholder=Password]", {
             id: "inputPassword",
             required: "required",
-            oninput: function(e) {
+            oninput: function (e) {
               User.password = e.target.value;
             }
           }),
@@ -96,7 +96,7 @@ export default {
           m("input.form-control[type=password][placeholder=Confirm password]", {
             id: "confirmPassword",
             required: "required",
-            oninput: function(e) {
+            oninput: function (e) {
               User.confirmPassword = e.target.value;
             }
           }),

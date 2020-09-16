@@ -9,11 +9,11 @@ const MODAL_TOKEN_LIST_ID = "api-token-list-modal";
 
 const ApiToken = {
   value: null,
-  copyToCliboard: function(e) {
+  copyToCliboard: function (e) {
     e.redraw = false;
     utils.copyToCliboard(ApiToken.value);
   },
-  openModal: function() {
+  openModal: function () {
     let modal = document.getElementById(MODAL_ID);
     if (!modal) {
       modal = document.createElement("div");
@@ -22,7 +22,7 @@ const ApiToken = {
     }
     m.mount(modal, Modal);
   },
-  closeModal: function(event) {
+  closeModal: function (event) {
     event.redraw = false;
     ApiToken.value = null;
     m.mount(document.getElementById(MODAL_ID), null);
@@ -30,7 +30,7 @@ const ApiToken = {
 };
 
 const ApiTokenList = {
-  renderModal: function(tokens = []) {
+  renderModal: function (tokens = []) {
     let modal = document.getElementById(MODAL_TOKEN_LIST_ID);
 
     if (!modal) {
@@ -41,7 +41,7 @@ const ApiTokenList = {
 
     m.render(modal, m(TokenListModal(tokens)));
   },
-  openModal: function(e) {
+  openModal: function (e) {
     e.redraw = false;
 
     m.request({
@@ -53,7 +53,7 @@ const ApiTokenList = {
       }
     })
       .then(ApiTokenList.renderModal)
-      .catch(function(e) {
+      .catch(function (e) {
         // TODO: Notify the user about the error.
         if (e && e.response) {
           console.log(e.response);
@@ -63,11 +63,11 @@ const ApiTokenList = {
         console.log(e.response);
       });
   },
-  closeModal: function(e) {
+  closeModal: function (e) {
     e.redraw = false;
     m.render(document.getElementById(MODAL_TOKEN_LIST_ID), null);
   },
-  deleteToken: function(t) {
+  deleteToken: function (t) {
     m.request({
       method: "DELETE",
       url: "/auth/token/" + t.tknId,
@@ -76,7 +76,7 @@ const ApiTokenList = {
         authorization: auth.getHeaderToken()
       }
     })
-      .then(function() {
+      .then(function () {
         return m.request({
           method: "GET",
           url: "/auth/tokens",
@@ -86,7 +86,7 @@ const ApiTokenList = {
           }
         });
       })
-      .then(function(tokens) {
+      .then(function (tokens) {
         $('[data-toggle="tooltip"]').tooltip("dispose");
 
         let modal = document.getElementById(MODAL_TOKEN_LIST_ID);
@@ -98,7 +98,7 @@ const ApiTokenList = {
         }
         m.render(modal, m(TokenListModal(tokens)));
       })
-      .catch(function(e) {
+      .catch(function (e) {
         $('[data-toggle="tooltip"]').tooltip("hide");
 
         if (e && e.response) {
@@ -109,7 +109,7 @@ const ApiTokenList = {
         console.log(e);
       });
   },
-  copyTokenToClipbard: function(t) {
+  copyTokenToClipbard: function (t) {
     $('[data-toggle="tooltip"]').tooltip("hide");
     utils.copyToCliboard(atob(t.tknId));
   }
@@ -174,7 +174,7 @@ function TokenListModal(tokens = []) {
                             "button.btn.btn-sm.btn-success.mr-2[data-toggle=tooltip][title='Copy to clipboard']",
                             {
                               type: "button",
-                              onclick: function(e) {
+                              onclick: function (e) {
                                 e.redraw = false;
                                 ApiTokenList.copyTokenToClipbard(t);
                               }
@@ -186,7 +186,7 @@ function TokenListModal(tokens = []) {
                             {
                               type: "button",
                               tabindex: "0",
-                              onclick: function(e) {
+                              onclick: function (e) {
                                 e.redraw = false;
                                 ApiTokenList.deleteToken(t);
                               }
@@ -224,7 +224,7 @@ function createApiTokenDialog(event) {
     },
     background: true
   })
-    .then(function(res) {
+    .then(function (res) {
       ApiToken.value = res.apiToken;
       ApiToken.openModal();
     })
@@ -359,7 +359,7 @@ export default {
             "div.text-center.d-none.d-md-inline",
             m("button.rounded-circle.border-0", {
               id: "sidebarToggle",
-              onclick: function(e) {
+              onclick: function (e) {
                 e.redraw = false;
 
                 $("body").toggleClass("sidebar-toggled");
@@ -405,10 +405,7 @@ export default {
                           ),
                           m(
                             "div.btn.btn-secondary.btn-circle.btn-md",
-                            auth
-                              .getUsername()
-                              .charAt(0)
-                              .toUpperCase()
+                            auth.getUsername().charAt(0).toUpperCase()
                           )
                         ),
                         m(

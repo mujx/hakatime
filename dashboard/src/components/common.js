@@ -1,7 +1,7 @@
 import m from "mithril";
 
 export default {
-  githubLink: function() {
+  githubLink: function () {
     return m(
       "p.mt-5.mb-3.text-muted.text-center",
       m(

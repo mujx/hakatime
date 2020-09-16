@@ -56,7 +56,7 @@ function hourDistribution() {
       if (LocalState.obj == null || LocalState.obj.totalSeconds === 0) return;
 
       const data = _.zipObject([...Array(24).keys()], Array(24).fill(0));
-      _.forEach(LocalState.obj.hour, function(v) {
+      _.forEach(LocalState.obj.hour, function (v) {
         data[utils.addTimeOffset(v.name)] = (v.totalSeconds / 3600).toFixed(1);
       });
 
@@ -70,7 +70,7 @@ function hourDistribution() {
         noData: config.noData,
         tooltip: {
           y: {
-            formatter: function(val) {
+            formatter: function (val) {
               return val + " hours";
             }
           }
@@ -125,7 +125,7 @@ function dayRadarChart() {
       if (LocalState.obj == null) return;
 
       const data = _.zipObject([...Array(7).keys()], Array(7).fill(0));
-      _.forEach(LocalState.obj.weekDay, function(v) {
+      _.forEach(LocalState.obj.weekDay, function (v) {
         data[v.name] = (v.totalSeconds / 3600).toFixed(1);
       });
 
@@ -139,7 +139,7 @@ function dayRadarChart() {
         noData: config.noData,
         tooltip: {
           y: {
-            formatter: function(val) {
+            formatter: function (val) {
               return val + " hours";
             }
           }
@@ -302,7 +302,7 @@ function fileChart() {
         noData: config.noData,
         tooltip: {
           y: {
-            formatter: function(val) {
+            formatter: function (val) {
               return val + " hours";
             }
           }
@@ -330,14 +330,11 @@ function fileChart() {
             colors: ["#fff"],
             fontFamily: "Nunito"
           },
-          formatter: function(val, opt) {
+          formatter: function (val, opt) {
             val = opt.w.globals.labels[opt.dataPointIndex];
 
             if (typeof val === "string") {
-              const basename = path
-                .dirname(val)
-                .split(path.sep)
-                .pop();
+              const basename = path.dirname(val).split(path.sep).pop();
               const filename = val.replace(/^.*[/]/, "");
 
               if (!basename) return filename;
@@ -420,7 +417,7 @@ function barChart() {
         },
         tooltip: {
           y: {
-            formatter: function(val) {
+            formatter: function (val) {
               return val + " hours";
             }
           }
@@ -443,7 +440,7 @@ function barChart() {
 }
 
 export default {
-  oninit: function() {
+  oninit: function () {
     if (!OverviewState.obj) return;
 
     LocalState.initProjectList(OverviewState.obj.projects);

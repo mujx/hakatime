@@ -31,12 +31,12 @@ export function tryToRefresh(errMsg, callback) {
     method: "POST",
     url: "/auth/refresh_token"
   })
-    .then(function(r) {
+    .then(function (r) {
       login(r);
 
       if (callback) callback();
     })
-    .catch(function(e) {
+    .catch(function (e) {
       clearTokens();
 
       if (errMsg) {
@@ -64,13 +64,13 @@ export function logout() {
       authorization: getHeaderToken()
     }
   })
-    .then(function() {
+    .then(function () {
       clearTokens();
       clearData();
 
       m.route.set("/login", { msg: "You've been logged out" });
     })
-    .catch(function(e) {
+    .catch(function (e) {
       m.route.set("/login", { msg: `Logout failed: ${e.response.error}` });
     });
 }

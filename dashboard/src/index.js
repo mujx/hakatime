@@ -8,7 +8,7 @@ import Projects from "./components/projects.js";
 import Login from "./components/login.js";
 import Register from "./components/register.js";
 
-window.addEventListener("storage", function(event) {
+window.addEventListener("storage", function (event) {
   if (event.key === "logout") {
     auth.clearTokens();
     m.route.set("/login", { msg: "You've been logged out" });
@@ -28,12 +28,12 @@ export function main() {
     "/login": Login,
     "/register": Register,
     "/app": {
-      render: function() {
+      render: function () {
         return m(Dashboard, m(Overview));
       }
     },
     "/app/projects": {
-      render: function() {
+      render: function () {
         return m(Dashboard, m(Projects));
       }
     }

@@ -73,7 +73,7 @@ const Model = {
         headers: headers
       })
     ])
-      .then(function(values) {
+      .then(function (values) {
         const obj = values[0];
 
         Model.obj = obj;
