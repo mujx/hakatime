@@ -17,20 +17,20 @@ jobs:
           key: dependency-cache-{{ checksum "./dashboard/package.json" }}
       - run:
           name: "Install dependencies"
-          command: cd dashboard && npm install
+          command: cd dashboard && yarn install
       - save_cache:
           key: dependency-cache-{{ checksum "./dashboard/package.json" }}
           paths:
             - ./dashboard/node_modules
       - run:
           name: "Build"
-          command: cd dashboard && npm run prod
+          command: cd dashboard && yarn run prod
       - run:
           name: "Lint"
-          command: cd dashboard && npm run lint
+          command: cd dashboard && yarn run lint
       - run:
           name: "Format"
-          command: cd dashboard && npm run fmt
+          command: cd dashboard && yarn run fmt
 
 workflows:
   version: 2
