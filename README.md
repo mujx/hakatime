@@ -48,6 +48,9 @@ You can use the following docker-compose setup for testing locally or an actual
 deployment. Change `HAKA_CORS_URL` to match the actual external endpoint of your
 instance.
 
+**NOTE**: Deploying on ARM is also possible using `mujx/hakatime:latest-arm` (semi-regular updates) or by
+building the image yourself with the dedicated Dockerfile (`Dockerfile.arm`).
+
 ```yaml
 version: "3"
 services:
