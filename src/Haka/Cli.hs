@@ -10,7 +10,7 @@ import Data.Bits.Extras (w16)
 import Data.ByteString.Char8 (pack)
 import Data.Text (Text, unpack)
 import Data.Version (showVersion)
-import qualified Haka.Users as Users
+import qualified Haka.PasswordUtils as PasswordUtils
 import qualified Haka.Utils as Utils
 import qualified Hasql.Connection as HasqlConn
 import qualified Hasql.Pool as HasqlPool
@@ -94,7 +94,7 @@ handleCommand (CreateToken ops) _ = do
   dbSettings <- getDbSettings
   pass <- Utils.passwordInput "Password: "
   pool <- HasqlPool.acquire (10, 1, dbSettings)
-  token <- Users.createToken pool username pass
+  token <- PasswordUtils.createToken pool username pass
   case token of
     Left err -> die $ unpack err
     Right val ->
@@ -107,11 +107,11 @@ handleCommand (CreateUser ops) _ = do
   dbSettings <- getDbSettings
   pass <- Utils.passwordInput "Set a password: "
   pool <- HasqlPool.acquire (10, 1, dbSettings)
-  hashUser <- Users.mkUser username pass
+  hashUser <- PasswordUtils.mkUser username pass
   case hashUser of
     Left err -> die (show err)
     Right user -> do
-      res <- Users.createUser pool user
+      res <- PasswordUtils.createUser pool user
       either
         handleError
         ( \_ -> do

@@ -5,6 +5,7 @@
 module Haka.DatabaseOperations
   ( processHeartbeatRequest,
     interpretDatabaseIO,
+    getUserByRefreshToken,
     getBadgeLinkInfo,
     getTotalActivityTime,
     mkBadgeLink,
@@ -29,6 +30,7 @@ import Data.Text (Text, pack)
 import Data.Time.Clock (UTCTime)
 import qualified Haka.Db.Sessions as Sessions
 import qualified Haka.Errors as Err
+import qualified Haka.PasswordUtils as PUtils
 import Haka.Types
   ( ApiToken (..),
     BadgeRow (..),
@@ -40,7 +42,6 @@ import Haka.Types
     TimelineRow (..),
     TokenData (..),
   )
-import Haka.Users (createUser, mkUser, validatePassword)
 import qualified Haka.Utils as Utils
 import qualified Hasql.Pool as HqPool
 import Polysemy
@@ -138,7 +139,7 @@ interpretDatabaseIO =
       res <- liftIO $ HqPool.use pool (Sessions.getUserByRefreshToken token)
       either (throw . SessionException) pure res
     ValidateCredentials pool user pass -> do
-      res <- liftIO $ HqPool.use pool (Sessions.validateUser validatePassword user pass)
+      res <- liftIO $ HqPool.use pool (Sessions.validateUser PUtils.validatePassword user pass)
       either
         (throw . SessionException)
         ( \isValid -> if isValid then pure $ Just user else pure Nothing
@@ -168,11 +169,11 @@ interpretDatabaseIO =
       either (throw . SessionException) (\_ -> pure tknData) res
     RegisterUser pool user pass expiry -> do
       tknData <- liftIO $ mkTokenData user
-      hashUser <- liftIO $ mkUser user pass
+      hashUser <- liftIO $ PUtils.mkUser user pass
       case hashUser of
         Left err -> throw $ RegistrationFailed (pack $ show err)
         Right hashUser' -> do
-          u <- liftIO $ createUser pool hashUser'
+          u <- liftIO $ PUtils.createUser pool hashUser'
           case u of
             Left e -> throw $ OperationException (Utils.toStrError e)
             Right userCreated ->

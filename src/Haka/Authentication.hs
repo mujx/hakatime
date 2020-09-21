@@ -13,9 +13,8 @@ import Control.Exception.Safe (throw)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
 import Data.Aeson (FromJSON, ToJSON)
-import qualified Data.ByteString as Bs
 import Data.Text (Text)
-import Data.Text.Encoding (decodeUtf8, encodeUtf8)
+import Data.Text.Encoding (encodeUtf8)
 import Data.Time (addUTCTime)
 import Data.Time.Clock (UTCTime (..), getCurrentTime)
 import GHC.Generics
@@ -30,11 +29,11 @@ import Haka.Types
     StoredApiToken,
     TokenData (..),
   )
+import Haka.Utils (getRefreshToken)
 import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
-import Safe (headMay)
 import Servant
 import Web.Cookie
 
@@ -155,13 +154,6 @@ mkLoginResponse tknData now =
       tokenExpiry = addUTCTime (30 * 60) now,
       tokenUsername = tknOwner tknData
     }
-
-getRefreshToken :: Bs.ByteString -> Maybe Text
-getRefreshToken cookies =
-  let value = headMay $ map snd $ filter (\(k, _) -> k == "refresh_token") (parseCookies cookies)
-   in case value of
-        Just v -> Just $ decodeUtf8 v
-        Nothing -> Nothing
 
 loginHandler :: AuthRequest -> AppM LoginResponse'
 loginHandler creds = do

@@ -1,91 +1,100 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Haka.Users
-  ( createUser,
-    mkUser,
-    createToken,
-    validatePassword,
+  ( API,
+    server,
   )
 where
 
-import qualified Crypto.Error as CErr
-import qualified Crypto.KDF.Argon2 as Argon2
-import qualified Crypto.Random.Entropy as Entropy
-import qualified Data.ByteString as Bs
-import qualified Data.Text as T
+import Control.Exception.Safe (throw)
+import Control.Monad (when)
+import Control.Monad.Reader (asks)
+import Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
+import Data.Maybe (fromJust, isNothing)
+import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
-import qualified Haka.Db.Sessions as Sessions
-import Haka.Types (RegisteredUser (..))
-import qualified Haka.Utils as Utils
-import qualified Hasql.Pool as HasqlPool
+import GHC.Generics
+import Haka.AesonHelpers (noPrefixOptions)
+import qualified Haka.DatabaseOperations as DbOps
+import qualified Haka.Errors as Err
+import Haka.Types (AppM, pool)
+import Haka.Utils (getRefreshToken)
+import Katip
+import Polysemy (runM)
+import Polysemy.Error (runError)
+import Polysemy.IO (embedToMonadIO)
+import Servant
 
-hashOutputLen :: Int
-hashOutputLen = 64
+type API = CurrentUser
 
-hashSaltLen :: Int
-hashSaltLen = 64
+type CurrentUser =
+  "auth"
+    :> "users"
+    :> "current"
+    -- The user is logged in if the refresh_token is still active.
+    :> Header "Cookie" Text
+    :> Get '[JSON] UserStatusResponse
 
-argonHash :: Bs.ByteString -> T.Text -> CErr.CryptoFailable Bs.ByteString
-argonHash salt password =
-  Argon2.hash Argon2.defaultOptions (encodeUtf8 password) salt hashOutputLen
+newtype UserStatusResponse = UserStatusResponse
+  { rData :: UserStatus
+  }
+  deriving (Generic)
 
-mkUser :: T.Text -> T.Text -> IO (Either CErr.CryptoError RegisteredUser)
-mkUser name pass = do
-  salt <- Entropy.getEntropy hashSaltLen
-  case argonHash salt pass of
-    CErr.CryptoFailed e -> pure $ Left e
-    CErr.CryptoPassed v ->
-      pure $
-        Right $
-          RegisteredUser
-            { username = name,
-              hashedPassword = v,
-              saltUsed = salt
-            }
+data UserStatus = UserStatus
+  { rFull_name :: Text,
+    rEmail :: Text,
+    -- TODO: Use generate letter icon.
+    rPhoto :: Text
+  }
+  deriving (Generic)
 
-validatePassword :: RegisteredUser -> T.Text -> T.Text -> Either CErr.CryptoError Bool
-validatePassword savedUser name password =
-  if name /= username savedUser
-    then Right False
-    else case argonHash (saltUsed savedUser) password of
-      CErr.CryptoFailed e -> Left e
-      CErr.CryptoPassed v -> Right (hashedPassword savedUser == v)
+defaultUserStatus :: Text -> UserStatusResponse
+defaultUserStatus u =
+  UserStatusResponse
+    { rData =
+        UserStatus
+          { rFull_name = u,
+            rEmail = u <> "@hakatime.dev",
+            rPhoto = ""
+          }
+    }
 
--- / Insert the user's credentials.
-createUser ::
-  HasqlPool.Pool ->
-  RegisteredUser ->
-  IO (Either HasqlPool.UsageError Bool)
-createUser pool user = HasqlPool.use pool (Sessions.insertUser user)
+instance ToJSON UserStatusResponse where
+  toJSON = genericToJSON noPrefixOptions
 
--- / Validate the user credentials and generate a token for it if successful.
-createToken :: HasqlPool.Pool -> T.Text -> T.Text -> IO (Either T.Text T.Text)
-createToken pool name pass = do
-  validationResult <- HasqlPool.use pool (Sessions.validateUser validatePassword name pass)
-  either (pure . Left . Utils.toStrError) genToken validationResult
-  where
-    genToken :: Bool -> IO (Either T.Text T.Text)
-    genToken isUserValid =
-      if not isUserValid
-        then pure $ Left "Wrong username or password"
-        else do
-          -- The user has the non-encoded version of the UUID. The wakatime client
-          -- will encode it to Base64 before sending it.
-          token <- Utils.randomToken
-          -- We save the Base64 representation of the token in the
-          -- database for future comparisons.
-          --
-          -- TODO: Encrypt the token
-          --
-          tokenResult <-
-            HasqlPool.use
-              pool
-              ( Sessions.insertToken
-                  (Utils.toBase64 token)
-                  name
-              )
-          either
-            (pure . Left . Utils.toStrError)
-            (\_ -> pure $ Right token)
-            tokenResult
+instance ToJSON UserStatus where
+  toJSON = genericToJSON noPrefixOptions
+
+instance FromJSON UserStatus where
+  parseJSON = genericParseJSON noPrefixOptions
+
+instance FromJSON UserStatusResponse where
+  parseJSON = genericParseJSON noPrefixOptions
+
+server :: Maybe Text -> AppM UserStatusResponse
+server Nothing = throw Err.missingRefreshTokenCookie
+server (Just cookies) = do
+  p <- asks pool
+
+  let refreshTkn =
+        getRefreshToken (encodeUtf8 cookies)
+
+  when (isNothing refreshTkn) (throw Err.missingRefreshTokenCookie)
+
+  res <-
+    runM
+      . embedToMonadIO
+      . runError
+      $ DbOps.interpretDatabaseIO $
+        DbOps.getUserByRefreshToken p (fromJust refreshTkn)
+
+  case res of
+    Left e -> do
+      $(logTM) ErrorS (logStr $ show e)
+      throw (DbOps.toJSONError e)
+    Right userM -> do
+      case userM of
+        Nothing -> throw Err.expiredToken
+        Just u -> return $ defaultUserStatus u

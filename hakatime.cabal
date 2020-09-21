@@ -64,6 +64,7 @@ library libhaka
                      , Haka.Stats
                      , Haka.Users
                      , Haka.Utils
+                     , Haka.PasswordUtils
                      , Paths_hakatime
 
   autogen-modules:     Paths_hakatime

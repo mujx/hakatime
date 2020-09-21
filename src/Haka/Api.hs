@@ -11,6 +11,7 @@ import qualified Haka.Heartbeats as Heartbeats
 import qualified Haka.Projects as Projects
 import qualified Haka.Stats as Stats
 import Haka.Types (AppM, ServerSettings (..))
+import qualified Haka.Users as Users
 import Servant
 
 type Static = Raw
@@ -25,6 +26,7 @@ type HakaAPI =
     :<|> Projects.API
     :<|> Auth.API
     :<|> Badges.API
+    :<|> Users.API
     :<|> Static
 
 api :: Proxy HakaAPI
@@ -38,4 +40,5 @@ server settings =
     :<|> Projects.server
     :<|> Auth.server (hakaEnableRegistration settings)
     :<|> Badges.server
+    :<|> Users.server
     :<|> serveDirectoryFileServer (hakaDashboardPath settings)

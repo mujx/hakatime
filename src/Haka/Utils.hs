@@ -2,6 +2,7 @@
 
 module Haka.Utils
   ( toStrError,
+    getRefreshToken,
     passwordInput,
     defaultLimit,
     randomToken,
@@ -15,6 +16,7 @@ module Haka.Utils
 where
 
 import Control.Exception (bracket_)
+import qualified Data.ByteString as Bs
 import Data.ByteString.Base64 (encode)
 import Data.Int (Int64)
 import Data.Text (Text, pack, splitOn)
@@ -25,7 +27,9 @@ import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
 import Hasql.Pool (UsageError (..))
 import qualified Hasql.Session as S
+import Safe (headMay)
 import System.IO (hFlush, hGetEcho, hSetEcho, stdin, stdout)
+import Web.Cookie
 
 defaultLimit :: Int64
 defaultLimit = 15
@@ -70,7 +74,7 @@ data EditorInfo = EditorInfo
   }
   deriving (Show)
 
--- / Parse the user agent string & extract the editor & plugin name/version pair.
+-- | Parse the user agent string & extract the editor & plugin name/version pair.
 userAgentInfo :: Text -> EditorInfo
 userAgentInfo userAgent =
   EditorInfo
@@ -137,3 +141,10 @@ toStrError
         )
     ) = err
 toStrError err = pack $ show err
+
+getRefreshToken :: Bs.ByteString -> Maybe Text
+getRefreshToken cookies =
+  let value = headMay $ map snd $ filter (\(k, _) -> k == "refresh_token") (parseCookies cookies)
+   in case value of
+        Just v -> Just $ decodeUtf8 v
+        Nothing -> Nothing
