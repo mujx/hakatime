@@ -31,18 +31,16 @@ const Model = {
       }
     })
       .then(obj => {
-        if (callback) {
+        if (typeof callback === "function") {
           callback(obj);
         } else {
           Model.timeline = obj;
         }
       })
-      .catch(err => auth.retryCall(err, Model.fetchItems));
+      .catch(err => auth.retryCall(err, Model.fetchTimeline));
   },
   // Fetch the statistics.
-  fetchItems: () => {
-    if (!auth.isLoggedIn()) return;
-
+  fetchItems: cb => {
     const start = new Date();
     const today = new Date();
     start.setDate(start.getDate() - TimeRange.numOfDays);
@@ -83,8 +81,10 @@ const Model = {
         );
 
         Model.timeline = values[1];
+
+        typeof cb === "function" && cb();
       })
-      .catch(err => auth.retryCall(err, Model.fetchItems));
+      .catch(err => auth.retryCall(err, () => Model.fetchItems(cb)));
   }
 };
 

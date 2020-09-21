@@ -441,7 +441,13 @@ function barChart() {
 
 export default {
   oninit: function () {
-    if (!OverviewState.obj) return;
+    if (!OverviewState.obj) {
+      OverviewState.fetchItems(() => {
+        LocalState.initProjectList(OverviewState.obj.projects);
+      });
+
+      return;
+    }
 
     LocalState.initProjectList(OverviewState.obj.projects);
   },

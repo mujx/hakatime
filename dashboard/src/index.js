@@ -20,10 +20,17 @@ export function main() {
 
   m.route(root, "/", {
     "/": {
-      oninit: () => {
+      onmatch: function () {
         document.title = "Hakatime";
-      },
-      view: () => m("div")
+
+        if (auth.isLoggedIn()) {
+          m.route.set("/app");
+        } else {
+          auth.tryToRefresh(null, () => {
+            m.route.set("/app");
+          });
+        }
+      }
     },
     "/login": Login,
     "/register": Register,
@@ -38,12 +45,4 @@ export function main() {
       }
     }
   });
-
-  if (auth.isLoggedIn()) {
-    m.route.set("/app");
-  } else {
-    auth.tryToRefresh(null, () => {
-      m.route.set("/app");
-    });
-  }
 }

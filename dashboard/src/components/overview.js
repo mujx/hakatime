@@ -463,6 +463,7 @@ function mkLangHeatMap() {
     m(heatmapChart(heatmapDataForLangs))
   );
 }
+
 export default {
   oninit: State.fetchItems,
   oncreate: () => {

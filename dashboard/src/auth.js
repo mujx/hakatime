@@ -34,7 +34,7 @@ export function tryToRefresh(errMsg, callback) {
     .then(function (r) {
       login(r);
 
-      if (callback) callback();
+      typeof callback === "function" && callback();
     })
     .catch(function (e) {
       clearTokens();
