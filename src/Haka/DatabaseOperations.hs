@@ -20,7 +20,6 @@ module Haka.DatabaseOperations
     DatabaseException (..),
     createAuthTokens,
     refreshAuthTokens,
-    toJSONError,
   )
 where
 
@@ -29,7 +28,7 @@ import Data.Int (Int64)
 import Data.Text (Text, pack)
 import Data.Time.Clock (UTCTime)
 import qualified Haka.Db.Sessions as Sessions
-import qualified Haka.Errors as Err
+import Haka.Errors (DatabaseException (..))
 import qualified Haka.PasswordUtils as PUtils
 import Haka.Types
   ( ApiToken (..),
@@ -48,33 +47,9 @@ import Polysemy
 import Polysemy.Error
 import Polysemy.Reader
 import PostgreSQL.Binary.Data (UUID)
-import Servant (ServerError (..))
 
 data OperationError = UsageError | Text
   deriving (Show)
-
--- All database operations might throw the exception below.
-data DatabaseException
-  = SessionException HqPool.UsageError
-  | UserNotFound
-  | InvalidCredentials
-  | MissingRefreshTokenCookie
-  | ExpiredToken
-  | UsernameExists Text
-  | RegistrationFailed Text
-  | OperationException Text
-  deriving (Show)
-
--- | Convert a database exception to a serializable error message.
-toJSONError :: DatabaseException -> ServerError
-toJSONError UserNotFound = Err.invalidTokenError
-toJSONError ExpiredToken = Err.expiredToken
-toJSONError InvalidCredentials = Err.invalidCredentials
-toJSONError (SessionException e) = Err.genericError (pack $ show e)
-toJSONError (OperationException e) = Err.genericError e
-toJSONError (UsernameExists _) = Err.usernameExists
-toJSONError (RegistrationFailed _) = Err.registerError
-toJSONError MissingRefreshTokenCookie = Err.missingRefreshTokenCookie
 
 -- Effect model
 data Database m a where

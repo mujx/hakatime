@@ -1,6 +1,5 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Haka.Users
   ( API,
@@ -21,7 +20,6 @@ import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
 import Haka.Types (AppM, pool)
 import Haka.Utils (getRefreshToken)
-import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
@@ -90,11 +88,8 @@ server (Just cookies) = do
       $ DbOps.interpretDatabaseIO $
         DbOps.getUserByRefreshToken p (fromJust refreshTkn)
 
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right userM -> do
-      case userM of
-        Nothing -> throw Err.expiredToken
-        Just u -> return $ defaultUserStatus u
+  userM <- either Err.logError pure res
+
+  case userM of
+    Nothing -> throw Err.expiredToken
+    Just u -> return $ defaultUserStatus u

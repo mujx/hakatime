@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Haka.Projects
@@ -23,9 +22,9 @@ import GHC.Generics
 import Haka.AesonHelpers (noPrefixOptions)
 import qualified Haka.DatabaseOperations as DbOps
 import Haka.Errors (missingAuthError)
+import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), AppM, ProjectStatRow (..), pool)
 import Haka.Utils (defaultLimit)
-import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
@@ -111,13 +110,12 @@ server project t0Param t1Param timeLimit (Just token) = do
     runM
       . embedToMonadIO
       . runError
-      $ DbOps.interpretDatabaseIO
-      $ DbOps.genProjectStatistics p token project (fromMaybe defaultLimit timeLimit) (t0, t1)
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right rows -> return $ toStatsPayload t0 t1 rows
+      $ DbOps.interpretDatabaseIO $
+        DbOps.genProjectStatistics p token project (fromMaybe defaultLimit timeLimit) (t0, t1)
+
+  rows <- either Err.logError pure res
+
+  return $ toStatsPayload t0 t1 rows
   where
     removeAWeek, removeAYear, addAWeek :: UTCTime -> UTCTime
     removeAWeek t =

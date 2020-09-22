@@ -1,6 +1,11 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Haka.Errors
   ( missingAuthError,
     missingRefreshTokenCookie,
+    logError,
+    toJSONError,
+    DatabaseException (..),
     invalidTokenError,
     disabledRegistration,
     genericError,
@@ -12,14 +17,17 @@ module Haka.Errors
   )
 where
 
+import Control.Exception.Safe (MonadThrow, throw)
 import Data.Aeson (encode)
 import qualified Data.ByteString.Char8 as C
 import Data.CaseInsensitive (mk)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Haka.Types
   ( ApiErrorData (..),
     HeartbeatApiResponse (..),
   )
+import qualified Hasql.Pool as HqPool
+import Katip
 import Servant
 
 mkApiError :: Text -> HeartbeatApiResponse
@@ -89,3 +97,31 @@ genericError _ =
     { errBody = encode $ mkApiError "An internal error occured",
       errHeaders = contentTypeHeader
     }
+
+-- All database operations might throw the exception below.
+data DatabaseException
+  = SessionException HqPool.UsageError
+  | UserNotFound
+  | InvalidCredentials
+  | MissingRefreshTokenCookie
+  | ExpiredToken
+  | UsernameExists Text
+  | RegistrationFailed Text
+  | OperationException Text
+  deriving (Show)
+
+-- | Convert a database exception to a serializable error message.
+toJSONError :: DatabaseException -> ServerError
+toJSONError UserNotFound = invalidTokenError
+toJSONError ExpiredToken = expiredToken
+toJSONError InvalidCredentials = invalidCredentials
+toJSONError (SessionException e) = genericError (pack $ show e)
+toJSONError (OperationException e) = genericError e
+toJSONError (UsernameExists _) = usernameExists
+toJSONError (RegistrationFailed _) = registerError
+toJSONError MissingRefreshTokenCookie = missingRefreshTokenCookie
+
+logError :: (KatipContext m, MonadThrow m) => DatabaseException -> m b
+logError e = do
+  $(logTM) ErrorS (logStr $ show e)
+  throw $ toJSONError e

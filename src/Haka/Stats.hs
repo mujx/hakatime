@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Haka.Stats
   ( API,
@@ -22,9 +21,9 @@ import GHC.Generics
 import Haka.AesonHelpers (noPrefixOptions)
 import qualified Haka.DatabaseOperations as DbOps
 import Haka.Errors (missingAuthError)
+import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), AppM, StatRow (..), TimelineRow (..), pool)
 import Haka.Utils (defaultLimit)
-import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
@@ -183,11 +182,10 @@ timelineStatsHandler t0Param t1Param timeLimit (Just token) = do
       . runError
       $ DbOps.interpretDatabaseIO $
         DbOps.getTimeline p token (fromMaybe defaultLimit timeLimit) (t0, t1)
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right rows -> return $ mkTimelinePayload rows
+
+  rows <- either Err.logError pure res
+
+  return $ mkTimelinePayload rows
   where
     mkTimelinePayload :: [TimelineRow] -> TimelinePayload
     mkTimelinePayload rows =
@@ -230,11 +228,10 @@ statsHandler t0Param t1Param timeLimit (Just token) = do
       . runError
       $ DbOps.interpretDatabaseIO $
         DbOps.generateStatistics p token (fromMaybe defaultLimit timeLimit) (t0, t1)
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right rows -> return $ toStatsPayload t0 t1 rows
+
+  rows <- either Err.logError pure res
+
+  return $ toStatsPayload t0 t1 rows
 
 fillMissing :: [UTCTime] -> [[StatRow]] -> [[StatRow]]
 fillMissing times rows = go times rows ([] :: [[StatRow]])

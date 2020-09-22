@@ -1,6 +1,5 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Haka.Authentication
@@ -30,7 +29,6 @@ import Haka.Types
     TokenData (..),
   )
 import Haka.Utils (getRefreshToken)
-import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
@@ -131,11 +129,8 @@ getStoredApiTokensHandler (Just tkn) = do
       . embedToMonadIO
       . runError
       $ DbOps.interpretDatabaseIO $ DbOps.getApiTokens dbPool tkn
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right v -> pure v
+
+  either Err.logError pure res
 
 mkRefreshTokenCookie :: TokenData -> SetCookie
 mkRefreshTokenCookie tknData =
@@ -170,15 +165,12 @@ loginHandler creds = do
           (password creds)
           dbPool
           (hakaSessionExpiry ss)
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right tknData -> do
-      let cookie = mkRefreshTokenCookie tknData
-      return $
-        addHeader cookie $
-          mkLoginResponse tknData now
+
+  tknData <- either Err.logError pure res
+
+  let cookie = mkRefreshTokenCookie tknData
+
+  return $ addHeader cookie $ mkLoginResponse tknData now
 
 registerHandler :: RegistrationStatus -> AuthRequest -> AppM LoginResponse'
 registerHandler DisabledRegistration _ = throw Err.disabledRegistration
@@ -192,15 +184,12 @@ registerHandler EnabledRegistration creds = do
       . runError
       $ DbOps.interpretDatabaseIO $
         DbOps.registerUser dbPool (username creds) (password creds) (hakaSessionExpiry ss)
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right tknData -> do
-      let cookie = mkRefreshTokenCookie tknData
-      return $
-        addHeader cookie $
-          mkLoginResponse tknData now
+
+  tknData <- either Err.logError pure res
+
+  let cookie = mkRefreshTokenCookie tknData
+
+  return $ addHeader cookie $ mkLoginResponse tknData now
 
 refreshTokenHandler :: Maybe Text -> AppM LoginResponse'
 refreshTokenHandler Nothing = throw Err.missingRefreshTokenCookie
@@ -217,15 +206,12 @@ refreshTokenHandler (Just cookies) = do
           (getRefreshToken (encodeUtf8 cookies))
           dbPool
           (hakaSessionExpiry ss)
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right tknData -> do
-      let cookie = mkRefreshTokenCookie tknData
-      return $
-        addHeader cookie $
-          mkLoginResponse tknData now
+
+  tknData <- either Err.logError pure res
+
+  let cookie = mkRefreshTokenCookie tknData
+
+  return $ addHeader cookie $ mkLoginResponse tknData now
 
 logoutHandler :: Maybe ApiToken -> Maybe Text -> AppM NoContent
 logoutHandler Nothing _ = throw Err.missingAuthError
@@ -239,11 +225,10 @@ logoutHandler (Just tkn) (Just cookies) =
         . runError
         $ DbOps.interpretDatabaseIO $
           DbOps.clearTokens tkn (getRefreshToken (encodeUtf8 cookies)) dbPool
-    case res of
-      Left e -> do
-        $(logTM) ErrorS (logStr $ show e)
-        throw (DbOps.toJSONError e)
-      Right _ -> return NoContent
+
+    _ <- either Err.logError pure res
+
+    return NoContent
 
 createAPITokenHandler :: Maybe ApiToken -> AppM TokenResponse
 createAPITokenHandler Nothing = throw Err.missingAuthError
@@ -256,11 +241,10 @@ createAPITokenHandler (Just tkn) =
         . runError
         $ DbOps.interpretDatabaseIO $
           DbOps.createNewApiToken dbPool tkn
-    case res of
-      Left e -> do
-        $(logTM) ErrorS (logStr $ show e)
-        throw (DbOps.toJSONError e)
-      Right t -> return $ TokenResponse {apiToken = t}
+
+    t <- either Err.logError pure res
+
+    return $ TokenResponse {apiToken = t}
 
 deleteTokenHandler :: Text -> Maybe ApiToken -> AppM NoContent
 deleteTokenHandler _ Nothing = throw Err.missingAuthError
@@ -271,11 +255,10 @@ deleteTokenHandler tokenId (Just tkn) = do
       . embedToMonadIO
       . runError
       $ DbOps.interpretDatabaseIO $ DbOps.deleteApiToken dbPool tkn tokenId
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right _ -> return NoContent
+
+  _ <- either Err.logError pure res
+
+  return NoContent
 
 server settings =
   loginHandler

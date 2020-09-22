@@ -1,5 +1,4 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Haka.Badges
   ( API,
@@ -7,7 +6,7 @@ module Haka.Badges
   )
 where
 
-import Control.Exception.Safe (MonadThrow, throw)
+import Control.Exception.Safe (throw)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
 import Data.Aeson (FromJSON, ToJSON)
@@ -23,7 +22,6 @@ import GHC.Generics
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
 import Haka.Types
-import Katip
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Media ((//))
@@ -84,17 +82,12 @@ badgeLinkHandler proj (Just tkn) = do
       $ DbOps.interpretDatabaseIO $
         DbOps.mkBadgeLink p proj tkn
 
-  badgeId <- either logError pure res
+  badgeId <- either Err.logError pure res
 
   return $
     BadgeResponse
       { badgeUrl = decodeUtf8 (hakaCorsUrl ss) <> "/badge/svg/" <> UUID.toText badgeId
       }
-
-logError :: (KatipContext m, MonadThrow m) => DbOps.DatabaseException -> m b
-logError e = do
-  $(logTM) ErrorS (logStr $ show e)
-  throw $ DbOps.toJSONError e
 
 badgeSvgHandler :: UUID.UUID -> Maybe Int64 -> AppM Bs.ByteString
 badgeSvgHandler badgeId daysParam = do
@@ -107,7 +100,7 @@ badgeSvgHandler badgeId daysParam = do
       $ DbOps.interpretDatabaseIO $
         DbOps.getBadgeLinkInfo p badgeId
 
-  badgeRow <- either logError pure badgeInfoResult
+  badgeRow <- either Err.logError pure badgeInfoResult
 
   timeResult <-
     runM
@@ -120,7 +113,7 @@ badgeSvgHandler badgeId daysParam = do
           (fromMaybe 7 daysParam)
           (badgeProject badgeRow)
 
-  activityTime <- either logError pure timeResult
+  activityTime <- either Err.logError pure timeResult
 
   ss <- asks srvSettings
 

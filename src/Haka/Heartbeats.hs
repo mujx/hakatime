@@ -138,15 +138,12 @@ multiHeartbeatHandler machineId (Just token) heartbeats = do
 
 -- | Construct an API Heartbeat response depending on the size of the response.
 mkResponse :: Either DbOps.DatabaseException [Int64] -> AppM HeartbeatApiResponse
-mkResponse res =
-  case res of
-    Left e -> do
-      $(logTM) ErrorS (logStr $ show e)
-      throw (DbOps.toJSONError e)
-    Right values ->
-      if length values > 1
-        then handleManyDbResults values
-        else handleSingleDbResult values
+mkResponse res = do
+  values <- either Err.logError pure res
+
+  if length values > 1
+    then handleManyDbResults values
+    else handleSingleDbResult values
 
 -- | Run the necessary database operations to store the incoming heartbeats.
 storeHeartbeats ::
@@ -166,7 +163,7 @@ storeHeartbeats p token machineId heartbeats =
             machineName = machineId
           }
       )
-    $ DbOps.interpretDatabaseIO
-    $ DbOps.processHeartbeatRequest heartbeats
+    $ DbOps.interpretDatabaseIO $
+      DbOps.processHeartbeatRequest heartbeats
 
 -- TODO: Discard timestamps from the future
