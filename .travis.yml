@@ -1,0 +1,14 @@
+arch: arm64
+
+dist: bionic
+
+services:
+  - docker
+
+script:
+  - docker build -t mujx/hakatime:arm64-latest -f Dockerfile.arm .
+  - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD ;
+  - docker push mujx/hakatime:arm64-latest
+
+notifications:
+  email: false
