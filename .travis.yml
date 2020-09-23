@@ -5,9 +5,19 @@ dist: bionic
 services:
   - docker
 
+cache:
+  directories:
+    - docker_images
+
+before_cache:
+  - docker save -o docker_images/images.tar $(docker images -a -q)
+
+before_install:
+  - docker load -i docker_images/images.tar || true
+
 script:
   - docker build -t mujx/hakatime:arm64-latest -f Dockerfile.arm .
-  - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD ;
+  - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
   - docker push mujx/hakatime:arm64-latest
 
 notifications:

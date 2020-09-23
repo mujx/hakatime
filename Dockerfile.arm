@@ -29,7 +29,7 @@ COPY test/          ./test
 COPY tools/         ./tools
 
 RUN cabal update
-RUN cabal build -j2 --dependencies-only exe:hakatime
+RUN cabal build -j4 --dependencies-only exe:hakatime
 
 RUN cabal build exe:hakatime && \
     mkdir -p /app/bin                && \
@@ -42,7 +42,7 @@ RUN apt-get update -y -qq && \
     apt-get clean && \
     apt-get autoclean
 
-RUN rm -rf /usr/lib/gcc/x86_64-linux-gnu/10/
+RUN rm -rf /usr/lib/gcc/*-gnu/10/
 
 COPY --from=dashboard-builder /usr/src/app/dist /app/bin/dashboard
 COPY --from=server-builder /app/bin/hakatime /app/bin/hakatime
