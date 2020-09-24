@@ -40,11 +40,7 @@ const Model = {
       .catch(err => auth.retryCall(err, Model.fetchTimeline));
   },
   // Fetch the statistics.
-  fetchItems: cb => {
-    const start = new Date();
-    const today = new Date();
-    start.setDate(start.getDate() - TimeRange.numOfDays);
-
+  fetchItems: (cb, d1, d2) => {
     const headers = {
       authorization: auth.getHeaderToken()
     };
@@ -54,8 +50,8 @@ const Model = {
         url: "/api/v1/users/current/stats",
         responseType: "json",
         params: {
-          start: start.toISOString(),
-          end: today.toISOString(),
+          start: d1 || TimeRange.start().toISOString(),
+          end: d2 || TimeRange.end().toISOString(),
           timeLimit: TimeRange.timeLimit
         },
         headers: headers

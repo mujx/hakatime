@@ -2,6 +2,7 @@ import m from "mithril";
 import _ from "lodash";
 import path from "path";
 import ApexCharts from "apexcharts/dist/apexcharts.common";
+import Litepicker from "litepicker";
 
 // Models
 import TimeRange from "../models/TimeRange.js";
@@ -439,6 +440,8 @@ function barChart() {
   };
 }
 
+let dateRangePicker;
+
 export default {
   oninit: function () {
     if (!OverviewState.obj) {
@@ -451,6 +454,12 @@ export default {
 
     LocalState.initProjectList(OverviewState.obj.projects);
   },
+  onremove: () => {
+    if (dateRangePicker) {
+      dateRangePicker.destroy();
+      dateRangePicker = null;
+    }
+  },
   view: () => {
     document.title = "Hakatime | Projects";
 
@@ -462,7 +471,6 @@ export default {
       ]);
     }
 
-    const ranges = [7, 15, 30, 45, 90];
     const toolbar = m("div.d-sm-flex.mb-4", [
       m(
         "h1.h3.mb-0.mr-auto.text-gray-800",
@@ -499,7 +507,7 @@ export default {
           },
           [
             m("i.fas.fa-clock.fa-md.text-white-50.mr-2"),
-            m("small", `Time limit (${TimeRange.timeLimit} mins)`)
+            m("small", `Cut-off limit (${TimeRange.timeLimit} mins)`)
           ]
         ),
         m(
@@ -526,22 +534,57 @@ export default {
           },
           [
             m("i.fas.fa-calendar.fa-md.text-white-50.mr-2"),
-            m("small", `Time range (${TimeRange.numOfDays} days)`)
+            m("small", `Date range (${TimeRange.dateRange()} days)`),
+            m("a", { id: "date-range-picker-project" })
           ]
         ),
         m(
           'div.dropdown-menu[aria-labelledby="dropdownMenuButton"]',
-          ranges.map(r => {
-            return m(
-              "a.btn.dropdown-item",
-              {
-                onclick: () => {
-                  if (TimeRange.setDays(r)) LocalState.fetchProjectStats();
-                }
-              },
-              `Last ${r} days`
-            );
-          })
+          config.dateRangePresets
+            .map(r => {
+              return m(
+                "a.btn.dropdown-item",
+                {
+                  onclick: () => {
+                    if (TimeRange.setDaysFromToday(r))
+                      LocalState.fetchProjectStats();
+                  }
+                },
+                `Last ${r} days`
+              );
+            })
+            .concat([
+              m("div.dropdown-divider"),
+              m(
+                "a.btn.dropdown-item",
+                {
+                  onclick: e => {
+                    e.redraw = false;
+
+                    if (!dateRangePicker) {
+                      dateRangePicker = new Litepicker({
+                        ...config.datePicker,
+                        element: document.getElementById(
+                          "date-range-picker-project"
+                        ),
+                        onSelect: (d1, d2) => {
+                          if (TimeRange.setDays(d1, d2)) {
+                            LocalState.fetchProjectStats(
+                              null,
+                              d1.toISOString(),
+                              d2.toISOString()
+                            );
+                          }
+                        }
+                      });
+                    }
+
+                    dateRangePicker.show();
+                  }
+                },
+                "Pick a date range"
+              )
+            ])
         )
       ])
     ]);

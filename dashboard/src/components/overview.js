@@ -464,6 +464,8 @@ function mkLangHeatMap() {
   );
 }
 
+let dateRangePicker;
+
 export default {
   oninit: State.fetchItems,
   oncreate: () => {
@@ -472,6 +474,12 @@ export default {
   },
   onremove: () => {
     clearInterval(State.interval);
+  },
+  onbeforeremove: () => {
+    if (dateRangePicker) {
+      dateRangePicker.destroy();
+      dateRangePicker = null;
+    }
   },
   view: () => {
     document.title = "Hakatime | Overview";
@@ -484,7 +492,6 @@ export default {
       ]);
     }
 
-    const ranges = [7, 15, 30, 45, 90];
     const toolbar = m("div.d-flex.mb-4", [
       m("h1.h3.mr-auto.mb-0.text-gray-800", "Overview"),
       m("div.dropdown.mr-2", [
@@ -496,7 +503,7 @@ export default {
           },
           [
             m("i.fas.fa-clock.fa-md.text-white-50.mr-2"),
-            m("small", `Time limit (${TimeRange.timeLimit} mins)`)
+            m("small", `Cut-off limit (${TimeRange.timeLimit} mins)`)
           ]
         ),
         m(
@@ -523,22 +530,53 @@ export default {
           },
           [
             m("i.fas.fa-calendar.fa-md.text-white-50.mr-2"),
-            m("small", `Time range (${TimeRange.numOfDays} days)`)
+            m("small", `Date range (${TimeRange.dateRange()} days)`),
+            m("a", { id: "date-range-picker" })
           ]
         ),
         m(
           'div.dropdown-menu[aria-labelledby="dropdownMenuButton"]',
-          ranges.map(r => {
-            return m(
-              "a.btn.dropdown-item",
-              {
-                onclick: () => {
-                  if (TimeRange.setDays(r)) State.fetchItems();
-                }
-              },
-              `Last ${r} days`
-            );
-          })
+          config.dateRangePresets
+            .map(r => {
+              return m(
+                "a.btn.dropdown-item",
+                {
+                  onclick: () => {
+                    if (TimeRange.setDaysFromToday(r)) State.fetchItems();
+                  }
+                },
+                `Last ${r} days`
+              );
+            })
+            .concat([
+              m("div.dropdown-divider"),
+              m(
+                "a.btn.dropdown-item",
+                {
+                  onclick: e => {
+                    e.redraw = false;
+
+                    if (!dateRangePicker) {
+                      dateRangePicker = new Litepicker({
+                        ...config.datePicker,
+                        element: document.getElementById("date-range-picker"),
+                        onSelect: (d1, d2) => {
+                          if (TimeRange.setDays(d1, d2))
+                            State.fetchItems(
+                              null,
+                              d1.toISOString(),
+                              d2.toISOString()
+                            );
+                        }
+                      });
+                    }
+
+                    dateRangePicker.show();
+                  }
+                },
+                "Pick a date range"
+              )
+            ])
         )
       ])
     ]);

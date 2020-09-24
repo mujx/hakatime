@@ -29,7 +29,7 @@ COPY test/          ./test
 COPY tools/         ./tools
 
 RUN cabal update
-RUN cabal build -j4 --dependencies-only exe:hakatime
+RUN cabal build -j3 --dependencies-only exe:hakatime
 
 RUN cabal build exe:hakatime && \
     mkdir -p /app/bin                && \

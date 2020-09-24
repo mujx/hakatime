@@ -27,7 +27,7 @@ const Model = {
 
     Model.fetchProjectStats();
   },
-  fetchProjectStats: event => {
+  fetchProjectStats: (event, d1, d2) => {
     // If it was triggered by a click event.
     if (event) Model.currentProject = event.target.innerHTML;
 
@@ -42,8 +42,8 @@ const Model = {
         authorization: auth.getHeaderToken()
       },
       params: {
-        start: start.toISOString(),
-        end: today.toISOString(),
+        start: d1 || start.toISOString(),
+        end: d2 || today.toISOString(),
         timeLimit: TimeRange.timeLimit
       }
     })
@@ -54,7 +54,9 @@ const Model = {
           new Date(obj.endDate)
         );
       })
-      .catch(err => auth.retryCall(err, () => Model.fetchProjectStats(event)));
+      .catch(err =>
+        auth.retryCall(err, () => Model.fetchProjectStats(event, d1, d2))
+      );
   }
 };
 
