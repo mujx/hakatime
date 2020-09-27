@@ -12,30 +12,24 @@ RUN yarn install && yarn run prod
 #
 # Build the server.
 #
-FROM debian:testing as server-builder
+FROM mujx/hakatime-arm-deps:latest as server-builder
 
 WORKDIR /build
-
-RUN apt-get update -y -qq && \
-    apt-get install -y ghc cabal-install libffi-dev libgmp-dev libncurses-dev libpq-dev zlib1g-dev llvm
 
 COPY UNLICENSE      ./
 COPY app/           ./app
 COPY README.md      ./
 COPY hakatime.cabal ./
+COPY cabal.project  ./
 COPY src/           ./src
 COPY sql/           ./sql
 COPY test/          ./test
 COPY tools/         ./tools
 
-RUN cabal update
-RUN cabal build -j3 --dependencies-only exe:hakatime
+RUN cabal build exe:hakatime && mkdir -p /app/bin && \
+    cp /build/dist-newstyle/build/*-linux/ghc-*/hakatime-*/x/hakatime/opt/build/hakatime/hakatime /app/bin/hakatime
 
-RUN cabal build exe:hakatime && \
-    mkdir -p /app/bin                && \
-    cp /build/dist-newstyle/build/*-linux/ghc-*/hakatime-*/x/hakatime/build/hakatime/hakatime /app/bin/hakatime
-
-FROM debian:testing
+FROM debian:testing-slim
 
 RUN apt-get update -y -qq && \
     apt-get install -y libffi-dev libgmp-dev libncurses-dev libpq-dev zlib1g-dev && \

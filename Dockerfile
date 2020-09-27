@@ -34,6 +34,7 @@ COPY UNLICENSE      ./
 COPY app/           ./app
 COPY README.md      ./
 COPY hakatime.cabal ./
+COPY cabal.project  ./
 COPY src/           ./src
 COPY sql/           ./sql
 COPY test/          ./test

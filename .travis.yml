@@ -16,9 +16,9 @@ before_install:
   - docker load -i docker_images/images.tar || true
 
 script:
-  - docker build -t mujx/hakatime:arm64-latest -f Dockerfile.arm .
+  - docker build -t mujx/hakatime:latest-arm64 -f Dockerfile.arm .
   - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-  - docker push mujx/hakatime:arm64-latest
+  - docker push mujx/hakatime:latest-arm64
 
 notifications:
   email: false
