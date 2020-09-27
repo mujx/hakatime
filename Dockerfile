@@ -44,7 +44,7 @@ RUN cabal build -j2 --dependencies-only all
 
 RUN cabal build -j2 exe:hakatime && \
     mkdir -p /app/bin                && \
-    cp /build/dist-newstyle/build/x86_64-linux/ghc-*/hakatime-*/x/hakatime/build/hakatime/hakatime /app/bin/hakatime
+    cp /build/dist-newstyle/build/*-linux/ghc-*/hakatime-*/x/hakatime/opt/build/hakatime/hakatime /app/bin/hakatime
 
 FROM alpine:3.12
 

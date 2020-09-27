@@ -2,15 +2,14 @@
 
 [![CircleCI](https://circleci.com/gh/mujx/hakatime.svg?style=svg)](https://circleci.com/gh/mujx/hakatime)
 [![Docker build](https://img.shields.io/docker/cloud/build/mujx/hakatime)](https://hub.docker.com/r/mujx/hakatime/builds)
+[![BuiltWithNix](https://img.shields.io/badge/Built_With-Nix-5277C3.svg?logo=nixos&labelColor=73C3D5)](https://nixos.org/)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 
-Hakatime is a server implementation of [Wakatime](https://wakatime.com/). It
-provides a single API endpoint (`/api/v1/users/current/heartbeats.bulk`) that
-the Wakatime client can use to send heartbeats containing info about your coding
-activity.
+Hakatime is a server implementation of [Wakatime](https://wakatime.com/). It provides a single API endpoint
+(`/api/v1/users/current/heartbeats.bulk`) that the Wakatime client can use to send heartbeats containing info
+about your coding activity.
 
-It comes together with a simple dashboard which provides a graphical
-representation of the collected data.
+It comes together with a simple dashboard which provides a graphical representation of the collected data.
 
 ## Features
 
@@ -24,8 +23,8 @@ representation of the collected data.
 
 There is demo instance with fake data [here](https://hakatime-demo.mtx-dev.xyz).
 
-Use `demo` as username and `demodemo` as password to login. You can create an API token
-and try sending your data.
+Use `demo` as username and `demodemo` as password to login. You can create an API token and try sending your
+data.
 
 ## Client setup
 
@@ -48,8 +47,9 @@ You can use the following docker-compose setup for testing locally or an actual
 deployment. Change `HAKA_CORS_URL` to match the actual external endpoint of your
 instance.
 
-**NOTE**: Deploying on ARM is also possible using `mujx/hakatime:latest-arm` (semi-regular updates) or by
-building the image yourself with the dedicated Dockerfile (`Dockerfile.arm`).
+**NOTE**: Deploying on ARM is also possible using `mujx/hakatime:latest-arm64` for the `arm64` architecture
+(builds on every commit) or with `mujx/hakatime:latest-arm` (manual semi-regular updates for `arm/v7` & `arm64`)
+or by building the image yourself with the dedicated Dockerfile (`Dockerfile.arm`).
 
 ```yaml
 version: "3"
@@ -106,8 +106,7 @@ Requirements:
 - [libpq](https://www.postgresql.org/docs/11/libpq.html) (for PostgreSQL bindings)
 - [cabal-install](https://www.haskell.org/cabal/) (If building with cabal)
 
-Using [nix](https://nixos.org/nix/) requires the least amount of manual
-intervention (installing packages etc)
+Using [nix](https://nixos.org/nix/) requires the least amount of manual intervention (installing packages etc)
 
 #### nix
 
@@ -142,11 +141,9 @@ npm run dev # Development server with hot reloading.
 
 ### Database
 
-The server needs a database to store its data, so we will have to create a
-PostgreSQL instance and initialize it with the schema found in
-[docker/001-init.sql](docker/001-init.sql). You can use the provided solution
-using docker-compose (`docker-compose up -d`) or do it manually, depending on
-your system.
+The server needs a database to store its data, so we will have to create a PostgreSQL instance and initialize
+it with the schema found in the [docker/](docker/) directory. You can use the provided solution using
+docker-compose (`docker-compose up -d`) or do it manually, depending on your system.
 
 ### Server
 
