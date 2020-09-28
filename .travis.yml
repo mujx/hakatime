@@ -1,6 +1,7 @@
 arch: arm64
-
-dist: bionic
+dist: focal
+language: minimal
+os: linux
 
 services:
   - docker
