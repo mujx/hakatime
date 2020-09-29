@@ -368,7 +368,7 @@ data HeartbeatPayload = HeartbeatPayload
     branch :: Maybe Text,
     -- | The category of the project.
     category :: Maybe Text,
-    cursorpos :: Maybe Int64,
+    cursorpos :: Maybe Text,
     -- | Software dependencies extracted from the source code.
     dependencies :: Maybe [Text],
     -- | The file, app etc.

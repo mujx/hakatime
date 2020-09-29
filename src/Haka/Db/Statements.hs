@@ -348,7 +348,7 @@ insertHeartBeat = Statement query params result True
         <> (user_agent >$< E.param (E.nonNullable E.text))
         <> (branch >$< E.param (E.nullable E.text))
         <> (category >$< E.param (E.nullable E.text))
-        <> (cursorpos >$< E.param (E.nullable E.int8))
+        <> (cursorpos >$< E.param (E.nullable E.text))
         <> ( dependencies
                >$< E.param
                  ( E.nullable
