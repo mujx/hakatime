@@ -14,6 +14,7 @@ import { mkSingleStatCard } from "../single_stat_card.js";
 import cards from "../card_container.js";
 import utils from "../utils.js";
 import config from "../config.js";
+import * as auth from "../auth";
 
 function mkFileChart() {
   return cards.mkCardContainer("Most active files", m(fileChart()));
@@ -525,7 +526,7 @@ export default {
           })
         )
       ]),
-      m("div.dropdown", [
+      m("div.dropdown.mr-2", [
         m(
           "button.btn.btn-primary.dropdown-toggle.shadow-sm[data-toggle='dropdown'][aria-haspopup='true'][aria-expanded='false']",
           {
@@ -585,6 +586,34 @@ export default {
                 "Pick a date range"
               )
             ])
+        )
+      ]),
+      m("div.mr-1", [
+        m(
+          "button.btn.btn-primary[title='Copy shields.io badge to clipboard']",
+          {
+            onclick: e => {
+              e.redraw = false;
+
+              m.request({
+                method: "GET",
+                url: `/badge/link/${LocalState.currentProject}`,
+                background: true,
+                headers: {
+                  authorization: auth.getHeaderToken()
+                }
+              })
+                .then(function (r) {
+                  utils.copyToCliboard(r.badgeUrl);
+                })
+                .catch(function (e) {
+                  // TODO: Show a visual to the user
+                  console.log(e);
+                });
+            },
+            role: "button"
+          },
+          m("i.fas.fa-clone.fa-md.text-white-50")
         )
       ])
     ]);
