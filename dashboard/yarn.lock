@@ -1081,10 +1081,10 @@ anymatch@^2.0.0:
     micromatch "^3.1.4"
     normalize-path "^2.1.1"
 
-apexcharts@3.20.2:
-  version "3.20.2"
-  resolved "https://registry.yarnpkg.com/apexcharts/-/apexcharts-3.20.2.tgz#902c7163e3a46350f839fcc71e0dc46b00fd3ae8"
-  integrity sha512-Wc3viU4BmkcGMKArkWr87Flr1+2YJWV0CDZheTaK4S7kNgg8Aw7a05u5gczRDyA68RsmdQ/ltLjpBBr1CKBUPA==
+apexcharts@3.22.0:
+  version "3.22.0"
+  resolved "https://registry.yarnpkg.com/apexcharts/-/apexcharts-3.22.0.tgz#df6f1030d0d5bba605069907102d2c261afe97cb"
+  integrity sha512-DDh2eXnAEA8GoKU/hdicOaS2jzGehXwv8Bj1djYYudkeQzEdglFoWsVyIxff+Ds7+aUtVAJzd/9ythZuyyIbXQ==
   dependencies:
     svg.draggable.js "^2.2.2"
     svg.easing.js "^2.0.0"

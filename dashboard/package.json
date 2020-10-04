@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.14.0",
-    "apexcharts": "3.20.2",
+    "apexcharts": "3.22.0",
     "bootstrap": "4.5.2",
     "jquery": "3.5.1",
     "litepicker": "1.5.7",
