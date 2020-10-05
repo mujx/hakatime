@@ -99,6 +99,7 @@ library libhaka
                      , safe
                      , servant              >= 0.17
                      , servant-server       >= 0.17
+                     , system-filepath
                      , text
                      , time
                      , transformers

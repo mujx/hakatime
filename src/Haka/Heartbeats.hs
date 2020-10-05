@@ -15,6 +15,8 @@ import Data.Aeson (ToJSON)
 import Data.Int (Int64)
 import qualified Data.Text as T
 import Data.Time.Calendar (Day)
+import Filesystem.Path (splitExtension)
+import Filesystem.Path.CurrentOS (fromText)
 import GHC.Generics
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
@@ -145,6 +147,22 @@ mkResponse res = do
     then handleManyDbResults values
     else handleSingleDbResult values
 
+addMissingLang :: HeartbeatPayload -> HeartbeatPayload
+addMissingLang hb@HeartbeatPayload {language = Nothing, ty = FileType} =
+  let lang = convertToLang $ findExt (entity hb)
+   in hb {language = lang}
+  where
+    findExt :: T.Text -> Maybe T.Text
+    findExt = snd . splitExtension . fromText
+
+    convertToLang :: Maybe T.Text -> Maybe T.Text
+    convertToLang (Just ext) = case ext of
+      "" -> Nothing
+      "." -> Nothing
+      a -> Just $ T.toUpper a
+    convertToLang _ = Nothing
+addMissingLang hb = hb
+
 -- | Run the necessary database operations to store the incoming heartbeats.
 storeHeartbeats ::
   Pool ->
@@ -164,6 +182,6 @@ storeHeartbeats p token machineId heartbeats =
           }
       )
     $ DbOps.interpretDatabaseIO $
-      DbOps.processHeartbeatRequest heartbeats
+      DbOps.processHeartbeatRequest (map addMissingLang heartbeats)
 
 -- TODO: Discard timestamps from the future
