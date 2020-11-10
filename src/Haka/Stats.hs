@@ -23,7 +23,7 @@ import qualified Haka.DatabaseOperations as DbOps
 import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), AppM, StatRow (..), TimelineRow (..), pool)
-import Haka.Utils (defaultLimit)
+import Haka.Utils (defaultLimit, sum')
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
@@ -261,7 +261,7 @@ toStatsPayload t0 t1 xs =
       startDate = t0,
       endDate = t1,
       dailyAvg = dailyAvgSecs,
-      dailyTotal = map (sum . map rTotalSeconds) byDate,
+      dailyTotal = map (sum' . map rTotalSeconds) byDate,
       projects = getSegment rProject,
       editors = getSegment rEditor,
       languages = getSegment rLanguage,
@@ -280,15 +280,15 @@ toStatsPayload t0 t1 xs =
                       unzip3 $ map (\(_, m') -> Data.Maybe.fromMaybe (0, 0, 0) (Map.lookup name m')) all'
                  in ResourceStats
                       { pName = name,
-                        pTotalSeconds = sum secs',
-                        pTotalPct = sum pct',
+                        pTotalSeconds = sum' secs',
+                        pTotalPct = sum' pct',
                         pTotalDaily = secs',
                         pPctDaily = dailyPct'
                       }
             )
             uniqProjectNames
     allSecs :: Int64
-    allSecs = sum $ [rTotalSeconds x | x <- xs]
+    allSecs = sum' $ [rTotalSeconds x | x <- xs]
     dailyAvgSecs :: Double
     dailyAvgSecs = fromIntegral allSecs / numOfDays
     byDate :: [[StatRow]]

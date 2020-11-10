@@ -12,6 +12,7 @@ module Haka.Utils
     rollingGroupBy,
     countDuration,
     fmtDate,
+    sum',
   )
 where
 
@@ -19,6 +20,7 @@ import Control.Exception (bracket_)
 import qualified Data.ByteString as Bs
 import Data.ByteString.Base64 (encode)
 import Data.Int (Int64)
+import Data.List (foldl')
 import Data.Text (Text, pack, splitOn)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Data.Time.Clock (UTCTime)
@@ -30,6 +32,9 @@ import qualified Hasql.Session as S
 import Safe (headMay)
 import System.IO (hFlush, hGetEcho, hSetEcho, stdin, stdout)
 import Web.Cookie
+
+sum' :: (Num a, Foldable t) => t a -> a
+sum' = foldl' (+) 0
 
 defaultLimit :: Int64
 defaultLimit = 15
@@ -60,7 +65,7 @@ rollingGroupBy predicate xs = go predicate xs [] []
 -- >>> 12
 countDuration :: [Int] -> Int -> Int
 countDuration points interval =
-  sum $ map countDiff $ groupByDiff points
+  sum' $ map countDiff $ groupByDiff points
   where
     groupByDiff = rollingGroupBy (\x y -> abs (y - x) <= interval)
     countDiff [] = 0

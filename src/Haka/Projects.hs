@@ -24,7 +24,7 @@ import qualified Haka.DatabaseOperations as DbOps
 import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), AppM, ProjectStatRow (..), pool)
-import Haka.Utils (defaultLimit)
+import Haka.Utils (defaultLimit, sum')
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
@@ -141,7 +141,7 @@ toStatsPayload t0 t1 xs =
     { totalSeconds = allSecs,
       startDate = t0,
       endDate = t1,
-      dailyTotal = map (sum . map prTotalSeconds) byDate,
+      dailyTotal = map (sum' . map prTotalSeconds) byDate,
       languages = getSegment prLanguage,
       files = getSegment prEntity,
       weekDay = getSegment prWeekday,
@@ -159,15 +159,15 @@ toStatsPayload t0 t1 xs =
                       unzip3 $ map (\(_, m') -> Data.Maybe.fromMaybe (0, 0, 0) (Map.lookup name m')) all'
                  in ResourceStats
                       { pName = name,
-                        pTotalSeconds = sum secs',
-                        pTotalPct = sum pct',
+                        pTotalSeconds = sum' secs',
+                        pTotalPct = sum' pct',
                         pTotalDaily = secs',
                         pPctDaily = dailyPct'
                       }
             )
             uniqProjectNames
     allSecs :: Int64
-    allSecs = sum $ [prTotalSeconds x | x <- xs]
+    allSecs = sum' $ [prTotalSeconds x | x <- xs]
     byDate :: [[ProjectStatRow]]
     byDate = fillMissing (genDates t0 t1) (List.groupBy (\a b -> prDay a == prDay b) xs)
 
