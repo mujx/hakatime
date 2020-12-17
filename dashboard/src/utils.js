@@ -1,6 +1,17 @@
 import _ from "lodash";
 
 export default {
+  mkErrorMessage: function (e) {
+    if (e.response && e.response.message) {
+      return e.response.message;
+    }
+
+    if (e.response && e.response.error) {
+      return e.response.error;
+    }
+
+    return "Unknown error";
+  },
   copyToCliboard: function (v) {
     const elem = document.createElement("textarea");
 

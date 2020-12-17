@@ -1,6 +1,7 @@
 import m from "mithril";
 import Commons from "./common.js";
 import { login, isLoggedIn } from "../auth.js";
+import utils from "../utils.js";
 
 const User = {
   username: "",
@@ -58,12 +59,7 @@ export default {
               m.route.set("/app");
             })
             .catch(function (e) {
-              if (e.response && e.response.error) {
-                ErrMsg.error = `Registration failed: ${e.response.error}`;
-                return;
-              }
-
-              ErrMsg.error = "Registration failed: Unknown error";
+              ErrMsg.error = `Registration failed: ${utils.mkErrorMessage(e)}`;
             });
         }
       },

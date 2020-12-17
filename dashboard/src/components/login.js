@@ -1,6 +1,7 @@
 import m from "mithril";
 import Commons from "./common.js";
 import { login, isLoggedIn } from "../auth.js";
+import utils from "../utils.js";
 
 const AuthUser = {
   username: "",
@@ -44,12 +45,7 @@ export default {
               m.route.set("/app");
             })
             .catch(function (e) {
-              if (e.response && e.response.error) {
-                ErrMsg.error = `Login failed: ${e.response.error}`;
-                return;
-              }
-
-              ErrMsg.error = "Login failed: Unknown error";
+              ErrMsg.error = `Login failed: ${utils.mkErrorMessage(e)}`;
             });
         }
       },

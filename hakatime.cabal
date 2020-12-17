@@ -51,6 +51,7 @@ library libhaka
   exposed-modules:     Haka.Api
                      , Haka.Cli
                      , Haka.Types
+                     , Haka.Middleware
 
   other-modules:       Haka.AesonHelpers
                      , Haka.Authentication
@@ -106,6 +107,9 @@ library libhaka
                      -- https://github.com/Soostone/katip/issues/117
                      , unliftio-core        >= 0.1 && < 0.2
                      , uuid
+                     , wai                  == 3.2.*
+                     , http-types
+                     , blaze-builder
 
   ghc-options:         -Wall
                        -Wcompat

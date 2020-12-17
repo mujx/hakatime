@@ -27,6 +27,7 @@ import qualified Options.Applicative as Opt
 import Servant
 import System.Environment.MrEnv (envAsBool, envAsInt, envAsString)
 import System.IO (stdout)
+import qualified Haka.Middleware as Middleware
 
 -- | Convert our 'App' type to a 'Servant.Handler', for a given 'AppCtx'.
 nt :: AppCtx -> AppM a -> Handler a
@@ -34,9 +35,10 @@ nt ctx = Handler . ExceptT . try . runAppT ctx
 
 app :: ServerSettings -> AppCtx -> Application
 app settings conf =
-  cors (const $ Just policy) $
-    serve Api.api $
-      hoistServer Api.api (nt conf) (Api.server settings)
+  Middleware.jsonResponse $
+    cors (const $ Just policy) $
+      serve Api.api $
+        hoistServer Api.api (nt conf) (Api.server settings)
   where
     policy =
       simpleCorsResourcePolicy

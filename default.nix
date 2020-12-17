@@ -1,8 +1,8 @@
-{ mkDerivation, aeson, base, base64-bytestring, bits, bytestring
-, case-insensitive, containers, contravariant-extras, cookie
-, cryptonite, fakedata, file-embed, hasql, hasql-pool
+{ mkDerivation, aeson, base, base64-bytestring, bits, blaze-builder
+, bytestring, case-insensitive, containers, contravariant-extras
+, cookie, cryptonite, fakedata, file-embed, hasql, hasql-pool
 , hasql-transaction, http-client, http-client-tls, http-media
-, katip, mr-env, mtl, optparse-applicative, polysemy
+, http-types, katip, mr-env, mtl, optparse-applicative, polysemy
 , polysemy-plugin, postgresql-binary, random, raw-strings-qq, safe
 , safe-exceptions, servant, servant-client, servant-server, stdenv
 , system-filepath, text, time, transformers, unliftio-core, uuid
@@ -15,13 +15,14 @@ mkDerivation {
   isLibrary = false;
   isExecutable = true;
   libraryHaskellDepends = [
-    aeson base base64-bytestring bits bytestring case-insensitive
-    containers contravariant-extras cookie cryptonite file-embed hasql
-    hasql-pool hasql-transaction http-client http-client-tls http-media
-    katip mr-env mtl optparse-applicative polysemy polysemy-plugin
-    postgresql-binary raw-strings-qq safe safe-exceptions servant
-    servant-server system-filepath text time transformers unliftio-core
-    uuid uuid-types
+    aeson base base64-bytestring bits blaze-builder bytestring
+    case-insensitive containers contravariant-extras cookie cryptonite
+    file-embed hasql hasql-pool hasql-transaction http-client
+    http-client-tls http-media http-types katip mr-env mtl
+    optparse-applicative polysemy polysemy-plugin postgresql-binary
+    raw-strings-qq safe safe-exceptions servant servant-server
+    system-filepath text time transformers unliftio-core uuid
+    uuid-types wai
   ];
   executableHaskellDepends = [
     aeson base base64-bytestring bytestring fakedata hasql-pool
