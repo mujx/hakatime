@@ -377,7 +377,7 @@ data HeartbeatPayload = HeartbeatPayload
     is_write :: Maybe Bool,
     -- | The language used by the entity.
     language :: Maybe Text,
-    lineno :: Maybe Int64,
+    lineno :: Maybe Text,
     -- | Total number of lines for the entity.
     file_lines :: Maybe Int64,
     -- | Name of the project.
