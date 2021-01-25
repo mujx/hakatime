@@ -1,17 +1,21 @@
 import m from "mithril";
 import * as storage from "./storage";
 
+function baseUrl() {
+  return location.href.replace(location.hash, "").replace(/\/$/, "");
+}
+
 function refreshToken() {
   return m.request({
     method: "POST",
-    url: "/auth/refresh_token"
+    url: baseUrl() + "/auth/refresh_token"
   });
 }
 
 function login(creds) {
   return m.request({
     method: "POST",
-    url: "/auth/login",
+    url: baseUrl() + "/auth/login",
     body: creds
   });
 }
@@ -19,7 +23,7 @@ function login(creds) {
 function register(username, password) {
   return m.request({
     method: "POST",
-    url: "/auth/register",
+    url: baseUrl() + "/auth/register",
     body: {
       username,
       password
@@ -30,7 +34,7 @@ function register(username, password) {
 function logout() {
   return m.request({
     method: "POST",
-    url: "/auth/logout",
+    url: baseUrl() + "/auth/logout",
     headers: {
       authorization: storage.getHeaderToken()
     }
@@ -39,7 +43,7 @@ function logout() {
 
 function getTimeline(params) {
   return m.request({
-    url: "/api/v1/users/current/timeline",
+    url: baseUrl() + "/api/v1/users/current/timeline",
     responseType: "json",
     background: true,
     params: params,
@@ -51,7 +55,7 @@ function getTimeline(params) {
 
 function getStats(params) {
   return m.request({
-    url: "/api/v1/users/current/stats",
+    url: baseUrl() + "/api/v1/users/current/stats",
     responseType: "json",
     params: params,
     headers: {
@@ -62,7 +66,7 @@ function getStats(params) {
 
 function getProject(projectName, params) {
   return m.request({
-    url: `/api/v1/users/current/projects/${projectName}`,
+    url: baseUrl() + `/api/v1/users/current/projects/${projectName}`,
     responseType: "json",
     headers: {
       authorization: storage.getHeaderToken()
@@ -74,7 +78,7 @@ function getProject(projectName, params) {
 function createApiToken() {
   return m.request({
     method: "POST",
-    url: "/auth/create_api_token",
+    url: baseUrl() + "/auth/create_api_token",
     headers: {
       authorization: storage.getHeaderToken()
     },
@@ -85,7 +89,7 @@ function createApiToken() {
 function getTokens() {
   return m.request({
     method: "GET",
-    url: "/auth/tokens",
+    url: baseUrl() + "/auth/tokens",
     background: true,
     headers: {
       authorization: storage.getHeaderToken()
@@ -96,7 +100,7 @@ function getTokens() {
 function deleteToken(tokenId) {
   return m.request({
     method: "DELETE",
-    url: "/auth/token/" + tokenId,
+    url: baseUrl() + "/auth/token/" + tokenId,
     background: true,
     headers: {
       authorization: storage.getHeaderToken()
@@ -107,7 +111,7 @@ function deleteToken(tokenId) {
 function getBadgeLink(projectName) {
   return m.request({
     method: "GET",
-    url: `/badge/link/${projectName}`,
+    url: baseUrl() + `/badge/link/${projectName}`,
     background: true,
     headers: {
       authorization: storage.getHeaderToken()
