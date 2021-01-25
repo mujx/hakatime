@@ -1,4 +1,5 @@
 import m from "mithril";
+import * as api from "../api";
 import Commons from "./common.js";
 import { login, isLoggedIn } from "../auth.js";
 import utils from "../utils.js";
@@ -32,11 +33,8 @@ export default {
         onsubmit: function (e) {
           e.preventDefault();
 
-          m.request({
-            method: "POST",
-            url: "/auth/login",
-            body: AuthUser
-          })
+          api
+            .login(AuthUser)
             .then(function (creds) {
               login(creds);
 

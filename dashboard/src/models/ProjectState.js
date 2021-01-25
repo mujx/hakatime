@@ -1,9 +1,9 @@
 import _ from "lodash";
-import m from "mithril";
 
 import TimeRange from "./TimeRange";
 import utils from "../utils.js";
 import * as auth from "../auth";
+import * as api from "../api";
 
 const Model = {
   projects: [],
@@ -35,18 +35,16 @@ const Model = {
     const today = new Date();
     start.setDate(start.getDate() - TimeRange.numOfDays);
 
-    m.request({
-      url: `/api/v1/users/current/projects/${Model.currentProject}`,
-      responseType: "json",
-      headers: {
-        authorization: auth.getHeaderToken()
-      },
-      params: {
-        start: d1 || start.toISOString(),
-        end: d2 || today.toISOString(),
-        timeLimit: TimeRange.timeLimit
-      }
-    })
+    api
+      .getProject(
+        Model.currentProject,
+        {
+          start: d1 || start.toISOString(),
+          end: d2 || today.toISOString(),
+          timeLimit: TimeRange.timeLimit
+        },
+        auth.getHeaderToken()
+      )
       .then(function (obj) {
         Model.obj = obj;
         Model.dates = utils.getDaysBetween(

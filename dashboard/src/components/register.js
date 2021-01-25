@@ -1,4 +1,5 @@
 import m from "mithril";
+import * as api from "../api";
 import Commons from "./common.js";
 import { login, isLoggedIn } from "../auth.js";
 import utils from "../utils.js";
@@ -43,14 +44,8 @@ export default {
             return;
           }
 
-          m.request({
-            method: "POST",
-            url: "/auth/register",
-            body: {
-              username: User.username,
-              password: User.password
-            }
-          })
+          api
+            .register(User.username, User.password)
             .then(function (creds) {
               login(creds);
 

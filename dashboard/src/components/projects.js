@@ -15,6 +15,7 @@ import cards from "../card_container.js";
 import utils from "../utils.js";
 import config from "../config.js";
 import * as auth from "../auth";
+import * as api from "../api";
 
 function mkFileChart() {
   return cards.mkCardContainer("Most active files", m(fileChart()));
@@ -595,14 +596,8 @@ export default {
             onclick: e => {
               e.redraw = false;
 
-              m.request({
-                method: "GET",
-                url: `/badge/link/${LocalState.currentProject}`,
-                background: true,
-                headers: {
-                  authorization: auth.getHeaderToken()
-                }
-              })
+              api
+                .getBadgeLink(LocalState.currentProject, auth.getHeaderToken())
                 .then(function (r) {
                   utils.copyToCliboard(r.badgeUrl);
                 })

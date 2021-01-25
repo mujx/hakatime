@@ -1,5 +1,6 @@
 import m from "mithril";
 
+import * as api from "./api";
 import OverviewState from "./models/State.js";
 import ProjectState from "./models/ProjectState.js";
 import TimeRange from "./models/TimeRange.js";
@@ -27,10 +28,8 @@ export function login(r) {
 }
 
 export function tryToRefresh(errMsg, callback) {
-  m.request({
-    method: "POST",
-    url: "/auth/refresh_token"
-  })
+  api
+    .refreshToken()
     .then(function (r) {
       login(r);
 
@@ -57,13 +56,8 @@ export function clearTokens() {
 
 export function logout() {
   // Force log-out will invalidate all other tokens.
-  m.request({
-    method: "POST",
-    url: "/auth/logout",
-    headers: {
-      authorization: getHeaderToken()
-    }
-  })
+  api
+    .logout(getHeaderToken())
     .then(function () {
       clearTokens();
       clearData();

@@ -1,6 +1,7 @@
 import m from "mithril";
 import $ from "jquery";
 
+import * as api from "../api";
 import * as auth from "../auth";
 import utils from "../utils";
 
@@ -44,14 +45,8 @@ const ApiTokenList = {
   openModal: function (e) {
     e.redraw = false;
 
-    m.request({
-      method: "GET",
-      url: "/auth/tokens",
-      background: true,
-      headers: {
-        authorization: auth.getHeaderToken()
-      }
-    })
+    api
+      .getTokens(auth.getHeaderToken())
       .then(ApiTokenList.renderModal)
       .catch(function (e) {
         // TODO: Notify the user about the error.
@@ -68,23 +63,10 @@ const ApiTokenList = {
     m.render(document.getElementById(MODAL_TOKEN_LIST_ID), null);
   },
   deleteToken: function (t) {
-    m.request({
-      method: "DELETE",
-      url: "/auth/token/" + t.tknId,
-      background: true,
-      headers: {
-        authorization: auth.getHeaderToken()
-      }
-    })
+    api
+      .deleteToken(t.tknId, auth.getHeaderToken())
       .then(function () {
-        return m.request({
-          method: "GET",
-          url: "/auth/tokens",
-          background: true,
-          headers: {
-            authorization: auth.getHeaderToken()
-          }
-        });
+        return api.getTokens(auth.getHeaderToken());
       })
       .then(function (tokens) {
         $('[data-toggle="tooltip"]').tooltip("dispose");
@@ -216,14 +198,8 @@ function TokenListModal(tokens = []) {
 
 function createApiTokenDialog(event) {
   event.redraw = false;
-  m.request({
-    method: "POST",
-    url: "/auth/create_api_token",
-    headers: {
-      authorization: auth.getHeaderToken()
-    },
-    background: true
-  })
+  api
+    .createApiToken(auth.getHeaderToken())
     .then(function (res) {
       ApiToken.value = res.apiToken;
       ApiToken.openModal();
