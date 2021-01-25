@@ -359,7 +359,7 @@ insertHeartBeat = Statement query params result True
         <> (entity >$< E.param (E.nonNullable E.text))
         <> (is_write >$< E.param (E.nullable E.bool))
         <> (language >$< E.param (E.nullable E.text))
-        <> (lineno >$< E.param (E.nullable E.int8))
+        <> (lineno >$< E.param (E.nullable E.text))
         <> (file_lines >$< E.param (E.nullable E.int8))
         <> (project >$< E.param (E.nullable E.text))
         <> (ty >$< E.param (E.nonNullable entityValue))

@@ -51,6 +51,8 @@ instance.
 (builds on every commit) or with `mujx/hakatime:latest-arm` (manual semi-regular updates for `arm/v7` & `arm64`)
 or by building the image yourself with the dedicated Dockerfile (`Dockerfile.arm`).
 
+**WARNING**: This setup relies on `./docker` directory located in this repository, please run it after making `git clone` to evade issues.
+
 ```yaml
 version: "3"
 services:
