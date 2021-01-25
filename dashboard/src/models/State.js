@@ -18,14 +18,11 @@ const Model = {
   },
   fetchTimeline: (d1, d2, callback) => {
     api
-      .getTimeline(
-        {
-          start: d1.toISOString(),
-          end: d2.toISOString(),
-          timeLimit: TimeRange.timeLimit
-        },
-        auth.getHeaderToken()
-      )
+      .getTimeline({
+        start: d1.toISOString(),
+        end: d2.toISOString(),
+        timeLimit: TimeRange.timeLimit
+      })
       .then(obj => {
         if (typeof callback === "function") {
           callback(obj);
@@ -38,22 +35,16 @@ const Model = {
   // Fetch the statistics.
   fetchItems: (cb, d1, d2) => {
     Promise.all([
-      api.getStats(
-        {
-          start: d1 || TimeRange.start().toISOString(),
-          end: d2 || TimeRange.end().toISOString(),
-          timeLimit: TimeRange.timeLimit
-        },
-        auth.getHeaderToken()
-      ),
-      api.getTimeline(
-        {
-          start: utils.removeHours(new Date(), 12).toISOString(),
-          end: new Date().toISOString(),
-          timeLimit: TimeRange.timeLimit
-        },
-        auth.getHeaderToken()
-      )
+      api.getStats({
+        start: d1 || TimeRange.start().toISOString(),
+        end: d2 || TimeRange.end().toISOString(),
+        timeLimit: TimeRange.timeLimit
+      }),
+      api.getTimeline({
+        start: utils.removeHours(new Date(), 12).toISOString(),
+        end: new Date().toISOString(),
+        timeLimit: TimeRange.timeLimit
+      })
     ])
       .then(function (values) {
         const obj = values[0];

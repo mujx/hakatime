@@ -1,37 +1,16 @@
 import m from "mithril";
 
 import * as api from "./api";
+import * as storage from "./storage";
 import OverviewState from "./models/State.js";
 import ProjectState from "./models/ProjectState.js";
 import TimeRange from "./models/TimeRange.js";
-
-let inMemToken = {
-  token: "",
-  tokenExpiry: "",
-  username: ""
-};
-
-function clearToken() {
-  inMemToken = {
-    token: "",
-    tokenExpiry: "",
-    username: ""
-  };
-}
-
-export function login(r) {
-  inMemToken = {
-    token: r.token,
-    tokenExpiry: r.tokenExpiry,
-    username: r.tokenUsername
-  };
-}
 
 export function tryToRefresh(errMsg, callback) {
   api
     .refreshToken()
     .then(function (r) {
-      login(r);
+      storage.updateToken(r);
 
       typeof callback === "function" && callback();
     })
@@ -48,7 +27,7 @@ export function tryToRefresh(errMsg, callback) {
 }
 
 export function clearTokens() {
-  clearToken();
+  storage.clearToken();
 
   // to support logging out from all windows.
   window.localStorage.setItem("logout", Date.now());
@@ -57,7 +36,7 @@ export function clearTokens() {
 export function logout() {
   // Force log-out will invalidate all other tokens.
   api
-    .logout(getHeaderToken())
+    .logout()
     .then(function () {
       clearTokens();
       clearData();
@@ -76,26 +55,14 @@ function clearData() {
 }
 
 export function checkInterval() {
-  if (isLoggedIn()) {
+  if (storage.isLoggedIn()) {
     const now = new Date();
-    const then = new Date(inMemToken.tokenExpiry - 5 * 60000);
+    const then = new Date(storage.getTokenExpiry() - 5 * 60000);
 
     if (now > then) {
       tryToRefresh();
     }
   }
-}
-
-export function getUsername() {
-  return inMemToken.username;
-}
-
-export function getHeaderToken() {
-  return `Basic ${inMemToken.token}`;
-}
-
-export function isLoggedIn() {
-  return inMemToken.token !== "" && inMemToken.tokenExpiry !== "";
 }
 
 export function retryCall(err, callback) {

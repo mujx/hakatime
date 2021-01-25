@@ -3,6 +3,7 @@ import $ from "jquery";
 
 import * as api from "../api";
 import * as auth from "../auth";
+import * as storage from "../storage";
 import utils from "../utils";
 
 const MODAL_ID = "api-token-modal";
@@ -46,7 +47,7 @@ const ApiTokenList = {
     e.redraw = false;
 
     api
-      .getTokens(auth.getHeaderToken())
+      .getTokens()
       .then(ApiTokenList.renderModal)
       .catch(function (e) {
         // TODO: Notify the user about the error.
@@ -64,9 +65,9 @@ const ApiTokenList = {
   },
   deleteToken: function (t) {
     api
-      .deleteToken(t.tknId, auth.getHeaderToken())
+      .deleteToken(t.tknId)
       .then(function () {
-        return api.getTokens(auth.getHeaderToken());
+        return api.getTokens();
       })
       .then(function (tokens) {
         $('[data-toggle="tooltip"]').tooltip("dispose");
@@ -199,7 +200,7 @@ function TokenListModal(tokens = []) {
 function createApiTokenDialog(event) {
   event.redraw = false;
   api
-    .createApiToken(auth.getHeaderToken())
+    .createApiToken()
     .then(function (res) {
       ApiToken.value = res.apiToken;
       ApiToken.openModal();
@@ -377,11 +378,11 @@ export default {
                           { id: "userDropdown", role: "button" },
                           m(
                             "span.mr-3.d-none.d-lg-inline.text-gray-600.small",
-                            auth.getUsername()
+                            storage.getUsername()
                           ),
                           m(
                             "div.btn.btn-secondary.btn-circle.btn-md",
-                            auth.getUsername().charAt(0).toUpperCase()
+                            storage.getUsername().charAt(0).toUpperCase()
                           )
                         ),
                         m(

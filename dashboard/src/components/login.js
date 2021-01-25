@@ -1,7 +1,7 @@
 import m from "mithril";
 import * as api from "../api";
 import Commons from "./common.js";
-import { login, isLoggedIn } from "../auth.js";
+import * as storage from "../storage";
 import utils from "../utils.js";
 
 const AuthUser = {
@@ -17,7 +17,7 @@ export default {
   oncreate: () => {
     document.title = "Hakatime | Login";
 
-    if (isLoggedIn()) {
+    if (storage.isLoggedIn()) {
       m.route.set("/app");
       return;
     }
@@ -36,7 +36,7 @@ export default {
           api
             .login(AuthUser)
             .then(function (creds) {
-              login(creds);
+              storage.updateToken(creds);
 
               ErrMsg.error = "";
 

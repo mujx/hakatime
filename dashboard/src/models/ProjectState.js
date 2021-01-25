@@ -36,15 +36,11 @@ const Model = {
     start.setDate(start.getDate() - TimeRange.numOfDays);
 
     api
-      .getProject(
-        Model.currentProject,
-        {
-          start: d1 || start.toISOString(),
-          end: d2 || today.toISOString(),
-          timeLimit: TimeRange.timeLimit
-        },
-        auth.getHeaderToken()
-      )
+      .getProject(Model.currentProject, {
+        start: d1 || start.toISOString(),
+        end: d2 || today.toISOString(),
+        timeLimit: TimeRange.timeLimit
+      })
       .then(function (obj) {
         Model.obj = obj;
         Model.dates = utils.getDaysBetween(

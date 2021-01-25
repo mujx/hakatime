@@ -1,7 +1,7 @@
 import m from "mithril";
 import * as api from "../api";
+import { isLoggedIn, updateToken } from "../storage";
 import Commons from "./common.js";
-import { login, isLoggedIn } from "../auth.js";
 import utils from "../utils.js";
 
 const User = {
@@ -47,13 +47,14 @@ export default {
           api
             .register(User.username, User.password)
             .then(function (creds) {
-              login(creds);
+              updateToken(creds);
 
               ErrMsg.error = "";
 
               m.route.set("/app");
             })
             .catch(function (e) {
+              console.log(e.response);
               ErrMsg.error = `Registration failed: ${utils.mkErrorMessage(e)}`;
             });
         }

@@ -1,4 +1,5 @@
 import m from "mithril";
+import * as storage from "./storage";
 
 function refreshToken() {
   return m.request({
@@ -26,90 +27,90 @@ function register(username, password) {
   });
 }
 
-function logout(authToken) {
+function logout() {
   return m.request({
     method: "POST",
     url: "/auth/logout",
     headers: {
-      authorization: authToken
+      authorization: storage.getHeaderToken()
     }
   });
 }
 
-function getTimeline(params, authToken) {
+function getTimeline(params) {
   return m.request({
     url: "/api/v1/users/current/timeline",
     responseType: "json",
     background: true,
     params: params,
     headers: {
-      authorization: authToken
+      authorization: storage.getHeaderToken()
     }
   });
 }
 
-function getStats(params, authToken) {
+function getStats(params) {
   return m.request({
     url: "/api/v1/users/current/stats",
     responseType: "json",
     params: params,
     headers: {
-      authorization: authToken
+      authorization: storage.getHeaderToken()
     }
   });
 }
 
-function getProject(projectName, params, authToken) {
+function getProject(projectName, params) {
   return m.request({
     url: `/api/v1/users/current/projects/${projectName}`,
     responseType: "json",
     headers: {
-      authorization: authToken
+      authorization: storage.getHeaderToken()
     },
     params: params
   });
 }
 
-function createApiToken(authToken) {
+function createApiToken() {
   return m.request({
     method: "POST",
     url: "/auth/create_api_token",
     headers: {
-      authorization: authToken
+      authorization: storage.getHeaderToken()
     },
     background: true
   });
 }
 
-function getTokens(authToken) {
+function getTokens() {
   return m.request({
     method: "GET",
     url: "/auth/tokens",
     background: true,
     headers: {
-      authorization: authToken
+      authorization: storage.getHeaderToken()
     }
   });
 }
 
-function deleteToken(tokenId, authToken) {
+function deleteToken(tokenId) {
   return m.request({
     method: "DELETE",
     url: "/auth/token/" + tokenId,
     background: true,
     headers: {
-      authorization: authToken
+      authorization: storage.getHeaderToken()
     }
   });
 }
 
-function getBadgeLink(projectName, authToken) {
+function getBadgeLink(projectName) {
   return m.request({
     method: "GET",
     url: `/badge/link/${projectName}`,
     background: true,
     headers: {
-      authorization: authToken
+      authorization: storage.getHeaderToken()
     }
   });
 }

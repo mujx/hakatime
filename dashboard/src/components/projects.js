@@ -14,7 +14,6 @@ import { mkSingleStatCard } from "../single_stat_card.js";
 import cards from "../card_container.js";
 import utils from "../utils.js";
 import config from "../config.js";
-import * as auth from "../auth";
 import * as api from "../api";
 
 function mkFileChart() {
@@ -597,7 +596,7 @@ export default {
               e.redraw = false;
 
               api
-                .getBadgeLink(LocalState.currentProject, auth.getHeaderToken())
+                .getBadgeLink(LocalState.currentProject)
                 .then(function (r) {
                   utils.copyToCliboard(r.badgeUrl);
                 })

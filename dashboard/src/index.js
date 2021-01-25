@@ -1,6 +1,7 @@
 import m from "mithril";
 
 import * as auth from "./auth.js";
+import * as storage from "./storage";
 
 import Dashboard from "./components/dashboard.js";
 import Overview from "./components/overview.js";
@@ -23,7 +24,7 @@ export function main() {
       onmatch: function () {
         document.title = "Hakatime";
 
-        if (auth.isLoggedIn()) {
+        if (storage.isLoggedIn()) {
           m.route.set("/app");
         } else {
           auth.tryToRefresh(null, () => {
