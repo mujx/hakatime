@@ -12,6 +12,7 @@ import Control.Exception.Safe (throw)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
 import Data.Aeson (FromJSON, ToJSON)
+import qualified Data.ByteString.Char8 as Bs
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (addUTCTime)
@@ -132,15 +133,20 @@ getStoredApiTokensHandler (Just tkn) = do
 
   either Err.logError pure res
 
-mkRefreshTokenCookie :: TokenData -> SetCookie
-mkRefreshTokenCookie tknData =
+mkRefreshTokenCookie :: TokenData -> String -> SetCookie
+mkRefreshTokenCookie tknData apiPrefix =
   defaultSetCookie
     { setCookieName = "refresh_token",
       setCookieValue = encodeUtf8 $ tknRefreshToken tknData,
       setCookieSameSite = Just sameSiteStrict,
-      setCookiePath = Just "/auth",
+      setCookiePath = Just (removeSlash apiPrefix <> "/auth"),
       setCookieHttpOnly = True
     }
+  where
+    removeSlash p =
+      Bs.pack $ case not $ null p of
+        True -> if last p == '/' then init p else p
+        False -> p
 
 mkLoginResponse :: TokenData -> UTCTime -> LoginResponse
 mkLoginResponse tknData now =
@@ -168,7 +174,7 @@ loginHandler creds = do
 
   tknData <- either Err.logError pure res
 
-  let cookie = mkRefreshTokenCookie tknData
+  let cookie = mkRefreshTokenCookie tknData (hakaApiPrefix ss)
 
   return $ addHeader cookie $ mkLoginResponse tknData now
 
@@ -187,7 +193,7 @@ registerHandler EnabledRegistration creds = do
 
   tknData <- either Err.logError pure res
 
-  let cookie = mkRefreshTokenCookie tknData
+  let cookie = mkRefreshTokenCookie tknData (hakaApiPrefix ss)
 
   return $ addHeader cookie $ mkLoginResponse tknData now
 
@@ -209,7 +215,7 @@ refreshTokenHandler (Just cookies) = do
 
   tknData <- either Err.logError pure res
 
-  let cookie = mkRefreshTokenCookie tknData
+  let cookie = mkRefreshTokenCookie tknData (hakaApiPrefix ss)
 
   return $ addHeader cookie $ mkLoginResponse tknData now
 

@@ -67,6 +67,9 @@ services:
       HAKA_DB_PASS: test
       HAKA_DB_USER: test
       # Server settings.
+      # Fill out this field if the api is behind another path (e.g behind a reverse proxy).
+      # This will adjust the Set-Cookie path for all the /auth related API calls.
+      HAKA_API_PREFIX: ""
       HAKA_BADGE_URL: "http://localhost:8080"
       HAKA_PORT: 8080
       HAKA_SHIELDS_IO_URL: "https://img.shields.io"

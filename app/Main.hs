@@ -77,6 +77,7 @@ getServerSettings = do
   p <- envAsInt "HAKA_PORT" 8080
   badgeUrl <- Bs.pack <$> envAsString "HAKA_BADGE_URL" "http://localhost:8080"
   dashboardPath <- envAsString "HAKA_DASHBOARD_PATH" "./dashboard/dist"
+  apiPrefix <- envAsString "HAKA_API_PREFIX" ""
   shieldsIOUrl <- envAsString "HAKA_SHIELDS_IO_URL" "https://img.shields.io"
   enableRegistration <- envAsBool "HAKA_ENABLE_REGISTRATION" True
   sessionExpiry <- envAsInt "HAKA_SESSION_EXPIRY" 24
@@ -84,6 +85,7 @@ getServerSettings = do
   return $
     ServerSettings
       { hakaPort = p,
+        hakaApiPrefix = apiPrefix,
         hakaBadgeUrl = badgeUrl,
         hakaDashboardPath = dashboardPath,
         hakaShieldsIOUrl = shieldsIOUrl,

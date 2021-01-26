@@ -69,6 +69,9 @@ data RegistrationStatus
 data ServerSettings = ServerSettings
   { -- | Where the service will listen to.
     hakaPort :: Int,
+    -- | If the api calls are made behind a proxy with a prefix,
+    -- we'll have to adjust the Set-Cookie path.
+    hakaApiPrefix :: String,
     -- | The external URL to be used for the badge generation.
     hakaBadgeUrl :: Bs.ByteString,
     -- | Where to look for dashboard's static files.
