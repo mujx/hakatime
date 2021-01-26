@@ -44,7 +44,7 @@ for further information.
 ## Deployment
 
 You can use the following docker-compose setup for testing locally or an actual
-deployment. Change `HAKA_CORS_URL` to match the actual external endpoint of your
+deployment. Change `HAKA_BADGE_URL` to match the actual external endpoint of your
 instance.
 
 **NOTE**: Deploying on ARM is also possible using `mujx/hakatime:latest-arm64` for the `arm64` architecture
@@ -67,7 +67,7 @@ services:
       HAKA_DB_PASS: test
       HAKA_DB_USER: test
       # Server settings.
-      HAKA_CORS_URL: "http://localhost:8080"
+      HAKA_BADGE_URL: "http://localhost:8080"
       HAKA_PORT: 8080
       HAKA_SHIELDS_IO_URL: "https://img.shields.io"
       HAKA_ENABLE_REGISTRATION: "true" # Toggle after you've created your account.

@@ -9,6 +9,7 @@ import Control.Monad.Trans.Except (ExceptT (..))
 import qualified Data.ByteString.Char8 as Bs
 import qualified Haka.Api as Api
 import qualified Haka.Cli as Cli
+import qualified Haka.Middleware as Middleware
 import Haka.Types
   ( AppCtx (..),
     AppM,
@@ -27,7 +28,6 @@ import qualified Options.Applicative as Opt
 import Servant
 import System.Environment.MrEnv (envAsBool, envAsInt, envAsString)
 import System.IO (stdout)
-import qualified Haka.Middleware as Middleware
 
 -- | Convert our 'App' type to a 'Servant.Handler', for a given 'AppCtx'.
 nt :: AppCtx -> AppM a -> Handler a
@@ -40,12 +40,7 @@ app settings conf =
       serve Api.api $
         hoistServer Api.api (nt conf) (Api.server settings)
   where
-    policy =
-      simpleCorsResourcePolicy
-        { corsRequestHeaders = ["content-type", "authorization"],
-          -- TODO: Make this list configurable.
-          corsOrigins = Just ([hakaCorsUrl settings], True)
-        }
+    policy = simpleCorsResourcePolicy
 
 -- TODO: Write method to initialize logging based on ENV variables.
 -- Env
@@ -80,7 +75,7 @@ initApp settings unApp = do
 getServerSettings :: IO ServerSettings
 getServerSettings = do
   p <- envAsInt "HAKA_PORT" 8080
-  corsUrl <- Bs.pack <$> envAsString "HAKA_CORS_URL" "http://localhost:8080"
+  badgeUrl <- Bs.pack <$> envAsString "HAKA_BADGE_URL" "http://localhost:8080"
   dashboardPath <- envAsString "HAKA_DASHBOARD_PATH" "./dashboard/dist"
   shieldsIOUrl <- envAsString "HAKA_SHIELDS_IO_URL" "https://img.shields.io"
   enableRegistration <- envAsBool "HAKA_ENABLE_REGISTRATION" True
@@ -89,7 +84,7 @@ getServerSettings = do
   return $
     ServerSettings
       { hakaPort = p,
-        hakaCorsUrl = corsUrl,
+        hakaBadgeUrl = badgeUrl,
         hakaDashboardPath = dashboardPath,
         hakaShieldsIOUrl = shieldsIOUrl,
         hakaEnableRegistration =

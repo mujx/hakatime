@@ -11,7 +11,7 @@ services:
       HAKA_DB_PASS: test
       HAKA_DB_USER: test
       # Server settings.
-      HAKA_CORS_URL: "http://localhost:8080"
+      HAKA_BADGE_URL: "http://localhost:8080"
       HAKA_PORT: 8080
       HAKA_SHIELDS_IO_URL: "https://img.shields.io"
       HAKA_ENABLE_REGISTRATION: "true" # Toggle after you've created your account.

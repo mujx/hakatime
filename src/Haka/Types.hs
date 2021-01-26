@@ -69,8 +69,8 @@ data RegistrationStatus
 data ServerSettings = ServerSettings
   { -- | Where the service will listen to.
     hakaPort :: Int,
-    -- | What domain to allow.
-    hakaCorsUrl :: Bs.ByteString,
+    -- | The external URL to be used for the badge generation.
+    hakaBadgeUrl :: Bs.ByteString,
     -- | Where to look for dashboard's static files.
     hakaDashboardPath :: FilePath,
     -- | Whether the registration is enabled.

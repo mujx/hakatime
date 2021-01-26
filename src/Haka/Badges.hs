@@ -86,7 +86,7 @@ badgeLinkHandler proj (Just tkn) = do
 
   return $
     BadgeResponse
-      { badgeUrl = decodeUtf8 (hakaCorsUrl ss) <> "/badge/svg/" <> UUID.toText badgeId
+      { badgeUrl = decodeUtf8 (hakaBadgeUrl ss) <> "/badge/svg/" <> UUID.toText badgeId
       }
 
 badgeSvgHandler :: UUID.UUID -> Maybe Int64 -> AppM Bs.ByteString
