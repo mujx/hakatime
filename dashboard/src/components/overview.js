@@ -23,6 +23,7 @@ const Charts = {
       const options = {
         series: series,
         noData: config.noData,
+        colors: config.colors,
         grid: {
           show: true,
           xaxis: {
@@ -84,6 +85,7 @@ const Charts = {
           toolbar: config.toolbar,
           animations: config.animations
         },
+        colors: config.colors,
         noData: config.noData,
         series: [
           {
@@ -207,6 +209,7 @@ function pieChart() {
 
       const options = {
         series: data,
+        colors: config.colors,
         noData: config.noData,
         legend: {
           show: false
@@ -423,6 +426,7 @@ function heatmapChart(mkDataFn) {
 
       const options = {
         series: series,
+        colors: config.colors,
         noData: config.noData,
         dataLabels: {
           enabled: false

@@ -63,6 +63,7 @@ function hourDistribution() {
       });
 
       const options = {
+        colors: config.colors,
         series: [
           {
             data: _.toArray(data),
@@ -132,6 +133,7 @@ function dayRadarChart() {
       });
 
       const options = {
+        colors: config.colors,
         series: [
           {
             data: _.toArray(data),
@@ -216,6 +218,7 @@ function pieChart() {
       const names = dataValues.map(v => v.name);
 
       const options = {
+        colors: config.colors,
         series: data,
         noData: config.noData,
         legend: {
@@ -297,6 +300,7 @@ function fileChart() {
       const categories = myData.map(v => v.name);
 
       const options = {
+        colors: config.colors,
         series: [
           {
             data: data,
@@ -398,6 +402,7 @@ function barChart() {
       });
 
       const options = {
+        colors: config.colors,
         chart: {
           type: "bar",
           height: "200%",
