@@ -53,9 +53,10 @@ const Charts = {
         yaxis: {
           labels: {
             style: {
-              fontFamily: "Nunito",
-              fontWeight: 500,
-              fontSize: "14px"
+              fontFamily: "Nunito"
+            },
+            formatter: function (value) {
+              return utils.truncate(value, 10);
             }
           }
         },
@@ -440,6 +441,13 @@ function heatmapChart(mkDataFn) {
         },
         xaxis: {
           type: "datetime"
+        },
+        yaxis: {
+          labels: {
+            formatter: function (value) {
+              return utils.truncate(value, 10);
+            }
+          }
         }
       };
 
