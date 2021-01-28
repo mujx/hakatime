@@ -80,7 +80,7 @@ const Charts = {
         chart: {
           type: "bar",
           fontFamily: "Nunito",
-          height: "250",
+          height: "200%",
           toolbar: config.toolbar,
           animations: config.animations
         },
@@ -208,9 +208,12 @@ function pieChart() {
       const options = {
         series: data,
         noData: config.noData,
+        legend: {
+          show: false
+        },
         chart: {
           fontFamily: "Nunito",
-          type: "donut",
+          type: "pie",
           animations: config.animations
         },
         labels: names

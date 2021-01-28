@@ -218,9 +218,11 @@ function pieChart() {
       const options = {
         series: data,
         noData: config.noData,
+        legend: {
+          show: false
+        },
         chart: {
-          type: "donut",
-          height: "260",
+          type: "pie",
           animations: config.animations
         },
         labels: names
@@ -398,7 +400,7 @@ function barChart() {
       const options = {
         chart: {
           type: "bar",
-          height: "250",
+          height: "200%",
           toolbar: config.toolbar,
           animations: config.animations
         },

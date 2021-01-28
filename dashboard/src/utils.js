@@ -1,6 +1,9 @@
 import _ from "lodash";
 
 export default {
+  truncate: function (input, num) {
+    return input.length > num ? `${input.substring(0, num)}...` : input;
+  },
   mkErrorMessage: function (e) {
     if (e.response && e.response.message) {
       return e.response.message;
