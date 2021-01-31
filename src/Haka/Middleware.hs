@@ -1,18 +1,15 @@
-module Haka.Middleware ( jsonResponse)
-where
+module Haka.Middleware (jsonResponse) where
 
-import Data.Text
-import Data.Text.Lazy.Encoding (decodeUtf8)
-import Data.ByteString.Lazy (toStrict)
 import Blaze.ByteString.Builder (toLazyByteString)
 import Blaze.ByteString.Builder.ByteString (fromByteString)
+import Data.Aeson
+import Data.ByteString.Lazy (toStrict)
+import Data.Text
+import qualified Data.Text.Lazy as TL
+import Data.Text.Lazy.Encoding (decodeUtf8)
+import Network.HTTP.Types
 import Network.Wai
 import Network.Wai.Internal
-import Network.HTTP.Types
-import Data.Text
-import Data.Aeson
-import qualified Data.Text.Lazy as TL
-
 
 -- | Middleware to convert client errors in JSON
 jsonResponse :: Application -> Application
@@ -45,4 +42,3 @@ buildResponse st err msg =
             "message" .= msg
           ]
     )
-

@@ -7,7 +7,6 @@ module Haka.Cli
 where
 
 import Data.Bits.Extras (w16)
-import Data.ByteString.Char8 (pack)
 import Data.Text (Text, unpack)
 import Data.Version (showVersion)
 import qualified Haka.PasswordUtils as PasswordUtils
@@ -16,16 +15,17 @@ import qualified Hasql.Connection as HasqlConn
 import qualified Hasql.Pool as HasqlPool
 import qualified Options.Applicative as Opt
 import Paths_hakatime (version)
-import System.Environment.MrEnv (envAsInt, envAsString)
+import System.Environment.MrEnv (envAsInt)
 import System.Exit (die)
+import System.Posix.Env.ByteString (getEnvDefault)
 
 getDbSettings :: IO HasqlConn.Settings
 getDbSettings = do
   dbPort <- w16 <$> envAsInt "HAKA_DB_PORT" 5432
-  dbHost <- pack <$> envAsString "HAKA_DB_HOST" "localhost"
-  dbName <- pack <$> envAsString "HAKA_DB_NAME" "test"
-  dbUser <- pack <$> envAsString "HAKA_DB_USER" "test"
-  dbPass <- pack <$> envAsString "HAKA_DB_PASS" "test"
+  dbHost <- getEnvDefault "HAKA_DB_HOST" "localhost"
+  dbName <- getEnvDefault "HAKA_DB_NAME" "test"
+  dbUser <- getEnvDefault "HAKA_DB_USER" "test"
+  dbPass <- getEnvDefault "HAKA_DB_PASS" "test"
   return $
     HasqlConn.settings dbHost dbPort dbUser dbPass dbName
 

@@ -6,7 +6,7 @@ where
 import Control.Exception (try)
 import Control.Monad (when)
 import Control.Monad.Trans.Except (ExceptT (..))
-import qualified Data.ByteString.Char8 as Bs
+import qualified GHC.IO.Encoding
 import qualified Haka.Api as Api
 import qualified Haka.Cli as Cli
 import qualified Haka.Middleware as Middleware
@@ -28,6 +28,7 @@ import qualified Options.Applicative as Opt
 import Servant
 import System.Environment.MrEnv (envAsBool, envAsInt, envAsString)
 import System.IO (stdout)
+import System.Posix.Env.ByteString (getEnvDefault)
 
 -- | Convert our 'App' type to a 'Servant.Handler', for a given 'AppCtx'.
 nt :: AppCtx -> AppM a -> Handler a
@@ -75,7 +76,7 @@ initApp settings unApp = do
 getServerSettings :: IO ServerSettings
 getServerSettings = do
   p <- envAsInt "HAKA_PORT" 8080
-  badgeUrl <- Bs.pack <$> envAsString "HAKA_BADGE_URL" "http://localhost:8080"
+  badgeUrl <- getEnvDefault "HAKA_BADGE_URL" "http://localhost:8080"
   dashboardPath <- envAsString "HAKA_DASHBOARD_PATH" "./dashboard/dist"
   apiPrefix <- envAsString "HAKA_API_PREFIX" ""
   shieldsIOUrl <- envAsString "HAKA_SHIELDS_IO_URL" "https://img.shields.io"
@@ -98,6 +99,8 @@ getServerSettings = do
 
 main :: IO ()
 main = do
+  GHC.IO.Encoding.setLocaleEncoding GHC.IO.Encoding.utf8
+
   parsedOpts <- Opt.execParser Cli.opts
   s <- getServerSettings
   Cli.handleCommand (Cli.serverCmd parsedOpts) (initApp s (app s))
