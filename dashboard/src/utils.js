@@ -34,6 +34,11 @@ export default {
     d1.setHours(d.getHours() - num);
     return d1;
   },
+  removeDays: function (d, num) {
+    const d1 = new Date(d);
+    d1.setDate(d.getDate() - num);
+    return d1;
+  },
   addDays: function (d, num) {
     const d1 = new Date(d);
     d1.setDate(d.getDate() + num);

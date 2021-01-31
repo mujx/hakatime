@@ -119,6 +119,23 @@ function getBadgeLink(projectName) {
   });
 }
 
+function submitImportRequest({ remoteServer, apiToken, startDate, endDate }) {
+  return m.request({
+    method: "POST",
+    url: baseUrl() + "/import",
+    background: true,
+    body: {
+      remoteServer,
+      apiToken,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString()
+    },
+    headers: {
+      authorization: storage.getHeaderToken()
+    }
+  });
+}
+
 export {
   createApiToken,
   deleteToken,
@@ -130,5 +147,6 @@ export {
   login,
   logout,
   refreshToken,
-  register
+  register,
+  submitImportRequest
 };

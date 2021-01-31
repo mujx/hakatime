@@ -8,6 +8,7 @@ import * as storage from "../storage";
 // Modals
 import CreateTokenModal from "../modals/CreateToken";
 import TokenListModal from "../modals/TokenList";
+import ImportDataModal from "../modals/ImportData";
 
 function createApiTokenDialog(event) {
   event.redraw = false;
@@ -146,6 +147,13 @@ export default {
                                 onclick: TokenListModal.openModal
                               },
                               "Tokens"
+                            ),
+                            m(
+                              "a.dropdown-item",
+                              {
+                                onclick: ImportDataModal.openModal
+                              },
+                              "Import data"
                             ),
                             m(
                               "a.dropdown-item",

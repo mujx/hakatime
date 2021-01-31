@@ -60,6 +60,7 @@ library libhaka
                      , Haka.Db.Sessions
                      , Haka.Db.Statements
                      , Haka.Errors
+                     , Haka.Import
                      , Haka.Heartbeats
                      , Haka.Projects
                      , Haka.Stats
