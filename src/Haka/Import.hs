@@ -114,7 +114,7 @@ data UserAgentPayload = UserAgentPayload
   }
   deriving (Show, Generic)
 
-data UserAgentList = UserAgentList
+newtype UserAgentList = UserAgentList
   { uaData :: [UserAgentPayload]
   }
   deriving (Show, Generic)
@@ -127,12 +127,13 @@ instance A.FromJSON UserAgentList where
 
 process :: QueueItem -> AppM ()
 process item = do
-  liftIO $ putStrLn $ "processing item: " <> show item
+  $(logTM) InfoS ("processing import request for user: " <> showLS (requester item))
+
   let payload = reqPayload item
       header = R.header "Authorization" ("Basic " <> (encodeUtf8 $ apiToken payload))
       allDays = genDateRange (startDate payload) (endDate payload)
 
-  bs <-
+  uaRes <-
     R.req
       R.GET
       (R.https wakatimeApi /: "api" /: "v1" /: "users" /: "current" /: "user_agents")
@@ -140,11 +141,11 @@ process item = do
       R.jsonResponse
       header
 
-  let userAgents = (R.responseBody bs :: UserAgentList)
+  let userAgents = (R.responseBody uaRes :: UserAgentList)
 
   traverse_
     ( \day -> do
-        bs <-
+        heartbeatsRes <-
           R.req
             R.GET
             (R.https wakatimeApi /: "api" /: "v1" /: "users" /: "current" /: "heartbeats")
@@ -152,24 +153,56 @@ process item = do
             R.jsonResponse
             (("date" =: day) <> header)
 
-        let heartbeatList = (R.responseBody bs :: HeartbeatList)
+        let heartbeatList = (R.responseBody heartbeatsRes :: HeartbeatList)
 
-        liftIO $ print (show day <> " " <> (show $ length $ listData heartbeatList))
+        $(logTM) InfoS ("importing " <> showLS (length $ listData heartbeatList) <> " heartbeats for day " <> showLS day)
 
-        let heartbeats = convertForDb userAgents heartbeatList
+        let heartbeats =
+              convertForDb
+                (requester item)
+                (uaData userAgents)
+                (listData heartbeatList)
 
         pool' <- asks pool
 
-        runM
-          . embedToMonadIO
-          . runError
-          $ DbOps.interpretDatabaseIO $
-            DbOps.importHeartbeats pool' (requester item) Nothing heartbeats
+        res <-
+          runM
+            . embedToMonadIO
+            . runError
+            $ DbOps.interpretDatabaseIO $
+              DbOps.importHeartbeats pool' (requester item) (Just "wakatime-import") heartbeats
+
+        either Err.logError pure res
     )
     allDays
 
-convertForDb :: UserAgentList -> HeartbeatList -> [HeartbeatPayload]
-convertForDb = undefined
+  $(logTM) InfoS "import completed"
+
+convertForDb :: Text -> [UserAgentPayload] -> [ImportHeartbeatPayload] -> [HeartbeatPayload]
+convertForDb user userAgents = map convertSchema
+  where
+    convertSchema payload =
+      let userAgentValue = uaValue $ head $ filter (\x -> uaId x == wUser_agent_id payload) userAgents
+       in HeartbeatPayload
+            { branch = wBranch payload,
+              category = wCategory payload,
+              cursorpos = wCursorpos payload,
+              dependencies = wDependencies payload,
+              editor = Nothing,
+              plugin = Nothing,
+              platform = Nothing,
+              machine = Nothing,
+              entity = wEntity payload,
+              file_lines = wLines payload,
+              is_write = wIs_write payload,
+              language = wLanguage payload,
+              lineno = wLineno payload,
+              project = wProject payload,
+              user_agent = userAgentValue,
+              sender = Just user,
+              time_sent = wTime payload,
+              ty = wType payload
+            }
 
 data ImportRequestException
   = ConnectionError (Maybe Bs.ByteString)
@@ -206,7 +239,7 @@ handleImportRequest = do
         Right conn -> pure conn
 
     processItems ctx items = do
-      if length items == 0
+      if null items
         then throw $ MalformedPaylod "Received empty payload list"
         else do
           case A.fromJSON (head items) :: A.Result QueueItem of
@@ -214,7 +247,7 @@ handleImportRequest = do
             A.Error e -> throw $ MalformedPaylod e
 
     numRetries :: Int
-    numRetries = 3
+    numRetries = 2
 
     numItems :: Int
     numItems = 1

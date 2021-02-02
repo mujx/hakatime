@@ -162,5 +162,5 @@ genDateRange t0 t1 =
       { utctDay = addDays d (utctDay t0),
         utctDayTime = 0
       }
-    | d <- [0 .. (diffDays (utctDay t1) (utctDay t0)) + 1]
+    | d <- [0 .. diffDays (utctDay t1) (utctDay t0) + 1]
   ]

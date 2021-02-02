@@ -25,4 +25,5 @@ VALUES ( $1, $2, $3, $4, $5,
          $11, $12, $13, CAST($14 AS INT), $15,
          $16, $17, $18 )
 
-RETURNING "id";
+ON CONFLICT ON CONSTRAINT unique_heartbeats
+DO UPDATE SET machine=EXCLUDED.machine RETURNING id;
