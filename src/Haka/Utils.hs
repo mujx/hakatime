@@ -24,7 +24,7 @@ import Data.Int (Int64)
 import Data.List (foldl')
 import Data.Text (Text, pack, splitOn)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
-import Data.Time (addDays, diffDays, diffUTCTime)
+import Data.Time (addDays, diffDays)
 import Data.Time.Clock (UTCTime (..))
 import Data.Time.Format (defaultTimeLocale, formatTime)
 import qualified Data.UUID as UUID

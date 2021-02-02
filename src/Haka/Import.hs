@@ -133,7 +133,7 @@ process item = do
   $(logTM) InfoS ("processing import request for user: " <> showLS (requester item))
 
   let payload = reqPayload item
-      header = R.header "Authorization" ("Basic " <> (encodeUtf8 $ apiToken payload))
+      header = R.header "Authorization" ("Basic " <> encodeUtf8 (apiToken payload))
       allDays = genDateRange (startDate payload) (endDate payload)
 
   uaRes <-

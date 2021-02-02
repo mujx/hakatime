@@ -1,12 +1,13 @@
 { mkDerivation, aeson, base, base64-bytestring, bits, blaze-builder
 , bytestring, case-insensitive, containers, contravariant-extras
 , cookie, cryptonite, fakedata, file-embed, hasql, hasql-pool
-, hasql-transaction, http-client, http-client-tls, http-media
-, http-types, katip, mr-env, mtl, optparse-applicative, polysemy
-, polysemy-plugin, postgresql-binary, random, raw-strings-qq, safe
-, safe-exceptions, servant, servant-client, servant-server, stdenv
-, system-filepath, text, time, transformers, unix, unliftio-core
-, uuid, uuid-types, wai, wai-cors, wai-extra, wai-logger, warp
+, hasql-queue, hasql-transaction, http-client, http-client-tls
+, http-media, http-types, katip, mr-env, mtl, optparse-applicative
+, polysemy, polysemy-plugin, postgresql-binary, random
+, raw-strings-qq, req, safe, safe-exceptions, servant
+, servant-client, servant-server, stdenv, system-filepath, text
+, time, transformers, unix, unliftio-core, uuid, uuid-types, wai
+, wai-cors, wai-extra, wai-logger, warp
 }:
 mkDerivation {
   pname = "hakatime";
@@ -17,19 +18,19 @@ mkDerivation {
   libraryHaskellDepends = [
     aeson base base64-bytestring bits blaze-builder bytestring
     case-insensitive containers contravariant-extras cookie cryptonite
-    file-embed hasql hasql-pool hasql-transaction http-client
-    http-client-tls http-media http-types katip mr-env mtl
+    file-embed hasql hasql-pool hasql-queue hasql-transaction
+    http-client http-client-tls http-media http-types katip mr-env mtl
     optparse-applicative polysemy polysemy-plugin postgresql-binary
-    raw-strings-qq safe safe-exceptions servant servant-server
+    raw-strings-qq req safe safe-exceptions servant servant-server
     system-filepath text time transformers unix unliftio-core uuid
     uuid-types wai
   ];
   executableHaskellDepends = [
-    aeson base base64-bytestring bytestring fakedata hasql-pool
-    http-client http-client-tls katip mr-env mtl optparse-applicative
-    polysemy polysemy-plugin random servant servant-client
-    servant-server text time transformers unix wai wai-cors wai-extra
-    wai-logger warp
+    aeson base base64-bytestring bytestring fakedata hasql hasql-pool
+    hasql-queue http-client http-client-tls katip mr-env mtl
+    optparse-applicative polysemy polysemy-plugin random
+    safe-exceptions servant servant-client servant-server text time
+    transformers unix wai wai-cors wai-extra wai-logger warp
   ];
   testHaskellDepends = [ base ];
   doHaddock = false;

@@ -38,7 +38,7 @@ function checkStatus(res) {
           console.log("the submitted job is pending");
         } else if (res.jobStatus == "JobFailed") {
           notyf().error(
-            "The import job failed. Please check server logs for more info."
+            "The import job failed. Please check the server logs for more info."
           );
           stopJobStatusCheck();
         } else if (res.jobStatus == "JobFinished") {
