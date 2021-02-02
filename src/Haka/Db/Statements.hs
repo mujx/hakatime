@@ -4,6 +4,8 @@
 module Haka.Db.Statements
   ( insertHeartBeat,
     createAPIToken,
+    deleteFailedJobs,
+    getJobStatus,
     createBadgeLink,
     getBadgeLinkInfo,
     getTotalActivityTime,
@@ -27,6 +29,7 @@ module Haka.Db.Statements
 where
 
 import Contravariant.Extras.Contrazip (contrazip3, contrazip4, contrazip5)
+import Data.Aeson as A
 import qualified Data.ByteString as Bs
 import Data.FileEmbed
 import Data.Functor.Contravariant ((>$<))
@@ -448,3 +451,19 @@ getTimeline = Statement query params result True
         <*> (D.column . D.nonNullable) D.timestamptz
     result :: D.Result [TimelineRow]
     result = D.rowList tRow
+
+deleteFailedJobs :: Statement A.Value Int64
+deleteFailedJobs = Statement query params D.rowsAffected True
+  where
+    params :: E.Params A.Value
+    params = E.param (E.nonNullable E.json)
+    query :: Bs.ByteString
+    query = [r| DELETE FROM payloads WHERE value::text = $1::text; |]
+
+getJobStatus :: Statement A.Value (Maybe Text)
+getJobStatus = Statement query params (D.rowMaybe ((D.column . D.nonNullable) D.text)) True
+  where
+    params :: E.Params A.Value
+    params = E.param (E.nonNullable E.json)
+    query :: Bs.ByteString
+    query = [r| SELECT state FROM payloads WHERE value::text = $1::text; |]

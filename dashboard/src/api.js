@@ -136,8 +136,26 @@ function submitImportRequest({ remoteServer, apiToken, startDate, endDate }) {
   });
 }
 
+function checkJobStatus({ remoteServer, apiToken, startDate, endDate }) {
+  return m.request({
+    method: "POST",
+    url: baseUrl() + "/import/status",
+    background: true,
+    body: {
+      remoteServer,
+      apiToken: btoa(apiToken),
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString()
+    },
+    headers: {
+      authorization: storage.getHeaderToken()
+    }
+  });
+}
+
 export {
   createApiToken,
+  checkJobStatus,
   deleteToken,
   getBadgeLink,
   getProject,

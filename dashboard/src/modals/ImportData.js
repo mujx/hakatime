@@ -1,12 +1,69 @@
 import m from "mithril";
 import $ from "jquery";
 import Litepicker from "litepicker";
+import { Notyf } from "notyf";
+import "notyf/notyf.min.css";
 
 import utils from "../utils";
 import * as api from "../api";
 
 let state = {};
 let picker = null;
+let jobStatusTimer = null;
+
+function notyf() {
+  return new Notyf({
+    duration: 5000,
+    dismissible: true,
+    position: {
+      y: "top"
+    }
+  });
+}
+
+function checkStatus(res) {
+  console.log(res);
+
+  notyf().success(
+    "Your request has been submitted. You'll be notified about its progress."
+  );
+
+  startJobStatusCheck(function () {
+    api
+      .checkJobStatus(state)
+      .then(function (res) {
+        console.log(res);
+
+        if (res.jobStatus == "JobPending") {
+          console.log("the submitted job is pending");
+        } else if (res.jobStatus == "JobFailed") {
+          notyf().error(
+            "The import job failed. Please check server logs for more info."
+          );
+          stopJobStatusCheck();
+        } else if (res.jobStatus == "JobFinished") {
+          notyf().success("The import job finished successfully");
+          stopJobStatusCheck();
+        }
+      })
+      .catch(function (e) {
+        stopJobStatusCheck();
+        notyf().error("An error occured: ", e.response.error);
+        console.log(e.response);
+      });
+  });
+}
+
+function startJobStatusCheck(callback) {
+  jobStatusTimer = setInterval(callback, 10000);
+}
+
+function stopJobStatusCheck() {
+  if (jobStatusTimer) {
+    clearInterval(jobStatusTimer);
+    jobStatusTimer = null;
+  }
+}
 
 function resetState() {
   state = {
@@ -37,18 +94,15 @@ function startImport(e) {
 
   api
     .submitImportRequest(state)
-    .then(function (res) {
-      console.log("job submitted");
-      console.log(res);
-    })
+    .then(checkStatus)
     .catch(function (e) {
+      notyf().error("Failed to submit job: ", e.response.error);
       console.log(e.response);
     });
 }
 
 function closeModal(e) {
   e.redraw = false;
-  resetState();
   m.render(document.getElementById(MODAL_ID), null);
 }
 
@@ -189,5 +243,7 @@ const Modal = {
 
 export default {
   Modal,
-  openModal
+  openModal,
+  startJobStatusCheck,
+  stopJobStatusCheck
 };

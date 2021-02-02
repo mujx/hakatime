@@ -5,6 +5,7 @@
 module Haka.DatabaseOperations
   ( processHeartbeatRequest,
     importHeartbeats,
+    deleteFailedJobs,
     interpretDatabaseIO,
     getUserByRefreshToken,
     getUserByToken,
@@ -17,6 +18,7 @@ module Haka.DatabaseOperations
     getTimeline,
     registerUser,
     createNewApiToken,
+    getJobStatus,
     clearTokens,
     generateStatistics,
     DatabaseException (..),
@@ -26,6 +28,7 @@ module Haka.DatabaseOperations
 where
 
 import Control.Monad.IO.Class (liftIO)
+import Data.Aeson as A
 import Data.Int (Int64)
 import Data.Text (Text, pack)
 import Data.Time.Clock (UTCTime)
@@ -89,6 +92,10 @@ data Database m a where
   CreateBadgeLink :: HqPool.Pool -> Text -> Text -> Database m UUID
   -- | Find the user/project combination from the badge id.
   GetBadgeLinkInfo :: HqPool.Pool -> UUID -> Database m BadgeRow
+  -- | Get the status of a queue item.
+  GetJobStatus :: HqPool.Pool -> A.Value -> Database m (Maybe Text)
+  -- | Delete stale failed jobs.
+  DeleteFailedJobs :: HqPool.Pool -> A.Value -> Database m Int64
 
 mkTokenData :: Text -> IO TokenData
 mkTokenData user = do
@@ -176,6 +183,12 @@ interpretDatabaseIO =
       either (throw . SessionException) pure res
     GetBadgeLinkInfo pool badgeId -> do
       res <- liftIO $ HqPool.use pool (Sessions.getBadgeLinkInfo badgeId)
+      either (throw . SessionException) pure res
+    GetJobStatus pool payload -> do
+      res <- liftIO $ HqPool.use pool (Sessions.getJobStatus payload)
+      either (throw . SessionException) pure res
+    DeleteFailedJobs pool payload -> do
+      res <- liftIO $ HqPool.use pool (Sessions.deleteFailedJobs payload)
       either (throw . SessionException) pure res
 
 makeSem ''Database

@@ -3,6 +3,8 @@ module Haka.Db.Sessions
     getUserByRefreshToken,
     createBadgeLink,
     getTotalActivityTime,
+    deleteFailedJobs,
+    getJobStatus,
     updateTokenUsage,
     deleteToken,
     createAPIToken,
@@ -22,6 +24,7 @@ where
 
 import Control.Monad.IO.Class (liftIO)
 import qualified Crypto.Error as CErr
+import Data.Aeson as A
 import Data.Int (Int64)
 import Data.List (nub)
 import Data.Maybe (mapMaybe)
@@ -160,3 +163,9 @@ createAPIToken usr = do
   newToken <- liftIO Utils.randomToken
   statement (usr, Utils.toBase64 newToken) Statements.createAPIToken
   pure newToken
+
+deleteFailedJobs :: A.Value -> Session Int64
+deleteFailedJobs payload = statement payload Statements.deleteFailedJobs
+
+getJobStatus :: A.Value -> Session (Maybe Text)
+getJobStatus payload = statement payload Statements.getJobStatus

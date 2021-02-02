@@ -18,11 +18,7 @@ import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Clock (UTCTime (..))
 import GHC.Generics
-import Haka.AesonHelpers
-  ( convertReservedWords,
-    noPrefixOptions,
-    untagged,
-  )
+import Haka.AesonHelpers (noPrefixOptions)
 import qualified Haka.Cli as Cli
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
@@ -40,12 +36,19 @@ import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
 import Servant
 
-newtype ImportRequestResponse = ImportRequestResponse
-  { jobStatus :: Text
-  }
+data JobStatus
+  = JobSubmitted
+  | JobPending
+  | JobFailed
+  | JobFinished
   deriving (Generic, Show)
 
-instance A.FromJSON ImportRequestResponse
+instance A.ToJSON JobStatus
+
+newtype ImportRequestResponse = ImportRequestResponse
+  { jobStatus :: JobStatus
+  }
+  deriving (Generic, Show)
 
 instance A.ToJSON ImportRequestResponse
 
@@ -247,15 +250,21 @@ handleImportRequest = do
             A.Error e -> throw $ MalformedPaylod e
 
     numRetries :: Int
-    numRetries = 2
+    numRetries = 3
 
     numItems :: Int
     numItems = 1
 
-type API = ImportRequest
+type API = ImportRequest :<|> ImportRequestStatus
 
 type ImportRequest =
   "import"
+    :> Header "Authorization" ApiToken
+    :> ReqBody '[JSON] ImportRequestPayload
+    :> Post '[JSON] ImportRequestResponse
+
+type ImportRequestStatus =
+  "import" :> "status"
     :> Header "Authorization" ApiToken
     :> ReqBody '[JSON] ImportRequestPayload
     :> Post '[JSON] ImportRequestResponse
@@ -270,11 +279,20 @@ enqueueRequest payload = do
     Left (Just e) -> error $ Bs.unpack e
     Right conn -> HasqlQueue.enqueue queueName conn E.json [payload]
 
-server :: Maybe ApiToken -> ImportRequestPayload -> AppM ImportRequestResponse
-server Nothing _ = throw Err.missingAuthError
-server (Just token) payload = do
-  $(logTM) InfoS "received an import request"
+server ::
+  ( Maybe ApiToken ->
+    ImportRequestPayload ->
+    AppM ImportRequestResponse
+  )
+    :<|> ( Maybe ApiToken ->
+           ImportRequestPayload ->
+           AppM ImportRequestResponse
+         )
+server = importRequestHandler :<|> checkRequestStatusHandler
 
+checkRequestStatusHandler :: Maybe ApiToken -> ImportRequestPayload -> AppM ImportRequestResponse
+checkRequestStatusHandler Nothing _ = throw Err.missingAuthError
+checkRequestStatusHandler (Just token) payload = do
   p <- asks pool
 
   res <-
@@ -286,13 +304,68 @@ server (Just token) payload = do
 
   user <- either Err.logError pure res
 
-  liftIO $
-    enqueueRequest
-      ( A.toJSON $
+  $(logTM) InfoS ("checking pending import request for user: " <> showLS user)
+
+  let item =
+        A.toJSON $
           QueueItem
             { requester = user,
               reqPayload = payload
             }
-      )
 
-  return $ ImportRequestResponse {jobStatus = "ok"}
+  statusResult <-
+    runM
+      . embedToMonadIO
+      . runError
+      $ DbOps.interpretDatabaseIO $
+        DbOps.getJobStatus p item
+
+  status <- either Err.logError pure statusResult
+
+  return $
+    ImportRequestResponse
+      { jobStatus =
+          case status of
+            Nothing -> JobFinished
+            Just s -> if s == "failed" then JobFailed else JobPending
+      }
+
+importRequestHandler :: Maybe ApiToken -> ImportRequestPayload -> AppM ImportRequestResponse
+importRequestHandler Nothing _ = throw Err.missingAuthError
+importRequestHandler (Just token) payload = do
+  p <- asks pool
+
+  userResult <-
+    runM
+      . embedToMonadIO
+      . runError
+      $ DbOps.interpretDatabaseIO $
+        DbOps.getUserByToken p token
+
+  user <- either Err.logError pure userResult
+
+  $(logTM) InfoS ("received an import request from user: " <> showLS user)
+
+  let item =
+        A.toJSON $
+          QueueItem
+            { requester = user,
+              reqPayload = payload
+            }
+
+  -- Delete previous failed jobs with the same parameters.
+  affectedRows <-
+    runM
+      . embedToMonadIO
+      . runError
+      $ DbOps.interpretDatabaseIO $
+        DbOps.deleteFailedJobs p item
+
+  _ <- either Err.logError pure affectedRows
+
+  liftIO $ enqueueRequest item
+
+  return $
+    ImportRequestResponse
+      { jobStatus = JobSubmitted
+      }

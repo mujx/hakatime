@@ -29,6 +29,7 @@
     "litepicker": "1.5.7",
     "lodash": "4.17.20",
     "mithril": "2.0.4",
+    "notyf": "^3.9.0",
     "popper.js": "1.16.1",
     "startbootstrap-sb-admin-2": "4.1.3",
     "typeface-nunito": "1.1.3"
