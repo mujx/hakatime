@@ -3,6 +3,7 @@
 module Haka.Utils
   ( toStrError,
     getRefreshToken,
+    genDateRange,
     passwordInput,
     defaultLimit,
     randomToken,
@@ -23,7 +24,8 @@ import Data.Int (Int64)
 import Data.List (foldl')
 import Data.Text (Text, pack, splitOn)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
-import Data.Time.Clock (UTCTime)
+import Data.Time (addDays, diffDays, diffUTCTime)
+import Data.Time.Clock (UTCTime (..))
 import Data.Time.Format (defaultTimeLocale, formatTime)
 import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
@@ -153,3 +155,12 @@ getRefreshToken cookies =
    in case value of
         Just v -> Just $ decodeUtf8 v
         Nothing -> Nothing
+
+genDateRange :: UTCTime -> UTCTime -> [UTCTime]
+genDateRange t0 t1 =
+  [ UTCTime
+      { utctDay = addDays d (utctDay t0),
+        utctDayTime = 0
+      }
+    | d <- [0 .. (diffDays (utctDay t1) (utctDay t0)) + 1]
+  ]

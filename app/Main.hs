@@ -3,12 +3,14 @@ module Main
   )
 where
 
-import Control.Exception (try)
-import Control.Monad (when)
+import Control.Concurrent (forkIO, threadDelay)
+import Control.Exception.Safe (catchAny, try)
+import Control.Monad (forever, when)
 import Control.Monad.Trans.Except (ExceptT (..))
 import qualified GHC.IO.Encoding
 import qualified Haka.Api as Api
 import qualified Haka.Cli as Cli
+import qualified Haka.Import as Import
 import qualified Haka.Middleware as Middleware
 import Haka.Types
   ( AppCtx (..),
@@ -18,7 +20,9 @@ import Haka.Types
     ServerSettings (..),
     runAppT,
   )
+import qualified Hasql.Connection as HasqlConn
 import qualified Hasql.Pool as HasqlPool
+import Hasql.Queue.Migrate (migrate)
 import Katip
 import Network.Wai
 import Network.Wai.Handler.Warp
@@ -50,8 +54,15 @@ app settings conf =
 
 initApp :: ServerSettings -> (AppCtx -> Application) -> IO ()
 initApp settings unApp = do
-  dbsettings <- Cli.getDbSettings
-  dbPool <- HasqlPool.acquire (10, 1, dbsettings)
+  dbSettings <- Cli.getDbSettings
+  dbPool <- HasqlPool.acquire (10, 1, dbSettings)
+
+  -- Set up the db schema for the postgres queue.
+  res <- HasqlConn.acquire dbSettings
+  case res of
+    Left e -> error $ "Failed to setup queue schema: " <> show e
+    Right conn -> migrate conn "json"
+
   let ns = Namespace {unNamespace = ["server"]}
   handleScribe <- mkHandleScribe ColorIfTerminal stdout (permitItem InfoS) V2
   logEnv' <- registerScribe "stdout" handleScribe defaultScribeSettings =<< initLogEnv "hakatime" "dev"
@@ -61,17 +72,25 @@ initApp settings unApp = do
             lsLogEnv = logEnv',
             lsContext = mempty
           }
+      appCtx =
+        AppCtx
+          { pool = dbPool,
+            logState = logState',
+            srvSettings = settings
+          }
+
+  -- Handle import requests on another thread.
+  _ <- forkIO $
+    forever $ do
+      runAppT appCtx Import.handleImportRequest
+        `catchAny` ( \e -> do
+                       putStrLn $ "Exception on import request handler: " <> show e
+                       threadDelay 1000000
+                   )
+
   withStdoutLogger $ \logger -> do
     let conf = setPort (hakaPort settings) $ setLogger logger defaultSettings
-    runSettings
-      conf
-      ( unApp
-          AppCtx
-            { pool = dbPool,
-              logState = logState',
-              srvSettings = settings
-            }
-      )
+    runSettings conf (unApp appCtx)
 
 getServerSettings :: IO ServerSettings
 getServerSettings = do

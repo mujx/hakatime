@@ -4,8 +4,10 @@
 
 module Haka.DatabaseOperations
   ( processHeartbeatRequest,
+    importHeartbeats,
     interpretDatabaseIO,
     getUserByRefreshToken,
+    getUserByToken,
     getBadgeLinkInfo,
     getTotalActivityTime,
     mkBadgeLink,
@@ -196,25 +198,30 @@ processHeartbeatRequest heartbeats = do
     Nothing -> throw UserNotFound
     Just userName -> do
       updateTokenUsage pool token
-      saveHeartbeats pool (updateHeartbeats userName machineId)
-  where
-    editorInfo :: [Utils.EditorInfo]
-    editorInfo = map (Utils.userAgentInfo . user_agent) heartbeats
-    -- Update the missing fields with info gatherred from the user-agent
-    -- header field & the machine id.
-    updateHeartbeats :: Text -> Maybe Text -> [HeartbeatPayload]
-    updateHeartbeats name machineId =
-      map
-        ( \(info, beat) ->
-            beat
-              { sender = Just name,
-                machine = machineId,
-                editor = Utils.editor info,
-                plugin = Utils.plugin info,
-                platform = Utils.platform info
-              }
-        )
-        (zip editorInfo heartbeats)
+      saveHeartbeats pool (updateHeartbeats heartbeats userName machineId)
+
+editorInfo :: [HeartbeatPayload] -> [Utils.EditorInfo]
+editorInfo heartbeats = map (Utils.userAgentInfo . user_agent) heartbeats
+
+-- Update the missing fields with info gatherred from the user-agent
+-- header field & the machine id.
+updateHeartbeats :: [HeartbeatPayload] -> Text -> Maybe Text -> [HeartbeatPayload]
+updateHeartbeats heartbeats name machineId =
+  map
+    ( \(info, beat) ->
+        beat
+          { sender = Just name,
+            machine = machineId,
+            editor = Utils.editor info,
+            plugin = Utils.plugin info,
+            platform = Utils.platform info
+          }
+    )
+    (zip (editorInfo heartbeats) heartbeats)
+
+importHeartbeats :: forall r. (Member Database r) => HqPool.Pool -> Text -> Maybe Text -> [HeartbeatPayload] -> Sem r [Int64]
+importHeartbeats pool username machineId heartbeats = do
+  saveHeartbeats pool (updateHeartbeats heartbeats username machineId)
 
 generateStatistics ::
   forall r.
@@ -373,3 +380,17 @@ mkBadgeLink pool proj token = do
   case retrievedUser of
     Nothing -> throw UserNotFound
     Just user -> createBadgeLink pool user proj
+
+getUserByToken ::
+  forall r.
+  ( Member Database r,
+    Member (Error DatabaseException) r
+  ) =>
+  HqPool.Pool ->
+  ApiToken ->
+  Sem r Text
+getUserByToken pool token = do
+  retrievedUser <- getUser pool token
+  case retrievedUser of
+    Nothing -> throw UserNotFound
+    Just user -> pure user

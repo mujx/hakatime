@@ -33,7 +33,7 @@ module Haka.Types
   )
 where
 
-import Control.Exception.Safe (MonadThrow)
+import Control.Exception.Safe (MonadThrow, throw)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader (MonadReader, asks, local)
 import Control.Monad.Trans.Reader (ReaderT (..), runReaderT)
@@ -58,6 +58,7 @@ import Haka.AesonHelpers
 import qualified Haka.Utils as Utils
 import qualified Hasql.Pool as HqPool
 import qualified Katip as K
+import qualified Network.HTTP.Req as Req
 import PostgreSQL.Binary.Data (Scientific)
 import Servant
 
@@ -152,6 +153,9 @@ instance MonadIO m => K.Katip (AppT m) where
           )
           m
       )
+
+instance (MonadIO m, MonadThrow m) => Req.MonadHttp (AppT m) where
+  handleHttpException = throw
 
 -- | Implement a @KatipContext@ instance for our @App@ monad.
 instance MonadIO m => K.KatipContext (AppT m) where
@@ -361,7 +365,7 @@ data HeartbeatPayload = HeartbeatPayload
     -- | The operating system info.
     platform :: Maybe Text,
     -- | Usually the hostname of the machine that sent the heartbeat.
-    -- Extracted from the X-Machine-Name header fiel.d
+    -- Extracted from the X-Machine-Name header field.
     machine :: Maybe Text,
     -- | The user associated with this request. Referenced by the Api Token.
     sender :: Maybe Text,

@@ -126,7 +126,7 @@ function submitImportRequest({ remoteServer, apiToken, startDate, endDate }) {
     background: true,
     body: {
       remoteServer,
-      apiToken,
+      apiToken: btoa(apiToken),
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString()
     },
