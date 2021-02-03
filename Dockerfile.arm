@@ -26,7 +26,7 @@ COPY sql/           ./sql
 COPY test/          ./test
 COPY tools/         ./tools
 
-RUN cabal build exe:hakatime && mkdir -p /app/bin && \
+RUN cabal build -j1 exe:hakatime && mkdir -p /app/bin && \
     cp /build/dist-newstyle/build/*-linux/ghc-*/hakatime-*/x/hakatime/opt/build/hakatime/hakatime /app/bin/hakatime
 
 FROM debian:testing-slim
