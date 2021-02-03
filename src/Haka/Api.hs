@@ -5,13 +5,13 @@ module Haka.Api
   )
 where
 
+import Haka.App (AppM, ServerSettings (..))
 import qualified Haka.Authentication as Auth
 import qualified Haka.Badges as Badges
 import qualified Haka.Heartbeats as Heartbeats
 import qualified Haka.Import as Import
 import qualified Haka.Projects as Projects
 import qualified Haka.Stats as Stats
-import Haka.Types (AppM, ServerSettings (..))
 import qualified Haka.Users as Users
 import Servant
 

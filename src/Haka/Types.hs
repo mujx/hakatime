@@ -1,41 +1,26 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Haka.Types
-  ( HeartbeatApiResponse (..),
-    HearbeatData (..),
+  ( HearbeatData (..),
     StoredApiToken (..),
+    RegisteredUser (..),
     BadgeRow (..),
-    RegistrationStatus (..),
-    ServerSettings (..),
     BulkHeartbeatData (..),
     HeartbeatId (..),
-    ApiErrorData (..),
     ReturnBulkStruct (..),
     ApiToken (..),
     HeartbeatPayload (..),
     EntityType (..),
-    RegisteredUser (..),
     StatRow (..),
     TimelineRow (..),
     ProjectStatRow (..),
-    AppCtx (..),
-    LogState (..),
-    AppM,
-    runAppT,
-    mkAppT,
-    AppT (..),
     TokenData (..),
   )
 where
 
-import Control.Exception.Safe (MonadThrow, throw)
-import Control.Monad.IO.Class (MonadIO)
-import Control.Monad.Reader (MonadReader, asks, local)
-import Control.Monad.Trans.Reader (ReaderT (..), runReaderT)
 import Data.Aeson
   ( FromJSON,
     ToJSON (..),
@@ -55,34 +40,8 @@ import Haka.AesonHelpers
     untagged,
   )
 import qualified Haka.Utils as Utils
-import qualified Hasql.Pool as HqPool
-import qualified Katip as K
-import qualified Network.HTTP.Req as Req
 import PostgreSQL.Binary.Data (Scientific)
 import Servant
-
-data RegistrationStatus
-  = EnabledRegistration
-  | DisabledRegistration
-
--- | Server configuration settings.
-data ServerSettings = ServerSettings
-  { -- | Where the service will listen to.
-    hakaPort :: Int,
-    -- | If the api calls are made behind a proxy with a prefix,
-    -- we'll have to adjust the Set-Cookie path.
-    hakaApiPrefix :: String,
-    -- | The external URL to be used for the badge generation.
-    hakaBadgeUrl :: Bs.ByteString,
-    -- | Where to look for dashboard's static files.
-    hakaDashboardPath :: FilePath,
-    -- | Whether the registration is enabled.
-    hakaEnableRegistration :: RegistrationStatus,
-    -- | Maximum duration of the dashboard session without activity.
-    hakaSessionExpiry :: Int64,
-    -- | A shields.io compatible endpoint to use for badge generation.
-    hakaShieldsIOUrl :: String
-  }
 
 data StoredApiToken = StoredApiToken
   { -- Some characters to identify a token.
@@ -105,104 +64,6 @@ data TokenData = TokenData
     -- | The refresh token.
     tknRefreshToken :: Text
   }
-
-data LogState = LogState
-  { lsContext :: !K.LogContexts,
-    lsNamespace :: !K.Namespace,
-    lsLogEnv :: !K.LogEnv
-  }
-
-data AppCtx = AppCtx
-  { pool :: HqPool.Pool,
-    logState :: LogState,
-    srvSettings :: ServerSettings
-  }
-
-newtype AppT m a = AppT
-  { unAppT :: ReaderT AppCtx m a
-  }
-  deriving
-    ( Applicative,
-      Functor,
-      Monad,
-      MonadIO,
-      MonadThrow,
-      MonadReader AppCtx
-    )
-
-type AppM = AppT IO
-
--- | Implement a @Katip@ instance for our @AppT@ monad.
-instance MonadIO m => K.Katip (AppT m) where
-  getLogEnv = do
-    logState' <- asks logState
-    pure $ lsLogEnv logState'
-  localLogEnv f (AppT m) =
-    AppT
-      ( local
-          ( \ctx ->
-              ctx
-                { logState =
-                    LogState
-                      { lsContext = (lsContext . logState) ctx,
-                        lsNamespace = (lsNamespace . logState) ctx,
-                        lsLogEnv = f $ (lsLogEnv . logState) ctx
-                      }
-                }
-          )
-          m
-      )
-
-instance (MonadIO m, MonadThrow m) => Req.MonadHttp (AppT m) where
-  handleHttpException = throw
-
--- | Implement a @KatipContext@ instance for our @App@ monad.
-instance MonadIO m => K.KatipContext (AppT m) where
-  getKatipContext = do
-    logState' <- asks logState
-    pure $ lsContext logState'
-  getKatipNamespace = do
-    logState' <- asks logState
-    pure $ lsNamespace logState'
-  localKatipNamespace f (AppT m) =
-    AppT
-      ( local
-          ( \ctx ->
-              ctx
-                { logState =
-                    LogState
-                      { lsContext = (lsContext . logState) ctx,
-                        lsNamespace = f $ (lsNamespace . logState) ctx,
-                        lsLogEnv = (lsLogEnv . logState) ctx
-                      }
-                }
-          )
-          m
-      )
-
-  localKatipContext f (AppT m) =
-    AppT
-      ( local
-          ( \ctx ->
-              ctx
-                { logState =
-                    LogState
-                      { lsContext = f ((lsContext . logState) ctx),
-                        lsNamespace = (lsNamespace . logState) ctx,
-                        lsLogEnv = (lsLogEnv . logState) ctx
-                      }
-                }
-          )
-          m
-      )
-
--- | Embed a function from some @Ctx@ to an arbitrary monad in @AppT@.
-mkAppT :: (AppCtx -> m a) -> AppT m a
-mkAppT = AppT . ReaderT
-
--- | Run an 'AppT' using the given 'Ctx'.
-runAppT :: AppCtx -> AppT m a -> m a
-runAppT ctx app = runReaderT (unAppT app) ctx
 
 data RegisteredUser = RegisteredUser
   { username :: Text,
@@ -293,12 +154,6 @@ instance FromHttpApiData ApiToken where
         ApiToken (strip $ decodeUtf8 token)
   parseHeader _ = Left "Authorization should follow the 'Basic <api-token>' format"
 
-data HeartbeatApiResponse
-  = SingleHeartbeatApiResponse HearbeatData
-  | BulkHeartbeatApiResponse BulkHeartbeatData
-  | ApiError ApiErrorData
-  deriving (Show, Generic)
-
 newtype HeartbeatId = HeartbeatId
   { heartbeatId :: Text
   }
@@ -340,21 +195,6 @@ instance ToJSON BulkHeartbeatData where
 
 instance FromJSON BulkHeartbeatData where
   parseJSON = genericParseJSON noPrefixOptions
-
-newtype ApiErrorData = ApiErrorData {apiError :: Text}
-  deriving (Show, Generic)
-
-instance ToJSON ApiErrorData where
-  toJSON = genericToJSON noPrefixOptions
-
-instance FromJSON ApiErrorData where
-  parseJSON = genericParseJSON noPrefixOptions
-
-instance ToJSON HeartbeatApiResponse where
-  toJSON = genericToJSON untagged
-
-instance FromJSON HeartbeatApiResponse where
-  parseJSON = genericParseJSON untagged
 
 data HeartbeatPayload = HeartbeatPayload
   { -- | The code editor used.

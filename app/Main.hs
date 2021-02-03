@@ -9,10 +9,7 @@ import Control.Monad (forever, when)
 import Control.Monad.Trans.Except (ExceptT (..))
 import qualified GHC.IO.Encoding
 import qualified Haka.Api as Api
-import qualified Haka.Cli as Cli
-import qualified Haka.Import as Import
-import qualified Haka.Middleware as Middleware
-import Haka.Types
+import Haka.App
   ( AppCtx (..),
     AppM,
     LogState (..),
@@ -20,6 +17,9 @@ import Haka.Types
     ServerSettings (..),
     runAppT,
   )
+import qualified Haka.Cli as Cli
+import qualified Haka.Import as Import
+import qualified Haka.Middleware as Middleware
 import qualified Hasql.Connection as HasqlConn
 import qualified Hasql.Pool as HasqlPool
 import Hasql.Queue.Migrate (migrate)

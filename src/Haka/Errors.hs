@@ -3,6 +3,7 @@
 module Haka.Errors
   ( missingAuthError,
     missingRefreshTokenCookie,
+    HeartbeatApiResponse (..),
     logError,
     toJSONError,
     DatabaseException (..),
@@ -18,17 +19,37 @@ module Haka.Errors
 where
 
 import Control.Exception.Safe (MonadThrow, throw)
-import Data.Aeson (encode)
+import Data.Aeson (FromJSON (..), ToJSON (..), encode, genericParseJSON, genericToJSON)
 import qualified Data.ByteString.Char8 as C
 import Data.CaseInsensitive (mk)
 import Data.Text (Text, pack)
-import Haka.Types
-  ( ApiErrorData (..),
-    HeartbeatApiResponse (..),
-  )
+import GHC.Generics
+import Haka.AesonHelpers (noPrefixOptions, untagged)
+import Haka.Types (BulkHeartbeatData, HearbeatData)
 import qualified Hasql.Pool as HqPool
 import Katip
 import Servant
+
+data HeartbeatApiResponse
+  = SingleHeartbeatApiResponse HearbeatData
+  | BulkHeartbeatApiResponse BulkHeartbeatData
+  | ApiError ApiErrorData
+  deriving (Show, Generic)
+
+instance ToJSON HeartbeatApiResponse where
+  toJSON = genericToJSON untagged
+
+instance FromJSON HeartbeatApiResponse where
+  parseJSON = genericParseJSON untagged
+
+newtype ApiErrorData = ApiErrorData {apiError :: Text}
+  deriving (Show, Generic)
+
+instance ToJSON ApiErrorData where
+  toJSON = genericToJSON noPrefixOptions
+
+instance FromJSON ApiErrorData where
+  parseJSON = genericParseJSON noPrefixOptions
 
 mkApiError :: Text -> HeartbeatApiResponse
 mkApiError msg = ApiError $ ApiErrorData {apiError = msg}

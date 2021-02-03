@@ -16,9 +16,9 @@ import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import GHC.Generics
 import Haka.AesonHelpers (noPrefixOptions)
+import Haka.App (AppCtx (..), AppM)
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
-import Haka.Types (AppM, pool)
 import Haka.Utils (getRefreshToken)
 import Polysemy (runM)
 import Polysemy.Error (runError)

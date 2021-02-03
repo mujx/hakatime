@@ -19,10 +19,11 @@ import Data.Time (addDays, diffDays, diffUTCTime)
 import Data.Time.Clock (UTCTime (..), getCurrentTime)
 import GHC.Generics
 import Haka.AesonHelpers (noPrefixOptions)
+import Haka.App (AppCtx (..), AppM)
 import qualified Haka.DatabaseOperations as DbOps
 import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
-import Haka.Types (ApiToken (..), AppM, StatRow (..), TimelineRow (..), pool)
+import Haka.Types (ApiToken (..), StatRow (..), TimelineRow (..))
 import Haka.Utils (defaultLimit, sum')
 import Polysemy (runM)
 import Polysemy.Error (runError)

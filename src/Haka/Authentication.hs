@@ -18,14 +18,11 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Time (addUTCTime)
 import Data.Time.Clock (UTCTime (..), getCurrentTime)
 import GHC.Generics
+import Haka.App (AppCtx (..), AppM, RegistrationStatus (..), ServerSettings (..))
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
 import Haka.Types
   ( ApiToken,
-    AppCtx (..),
-    AppM,
-    RegistrationStatus (..),
-    ServerSettings (..),
     StoredApiToken,
     TokenData (..),
   )

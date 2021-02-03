@@ -18,7 +18,9 @@ import Data.Time.Calendar (Day)
 import Filesystem.Path (splitExtension)
 import Filesystem.Path.CurrentOS (fromText)
 import GHC.Generics
+import Haka.App (AppCtx (..), AppM)
 import qualified Haka.DatabaseOperations as DbOps
+import Haka.Errors (HeartbeatApiResponse (..))
 import qualified Haka.Errors as Err
 import Haka.Types
 import Hasql.Pool (Pool)

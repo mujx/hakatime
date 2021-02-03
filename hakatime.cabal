@@ -50,12 +50,13 @@ library libhaka
   hs-source-dirs:      src
   exposed-modules:     Haka.Api
                      , Haka.Cli
-                     , Haka.Types
+                     , Haka.App
                      , Haka.Middleware
                      , Haka.Import
 
   other-modules:       Haka.AesonHelpers
                      , Haka.Authentication
+                     , Haka.Types
                      , Haka.Badges
                      , Haka.DatabaseOperations
                      , Haka.Db.Sessions

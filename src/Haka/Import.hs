@@ -19,10 +19,11 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Clock (UTCTime (..))
 import GHC.Generics
 import Haka.AesonHelpers (noPrefixOptions)
+import Haka.App (AppCtx (..), AppM, runAppT)
 import qualified Haka.Cli as Cli
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
-import Haka.Types (ApiToken, AppCtx (..), AppM, EntityType (..), HeartbeatPayload (..), runAppT)
+import Haka.Types (ApiToken, EntityType (..), HeartbeatPayload (..))
 import Haka.Utils (genDateRange)
 import qualified Hasql.Connection as HasqlConn
 import qualified Hasql.Decoders as D

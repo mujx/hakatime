@@ -19,9 +19,10 @@ import Data.Text (Text, unpack)
 import Data.Text.Encoding (decodeUtf8)
 import qualified Data.UUID.Types as UUID
 import GHC.Generics
+import Haka.App (AppCtx (..), AppM, ServerSettings (..))
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
-import Haka.Types
+import Haka.Types (ApiToken (..), BadgeRow (..))
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Media ((//))

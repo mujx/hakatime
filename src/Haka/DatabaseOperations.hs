@@ -210,7 +210,7 @@ processHeartbeatRequest pool token machineId heartbeats = do
       saveHeartbeats pool (updateHeartbeats heartbeats userName machineId)
 
 editorInfo :: [HeartbeatPayload] -> [Utils.EditorInfo]
-editorInfo heartbeats = map (Utils.userAgentInfo . user_agent) heartbeats
+editorInfo = map (Utils.userAgentInfo . user_agent)
 
 -- Update the missing fields with info gatherred from the user-agent
 -- header field & the machine id.
