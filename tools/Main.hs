@@ -10,6 +10,7 @@ import Faker.Combinators
 import qualified Faker.DateTime
 import qualified Faker.Internet
 import Haka.Api (heartbeatApi)
+import Haka.Errors (HeartbeatApiResponse (..))
 import Haka.Types
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
@@ -118,7 +119,6 @@ main :: IO ()
 main = runClient
 
 sendHeartbeat :: Maybe Text -> Maybe ApiToken -> HeartbeatPayload -> ClientM HeartbeatApiResponse
-
 sendHeartbeats :: Maybe Text -> Maybe ApiToken -> [HeartbeatPayload] -> ClientM HeartbeatApiResponse
 sendHeartbeat :<|> sendHeartbeats = client heartbeatApi
 

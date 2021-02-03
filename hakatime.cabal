@@ -52,16 +52,16 @@ library libhaka
                      , Haka.Cli
                      , Haka.App
                      , Haka.Middleware
+                     , Haka.Errors
                      , Haka.Import
+                     , Haka.Types
 
   other-modules:       Haka.AesonHelpers
                      , Haka.Authentication
-                     , Haka.Types
                      , Haka.Badges
                      , Haka.DatabaseOperations
                      , Haka.Db.Sessions
                      , Haka.Db.Statements
-                     , Haka.Errors
                      , Haka.Heartbeats
                      , Haka.Projects
                      , Haka.Stats
