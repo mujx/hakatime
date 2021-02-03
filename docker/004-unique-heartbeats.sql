@@ -6,7 +6,6 @@ ALTER TABLE heartbeats
       machine,
       sender,
       time_sent,
-      user_agent,
-      project
+      user_agent
     );
 
