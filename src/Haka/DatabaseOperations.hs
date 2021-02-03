@@ -40,7 +40,6 @@ import Haka.Types
     BadgeRow (..),
     HeartbeatPayload (..),
     ProjectStatRow (..),
-    RequestConfig (..),
     StatRow (..),
     StoredApiToken,
     TimelineRow (..),
@@ -50,7 +49,6 @@ import qualified Haka.Utils as Utils
 import qualified Hasql.Pool as HqPool
 import Polysemy
 import Polysemy.Error
-import Polysemy.Reader
 import PostgreSQL.Binary.Data (UUID)
 
 data OperationError = UsageError | Text
@@ -196,16 +194,14 @@ makeSem ''Database
 processHeartbeatRequest ::
   forall r.
   ( Member Database r,
-    Member (Error DatabaseException) r,
-    Member (Reader RequestConfig) r
+    Member (Error DatabaseException) r
   ) =>
+  HqPool.Pool ->
+  ApiToken ->
+  Maybe Text ->
   [HeartbeatPayload] ->
   Sem r [Int64]
-processHeartbeatRequest heartbeats = do
-  reqConfig <- ask
-  let pool = dbPool reqConfig
-      token = apiToken reqConfig
-      machineId = machineName reqConfig
+processHeartbeatRequest pool token machineId heartbeats = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UserNotFound

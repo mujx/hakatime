@@ -26,7 +26,6 @@ import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
-import Polysemy.Reader (runReader)
 import Servant
 
 data User = User
@@ -174,14 +173,7 @@ storeHeartbeats p token machineId heartbeats =
   runM
     . embedToMonadIO
     . runError
-    . runReader
-      ( RequestConfig
-          { dbPool = p,
-            apiToken = token,
-            machineName = machineId
-          }
-      )
     $ DbOps.interpretDatabaseIO $
-      DbOps.processHeartbeatRequest (map addMissingLang heartbeats)
+      DbOps.processHeartbeatRequest p token machineId (map addMissingLang heartbeats)
 
 -- TODO: Discard timestamps from the future

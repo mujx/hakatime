@@ -18,7 +18,6 @@ module Haka.Types
     ApiToken (..),
     HeartbeatPayload (..),
     EntityType (..),
-    RequestConfig (..),
     RegisteredUser (..),
     StatRow (..),
     TimelineRow (..),
@@ -417,14 +416,3 @@ instance ToJSON EntityType where
   toJSON FileType = A.String "file"
   toJSON AppType = A.String "app"
   toJSON DomainType = A.String "domain"
-
--- Global read-only state required for all the db operations.
-data RequestConfig = RequestConfig
-  { -- | The connection pool assigned with each request.
-    dbPool :: HqPool.Pool,
-    -- | The API token retrieved from the HTTP request headers.
-    apiToken :: ApiToken,
-    -- | Hostname information about the sender host.
-    machineName :: Maybe Text
-  }
-  deriving (Show)
