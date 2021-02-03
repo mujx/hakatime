@@ -16,6 +16,7 @@ It comes together with a simple dashboard which provides a graphical representat
 - Total activity view.
 - Per project activity view.
 - User registration & login.
+- Import data from Wakatime.
 - Badge generation for a project (using shields.io compatible endpoint). [![my-app](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=7)](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=7)
 - API token management.
 
@@ -47,11 +48,11 @@ You can use the following docker-compose setup for testing locally or an actual
 deployment. Change `HAKA_BADGE_URL` to match the actual external endpoint of your
 instance.
 
-**NOTE**: Deploying on ARM is also possible using `mujx/hakatime:latest-arm64` for the `arm64` architecture
+Deploying on ARM is also possible using `mujx/hakatime:latest-arm64` for the `arm64` architecture
 (builds on every commit) or with `mujx/hakatime:latest-arm` (manual semi-regular updates for `arm/v7` & `arm64`)
 or by building the image yourself with the dedicated Dockerfile (`Dockerfile.arm`).
 
-**WARNING**: This setup relies on `./docker` directory located in this repository, please run it after making `git clone` to evade issues.
+:warning: This setup relies on `./docker` directory located in this repository, please run it after making `git clone` to evade issues.
 
 ```yaml
 version: "3"
