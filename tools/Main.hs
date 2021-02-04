@@ -84,7 +84,7 @@ generateTimeline :: IO [HeartbeatPayload]
 generateTimeline = do
   let settings = setNonDeterministic defaultFakerSettings
   steps <- randomRIO (10, 80)
-  start <- generateWithSettings settings (Faker.DateTime.utcBetweenYears 2020 2020)
+  start <- generateWithSettings settings (Faker.DateTime.utcBetweenYears 2021 2021)
   lang <- generateWithSettings settings fakeLang
   proj <- generateWithSettings settings fakeProject
   filename <- generateWithSettings settings fakeFilename
