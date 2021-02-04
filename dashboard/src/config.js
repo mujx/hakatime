@@ -1,4 +1,10 @@
 export default {
+  getVersionString: function () {
+    if (!this.currentVersion) return "";
+
+    return `version: git-${this.currentVersion}`;
+  },
+  currentVersion: "",
   noData: {
     text: "No data available",
     style: {

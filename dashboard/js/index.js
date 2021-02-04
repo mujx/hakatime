@@ -15,6 +15,10 @@ function loadEnv() {
     config.animations.enabled = process.env.ENABLE_ANIMATION === "true";
   }
 
+  if (process.env.HAKA_VERSION) {
+    config.currentVersion = process.env.HAKA_VERSION;
+  }
+
   main();
 }
 

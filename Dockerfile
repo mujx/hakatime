@@ -6,8 +6,10 @@ FROM node:12.18 as dashboard-builder
 WORKDIR /usr/src/app
 
 COPY dashboard ./
+COPY .git ./
 
 RUN yarn install && yarn run prod
+RUN rm -rf .git
 
 #
 # Build the server.

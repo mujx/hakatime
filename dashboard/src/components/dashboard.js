@@ -4,6 +4,7 @@ import $ from "jquery";
 import * as api from "../api";
 import * as auth from "../auth";
 import * as storage from "../storage";
+import config from "../config.js";
 
 // Modals
 import CreateTokenModal from "../modals/CreateToken";
@@ -171,7 +172,16 @@ export default {
               ]
             ),
             m("div.container-fluid", vnode.children)
-          ])
+          ]),
+          config.currentVersion
+            ? m(
+                "a.text-black-50.badge.m-2",
+                {
+                  href: `https://github.com/mujx/hakatime/commit/${config.currentVersion}`
+                },
+                config.getVersionString()
+              )
+            : m("")
         ])
       ])
     ];
