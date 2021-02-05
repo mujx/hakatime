@@ -122,7 +122,7 @@ genericError _ =
 -- All database operations might throw the exception below.
 data DatabaseException
   = SessionException HqPool.UsageError
-  | UserNotFound
+  | UnknownApiToken
   | InvalidCredentials
   | MissingRefreshTokenCookie
   | ExpiredToken
@@ -133,7 +133,7 @@ data DatabaseException
 
 -- | Convert a database exception to a serializable error message.
 toJSONError :: DatabaseException -> ServerError
-toJSONError UserNotFound = invalidTokenError
+toJSONError UnknownApiToken = invalidTokenError
 toJSONError ExpiredToken = expiredToken
 toJSONError InvalidCredentials = invalidCredentials
 toJSONError (SessionException e) = genericError (pack $ show e)

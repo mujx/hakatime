@@ -204,7 +204,7 @@ processHeartbeatRequest ::
 processHeartbeatRequest pool token machineId heartbeats = do
   retrievedUser <- getUser pool token
   case retrievedUser of
-    Nothing -> throw UserNotFound
+    Nothing -> throw UnknownApiToken
     Just userName -> do
       updateTokenUsage pool token
       saveHeartbeats pool (updateHeartbeats heartbeats userName machineId)
@@ -245,7 +245,7 @@ generateStatistics ::
 generateStatistics pool token timeLimit tmRange = do
   retrievedUser <- getUser pool token
   case retrievedUser of
-    Nothing -> throw UserNotFound
+    Nothing -> throw UnknownApiToken
     Just username -> getTotalStats pool username tmRange timeLimit
 
 getTimeline ::
@@ -261,7 +261,7 @@ getTimeline ::
 getTimeline pool token timeLimit tmRange = do
   retrievedUser <- getUser pool token
   case retrievedUser of
-    Nothing -> throw UserNotFound
+    Nothing -> throw UnknownApiToken
     Just username -> getTimelineStats pool username tmRange timeLimit
 
 genProjectStatistics ::
@@ -278,7 +278,7 @@ genProjectStatistics ::
 genProjectStatistics pool token proj timeLimit tmRange = do
   retrievedUser <- getUser pool token
   case retrievedUser of
-    Nothing -> throw UserNotFound
+    Nothing -> throw UnknownApiToken
     Just username -> getProjectStats pool username proj tmRange timeLimit
 
 createNewApiToken ::
@@ -292,7 +292,7 @@ createNewApiToken ::
 createNewApiToken pool token = do
   retrievedUser <- getUser pool token
   case retrievedUser of
-    Nothing -> throw UserNotFound
+    Nothing -> throw UnknownApiToken
     Just username -> createAPIToken pool username
 
 createAuthTokens ::
@@ -357,7 +357,7 @@ getApiTokens ::
 getApiTokens pool token = do
   retrievedUser <- getUser pool token
   case retrievedUser of
-    Nothing -> throw UserNotFound
+    Nothing -> throw UnknownApiToken
     Just username -> listApiTokens pool username
 
 deleteApiToken ::
@@ -372,7 +372,7 @@ deleteApiToken ::
 deleteApiToken pool token tokenId = do
   retrievedUser <- getUser pool token
   case retrievedUser of
-    Nothing -> throw UserNotFound
+    Nothing -> throw UnknownApiToken
     Just _ -> deleteToken pool (ApiToken tokenId)
 
 mkBadgeLink ::
@@ -387,7 +387,7 @@ mkBadgeLink ::
 mkBadgeLink pool proj token = do
   retrievedUser <- getUser pool token
   case retrievedUser of
-    Nothing -> throw UserNotFound
+    Nothing -> throw UnknownApiToken
     Just user -> createBadgeLink pool user proj
 
 getUserByToken ::
@@ -401,5 +401,5 @@ getUserByToken ::
 getUserByToken pool token = do
   retrievedUser <- getUser pool token
   case retrievedUser of
-    Nothing -> throw UserNotFound
+    Nothing -> throw UnknownApiToken
     Just user -> pure user
