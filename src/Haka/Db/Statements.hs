@@ -296,13 +296,15 @@ getUserByRefreshToken =
       ; 
     |]
 
-insertProject :: Statement Text ()
-insertProject = Statement query (E.param (E.nonNullable E.text)) D.noResult True
+insertProject :: Statement (Text, Text) ()
+insertProject = Statement query params D.noResult True
   where
+    params :: E.Params (Text, Text)
+    params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
     query :: Bs.ByteString
     query =
       [r|
-        INSERT INTO projects (name) VALUES ( $1 ) ON CONFLICT DO NOTHING;
+        INSERT INTO projects (owner, name) VALUES ( $1, $2 ) ON CONFLICT DO NOTHING;
       |]
 
 createBadgeLink :: Statement (Text, Text) UUID

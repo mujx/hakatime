@@ -84,13 +84,22 @@ deleteTokens (ApiToken token) refreshToken = do
   pure (r1 + r2)
 
 saveHeartbeats :: [HeartbeatPayload] -> Session [Int64]
+saveHeartbeats [] = pure []
 saveHeartbeats payloadData = do
   -- Create the projects first so they can be referenced from the heartbeats.
   mapM_ (`statement` Statements.insertProject) uniqueProjects
   -- Insert the heartbeats.
   mapM (`statement` Statements.insertHeartBeat) payloadData
   where
-    uniqueProjects = nub $ mapMaybe project payloadData
+    uniqueProjects =
+      nub $
+        mapMaybe
+          ( \x ->
+              case (sender x, project x) of
+                (Just user, Just proj) -> Just (user, proj)
+                _ -> Nothing
+          )
+          payloadData
 
 getTotalActivityTime :: Text -> Int64 -> Text -> Session (Maybe Int64)
 getTotalActivityTime user days proj = statement (user, days, proj) Statements.getTotalActivityTime
