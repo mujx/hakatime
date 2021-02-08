@@ -148,5 +148,7 @@ data ServerSettings = ServerSettings
     -- | Control the logger output format. json for prod, key-value pair for dev.
     hakaRunEnv :: Log.EnvType,
     -- | Verbosity level.
-    hakaLogLevel :: String
+    hakaLogLevel :: String,
+    -- | Whether to log the HTTP requests.
+    hakaHasHttpLogger :: Bool
   }

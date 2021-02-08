@@ -87,9 +87,13 @@ initApp settings unApp = do
                        threadDelay 1000000
                    )
 
-  withStdoutLogger $ \logger -> do
-    let conf = setPort (hakaPort settings) $ setLogger logger defaultSettings
-    runSettings conf (unApp appCtx)
+  if hakaHasHttpLogger settings
+    then do
+      withStdoutLogger $ \logger -> do
+        let conf = setPort (hakaPort settings) $ setLogger logger defaultSettings
+        runSettings conf (unApp appCtx)
+    else do
+      run (hakaPort settings) (unApp appCtx)
 
 getServerSettings :: IO ServerSettings
 getServerSettings = do
@@ -102,6 +106,7 @@ getServerSettings = do
   sessionExpiry <- envAsInt "HAKA_SESSION_EXPIRY" 24
   logLevel <- envAsString "HAKA_LOG_LEVEL" "info"
   rEnv <- envAsString "HAKA_ENV" "prod"
+  enableHttpLog <- envAsBool "HAKA_HTTP_LOG" True
   when (sessionExpiry <= 0) (error "Session expiry should be a positive integer")
   return $
     ServerSettings
@@ -111,6 +116,7 @@ getServerSettings = do
         hakaDashboardPath = dashboardPath,
         hakaShieldsIOUrl = shieldsIOUrl,
         hakaLogLevel = logLevel,
+        hakaHasHttpLogger = enableHttpLog,
         hakaRunEnv = case rEnv of
           "prod" -> Log.Prod
           "production" -> Log.Prod
