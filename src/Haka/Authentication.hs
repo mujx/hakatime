@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Haka.Authentication
@@ -27,6 +28,7 @@ import Haka.Types
     TokenData (..),
   )
 import Haka.Utils (getRefreshToken)
+import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
@@ -158,6 +160,9 @@ loginHandler creds = do
   now <- liftIO getCurrentTime
   dbPool <- asks pool
   ss <- asks srvSettings
+
+  $(logTM) DebugS ("creating auth tokens for user " <> showLS (username creds))
+
   res <-
     runM
       . embedToMonadIO
@@ -181,6 +186,9 @@ registerHandler EnabledRegistration creds = do
   now <- liftIO getCurrentTime
   dbPool <- asks pool
   ss <- asks srvSettings
+
+  $(logTM) InfoS ("registering user " <> showLS (username creds))
+
   res <-
     runM
       . embedToMonadIO
@@ -200,6 +208,9 @@ refreshTokenHandler (Just cookies) = do
   now <- liftIO getCurrentTime
   dbPool <- asks pool
   ss <- asks srvSettings
+
+  $(logTM) DebugS "refresh token request"
+
   res <-
     runM
       . embedToMonadIO

@@ -55,6 +55,7 @@ library libhaka
                      , Haka.Errors
                      , Haka.Import
                      , Haka.Types
+                     , Haka.Logger
 
   other-modules:       Haka.AesonHelpers
                      , Haka.Authentication
@@ -113,6 +114,7 @@ library libhaka
                      , unliftio-core        >= 0.1 && < 0.2
                      , uuid
                      , wai                  == 3.2.*
+                     , wai-extra
                      , http-types
                      , blaze-builder
 
@@ -162,6 +164,7 @@ executable hakatime
                      , unix
                      , mtl                  == 2.2.2
                      , safe-exceptions
+                     , text
                      , optparse-applicative >= 0.15
                      , polysemy             == 1.3.*
                      , polysemy-plugin      == 0.2.*

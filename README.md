@@ -77,6 +77,8 @@ services:
       HAKA_ENABLE_REGISTRATION: "true" # Toggle after you've created your account.
       # Number of hours after which inactive browser sessions will expire (login required).
       HAKA_SESSION_EXPIRY: "24"
+      HAKA_LOG_LEVEL: "info" # Control the verbosity of the logger.
+      HAKA_ENV: "prod" # Use a json logger for production, otherwise key=value pairs.
     ports:
       - "127.0.0.1:8080:8080"
   haka_db:

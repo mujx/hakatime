@@ -134,7 +134,7 @@ multiHeartbeatHandler ::
   AppM HeartbeatApiResponse
 multiHeartbeatHandler _ Nothing _ = throw Err.missingAuthError
 multiHeartbeatHandler machineId (Just token) heartbeats = do
-  $(logTM) InfoS (logStr ("received: " <> show (length heartbeats) <> " heartbeats"))
+  $(logTM) InfoS (logStr ("received " <> show (length heartbeats) <> " heartbeats"))
   p <- asks pool
   res <- storeHeartbeats p token machineId heartbeats
   mkResponse res

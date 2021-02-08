@@ -133,9 +133,6 @@ badgeSvgHandler badgeId daysParam = do
 
   return $ LBs.toStrict $ responseBody response
 
--- TODO: the projects table should have (user, project) as primary key.
---
-
 reduceBy :: Integral a => a -> [a] -> [a]
 n `reduceBy` xs = n' : ys where (n', ys) = mapAccumR quotRem n xs
 

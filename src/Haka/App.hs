@@ -21,6 +21,7 @@ import Control.Monad.Reader (MonadReader, asks, local)
 import Control.Monad.Trans.Reader (ReaderT (..), runReaderT)
 import qualified Data.ByteString as Bs
 import Data.Int (Int64)
+import qualified Haka.Logger as Log
 import qualified Hasql.Pool as HqPool
 import Katip as K
 import qualified Network.HTTP.Req as Req
@@ -143,5 +144,9 @@ data ServerSettings = ServerSettings
     -- | Maximum duration of the dashboard session without activity.
     hakaSessionExpiry :: Int64,
     -- | A shields.io compatible endpoint to use for badge generation.
-    hakaShieldsIOUrl :: String
+    hakaShieldsIOUrl :: String,
+    -- | Control the logger output format. json for prod, key-value pair for dev.
+    hakaRunEnv :: Log.EnvType,
+    -- | Verbosity level.
+    hakaLogLevel :: String
   }

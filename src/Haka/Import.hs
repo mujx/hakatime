@@ -131,7 +131,7 @@ instance A.FromJSON UserAgentList where
 
 process :: QueueItem -> AppM ()
 process item = do
-  $(logTM) InfoS ("processing import request for user: " <> showLS (requester item))
+  $(logTM) InfoS ("processing import request for user " <> showLS (requester item))
 
   let payload = reqPayload item
       header = R.header "Authorization" ("Basic " <> encodeUtf8 (apiToken payload))
@@ -280,15 +280,9 @@ enqueueRequest payload = do
     Left (Just e) -> error $ Bs.unpack e
     Right conn -> HasqlQueue.enqueue queueName conn E.json [payload]
 
-server ::
-  ( Maybe ApiToken ->
-    ImportRequestPayload ->
-    AppM ImportRequestResponse
-  )
-    :<|> ( Maybe ApiToken ->
-           ImportRequestPayload ->
-           AppM ImportRequestResponse
-         )
+type ImportRequestHandler = Maybe ApiToken -> ImportRequestPayload -> AppM ImportRequestResponse
+
+server :: ImportRequestHandler :<|> ImportRequestHandler
 server = importRequestHandler :<|> checkRequestStatusHandler
 
 checkRequestStatusHandler :: Maybe ApiToken -> ImportRequestPayload -> AppM ImportRequestResponse
@@ -305,7 +299,7 @@ checkRequestStatusHandler (Just token) payload = do
 
   user <- either Err.logError pure res
 
-  $(logTM) InfoS ("checking pending import request for user: " <> showLS user)
+  $(logTM) InfoS ("checking pending import request for user " <> showLS user)
 
   let item =
         A.toJSON $
@@ -321,15 +315,13 @@ checkRequestStatusHandler (Just token) payload = do
       $ DbOps.interpretDatabaseIO $
         DbOps.getJobStatus p item
 
-  status <- either Err.logError pure statusResult
+  statusMaybe <- either Err.logError pure statusResult
 
-  return $
-    ImportRequestResponse
-      { jobStatus =
-          case status of
-            Nothing -> JobFinished
-            Just s -> if s == "failed" then JobFailed else JobPending
-      }
+  let status = maybe JobFinished (\s -> if s == "failed" then JobFailed else JobPending) statusMaybe
+
+  $(logTM) InfoS ("import request for user " <> showLS user <> ": " <> showLS status)
+
+  return $ ImportRequestResponse {jobStatus = status}
 
 importRequestHandler :: Maybe ApiToken -> ImportRequestPayload -> AppM ImportRequestResponse
 importRequestHandler Nothing _ = throw Err.missingAuthError
@@ -345,7 +337,7 @@ importRequestHandler (Just token) payload = do
 
   user <- either Err.logError pure userResult
 
-  $(logTM) InfoS ("received an import request from user: " <> showLS user)
+  $(logTM) InfoS ("received an import request from user " <> showLS user)
 
   let item =
         A.toJSON $

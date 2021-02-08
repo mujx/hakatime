@@ -7,6 +7,8 @@ import Control.Concurrent (forkIO, threadDelay)
 import Control.Exception.Safe (catchAny, try)
 import Control.Monad (forever, when)
 import Control.Monad.Trans.Except (ExceptT (..))
+import Data.Maybe (fromMaybe)
+import Data.Text (pack)
 import qualified GHC.IO.Encoding
 import qualified Haka.Api as Api
 import Haka.App
@@ -19,6 +21,7 @@ import Haka.App
   )
 import qualified Haka.Cli as Cli
 import qualified Haka.Import as Import
+import qualified Haka.Logger as Log
 import qualified Haka.Middleware as Middleware
 import qualified Hasql.Connection as HasqlConn
 import qualified Hasql.Pool as HasqlPool
@@ -31,7 +34,6 @@ import Network.Wai.Middleware.Cors
 import qualified Options.Applicative as Opt
 import Servant
 import System.Environment.MrEnv (envAsBool, envAsInt, envAsString)
-import System.IO (stdout)
 import System.Posix.Env.ByteString (getEnvDefault)
 
 -- | Convert our 'App' type to a 'Servant.Handler', for a given 'AppCtx'.
@@ -47,11 +49,6 @@ app settings conf =
   where
     policy = simpleCorsResourcePolicy
 
--- TODO: Write method to initialize logging based on ENV variables.
--- Env
--- LogLevel
--- Verbosity
-
 initApp :: ServerSettings -> (AppCtx -> Application) -> IO ()
 initApp settings unApp = do
   dbSettings <- Cli.getDbSettings
@@ -63,13 +60,14 @@ initApp settings unApp = do
     Left e -> error $ "Failed to setup queue schema: " <> show e
     Right conn -> migrate conn "json"
 
-  let ns = Namespace {unNamespace = ["server"]}
-  handleScribe <- mkHandleScribe ColorIfTerminal stdout (permitItem InfoS) V2
-  logEnv' <- registerScribe "stdout" handleScribe defaultScribeSettings =<< initLogEnv "hakatime" "dev"
+  logenv <-
+    Log.setupLogEnv
+      (hakaRunEnv settings)
+      (fromMaybe InfoS (textToSeverity $ pack $ hakaLogLevel settings))
   let logState' =
         LogState
-          { lsNamespace = ns,
-            lsLogEnv = logEnv',
+          { lsNamespace = Namespace {unNamespace = ["server"]},
+            lsLogEnv = logenv,
             lsContext = mempty
           }
       appCtx =
@@ -84,7 +82,8 @@ initApp settings unApp = do
     forever $ do
       runAppT appCtx Import.handleImportRequest
         `catchAny` ( \e -> do
-                       putStrLn $ "Exception on import request handler: " <> show e
+                       runKatipT logenv $ Log.logMs ErrorS "Failed to execute import request"
+                       runKatipT logenv $ Log.logMs ErrorS (pack $ show e)
                        threadDelay 1000000
                    )
 
@@ -101,6 +100,8 @@ getServerSettings = do
   shieldsIOUrl <- envAsString "HAKA_SHIELDS_IO_URL" "https://img.shields.io"
   enableRegistration <- envAsBool "HAKA_ENABLE_REGISTRATION" True
   sessionExpiry <- envAsInt "HAKA_SESSION_EXPIRY" 24
+  logLevel <- envAsString "HAKA_LOG_LEVEL" "info"
+  rEnv <- envAsString "HAKA_ENV" "prod"
   when (sessionExpiry <= 0) (error "Session expiry should be a positive integer")
   return $
     ServerSettings
@@ -109,6 +110,11 @@ getServerSettings = do
         hakaBadgeUrl = badgeUrl,
         hakaDashboardPath = dashboardPath,
         hakaShieldsIOUrl = shieldsIOUrl,
+        hakaLogLevel = logLevel,
+        hakaRunEnv = case rEnv of
+          "prod" -> Log.Prod
+          "production" -> Log.Prod
+          _ -> Log.Dev,
         hakaEnableRegistration =
           if enableRegistration
             then EnabledRegistration
