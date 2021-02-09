@@ -157,7 +157,7 @@ loginHandler creds = do
   dbPool <- asks pool
   ss <- asks srvSettings
 
-  $(logTM) DebugS ("creating auth tokens for user " <> showLS (username creds))
+  $(logTM) InfoS ("login for user " <> showLS (username creds))
 
   res <-
     runM

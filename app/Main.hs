@@ -3,7 +3,7 @@ module Main
   )
 where
 
-import Control.Concurrent (forkIO, threadDelay)
+import Control.Concurrent (forkIO)
 import Control.Exception.Safe (catchAny, try)
 import qualified GHC.IO.Encoding
 import qualified Haka.Api as Api
@@ -74,14 +74,10 @@ initApp settings unApp = do
           }
 
   -- Handle import requests on another thread.
-  _ <- forkIO $
-    forever $ do
-      runAppT appCtx Import.handleImportRequest
-        `catchAny` ( \e -> do
-                       runKatipT logenv $ Log.logMs ErrorS "Failed to execute import request"
-                       runKatipT logenv $ Log.logMs ErrorS (show e)
-                       threadDelay 1000000
-                   )
+  _ <-
+    forkIO $
+      forever $
+        runAppT appCtx Import.handleImportRequest `catchAny` Import.logExceptions logenv
 
   if hakaHasHttpLogger settings
     then do

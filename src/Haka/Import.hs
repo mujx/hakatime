@@ -4,9 +4,11 @@ module Haka.Import
   ( API,
     server,
     handleImportRequest,
+    logExceptions,
   )
 where
 
+import Control.Concurrent (threadDelay)
 import Control.Exception.Safe (bracket, throw)
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Char8 as Bs
@@ -16,6 +18,7 @@ import Haka.App (AppCtx (..), AppM, runAppT)
 import qualified Haka.Cli as Cli
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
+import qualified Haka.Logger as Log
 import Haka.Types (ApiToken, EntityType (..), HeartbeatPayload (..))
 import Haka.Utils (genDateRange)
 import qualified Hasql.Connection as HasqlConn
@@ -23,6 +26,7 @@ import qualified Hasql.Decoders as D
 import qualified Hasql.Encoders as E
 import qualified Hasql.Queue.Low.AtLeastOnce as HasqlQueue
 import Katip
+import qualified Network.HTTP.Client as HttpClient
 import Network.HTTP.Req ((/:), (=:))
 import qualified Network.HTTP.Req as R
 import Polysemy (runM)
@@ -122,6 +126,32 @@ instance A.FromJSON UserAgentPayload where
 
 instance A.FromJSON UserAgentList where
   parseJSON = A.genericParseJSON noPrefixOptions
+
+logExceptions :: LogEnv -> SomeException -> IO ()
+logExceptions logenv e = do
+  let logError msg = runKatipT logenv $ Log.logMs ErrorS msg
+
+  logError "failed to execute import request"
+
+  case fromException e :: Maybe R.HttpException of
+    Just (R.VanillaHttpException (HttpClient.HttpExceptionRequest _ c)) ->
+      logError ("http call to api.wakatime.com failed: " <> show c)
+    Just (R.VanillaHttpException (HttpClient.InvalidUrlException url reason)) ->
+      logError ("http call was made with invalid URL " <> show url <> ": " <> show reason)
+    Just (R.JsonHttpException s) ->
+      logError ("json decoding failed: " <> show s)
+    Nothing ->
+      case fromException e :: Maybe ImportRequestException of
+        Just (ConnectionError s) -> do
+          logError ("failed to connect to postgres: " <> show s)
+          threadDelay 5000000
+        Just (InvalidToken s) ->
+          logError ("invalid token was given: " <> show s)
+        Just (MalformedPaylod s) ->
+          logError ("malformed payload was sent: " <> show s)
+        Nothing -> logError (show e)
+
+  threadDelay 2000000
 
 process :: QueueItem -> AppM ()
 process item = do

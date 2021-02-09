@@ -140,6 +140,6 @@ compoundDuration :: Maybe Int64 -> Text
 compoundDuration Nothing = "no data"
 compoundDuration (Just v) =
   let durations = computeDurations v
-   in if length durations > 0
+   in if not (null durations)
         then unwords $ map (toText . \(n, s) -> printf "%d %s" n s :: String) $ Unsafe.init durations
         else "no data"
