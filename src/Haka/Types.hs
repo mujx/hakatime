@@ -29,16 +29,9 @@ import Data.Aeson
   )
 import qualified Data.Aeson as A
 import qualified Data.ByteString as Bs
-import Data.Int (Int64)
-import Data.Text (Text, strip)
-import Data.Text.Encoding (decodeUtf8, encodeUtf8)
+import Data.Text (strip)
 import Data.Time.Clock (UTCTime)
-import GHC.Generics
-import Haka.AesonHelpers
-  ( convertReservedWords,
-    noPrefixOptions,
-    untagged,
-  )
+import Haka.AesonHelpers (convertReservedWords, noPrefixOptions, untagged)
 import qualified Haka.Utils as Utils
 import PostgreSQL.Binary.Data (Scientific)
 import Servant
@@ -67,8 +60,8 @@ data TokenData = TokenData
 
 data RegisteredUser = RegisteredUser
   { username :: Text,
-    hashedPassword :: Bs.ByteString,
-    saltUsed :: Bs.ByteString
+    hashedPassword :: ByteString,
+    saltUsed :: ByteString
   }
   deriving (Eq, Show)
 

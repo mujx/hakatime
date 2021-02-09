@@ -10,14 +10,11 @@ module Haka.Heartbeats
 where
 
 import Control.Exception.Safe (throw)
-import Control.Monad.Reader (asks)
 import Data.Aeson (ToJSON)
-import Data.Int (Int64)
-import qualified Data.Text as T
+import Data.Text (toUpper)
 import Data.Time.Calendar (Day)
 import Filesystem.Path (splitExtension)
 import Filesystem.Path.CurrentOS (fromText)
-import GHC.Generics
 import Haka.App (AppCtx (..), AppM)
 import qualified Haka.DatabaseOperations as DbOps
 import Haka.Errors (HeartbeatApiResponse (..))
@@ -28,12 +25,13 @@ import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
+import qualified Relude.Unsafe as Unsafe
 import Servant
 
 data User = User
-  { name :: T.Text,
+  { name :: Text,
     age :: Int,
-    email :: T.Text,
+    email :: Text,
     registration_date :: Day
   }
   deriving (Eq, Show, Generic)
@@ -59,7 +57,7 @@ type SingleHeartbeat =
     :> "users"
     :> "current"
     :> "heartbeats"
-    :> Header "X-Machine-Name" T.Text
+    :> Header "X-Machine-Name" Text
     :> Header "Authorization" ApiToken
     :> ReqBody '[JSON] HeartbeatPayload
     :> Post '[JSON] HeartbeatApiResponse
@@ -70,7 +68,7 @@ type MultipleHeartbeats =
     :> "users"
     :> "current"
     :> "heartbeats.bulk"
-    :> Header "X-Machine-Name" T.Text
+    :> Header "X-Machine-Name" Text
     :> Header "Authorization" ApiToken
     :> ReqBody '[JSON] [HeartbeatPayload]
     :> Post '[JSON] HeartbeatApiResponse
@@ -78,24 +76,24 @@ type MultipleHeartbeats =
 type API = SingleHeartbeat :<|> MultipleHeartbeats
 
 server ::
-  ( Maybe T.Text ->
+  ( Maybe Text ->
     Maybe ApiToken ->
     HeartbeatPayload ->
     AppM HeartbeatApiResponse
   )
-    :<|> ( Maybe T.Text ->
+    :<|> ( Maybe Text ->
            Maybe ApiToken ->
            [HeartbeatPayload] ->
            AppM HeartbeatApiResponse
          )
 server = heartbeatHandler :<|> multiHeartbeatHandler
 
-mkHeartbeatId :: T.Text -> HearbeatData
+mkHeartbeatId :: Text -> HearbeatData
 mkHeartbeatId i = HearbeatData {heartbeatData = HeartbeatId {heartbeatId = i}}
 
 handleSingleDbResult :: [Int64] -> AppM HeartbeatApiResponse
 handleSingleDbResult ids =
-  pure $ SingleHeartbeatApiResponse $ mkHeartbeatId (T.pack $ show (head ids))
+  pure $ SingleHeartbeatApiResponse $ mkHeartbeatId (show (Unsafe.head ids))
 
 handleManyDbResults :: [Int64] -> AppM HeartbeatApiResponse
 handleManyDbResults ids =
@@ -106,14 +104,14 @@ handleManyDbResults ids =
     mkResponseItem =
       map
         ( \x ->
-            [ ReturnData $ mkHeartbeatId (T.pack $ show x),
+            [ ReturnData $ mkHeartbeatId (show x),
               ReturnCode 201
             ]
         )
 
 heartbeatHandler ::
   -- | X-Machine-Name header field with the hostname.
-  Maybe T.Text ->
+  Maybe Text ->
   -- | Authorization header field with the Api token.
   Maybe ApiToken ->
   HeartbeatPayload ->
@@ -127,14 +125,14 @@ heartbeatHandler machineId (Just token) heartbeat = do
 
 multiHeartbeatHandler ::
   -- | X-Machine-Name header field with the hostname.
-  Maybe T.Text ->
+  Maybe Text ->
   -- | Authorization header field with the Api token.
   Maybe ApiToken ->
   [HeartbeatPayload] ->
   AppM HeartbeatApiResponse
 multiHeartbeatHandler _ Nothing _ = throw Err.missingAuthError
 multiHeartbeatHandler machineId (Just token) heartbeats = do
-  $(logTM) InfoS (logStr ("received " <> show (length heartbeats) <> " heartbeats"))
+  $(logTM) InfoS ("received " <> showLS (length heartbeats) <> " heartbeats")
   p <- asks pool
   res <- storeHeartbeats p token machineId heartbeats
   mkResponse res
@@ -153,14 +151,14 @@ addMissingLang hb@HeartbeatPayload {language = Nothing, ty = FileType} =
   let lang = convertToLang $ findExt (entity hb)
    in hb {language = lang}
   where
-    findExt :: T.Text -> Maybe T.Text
+    findExt :: Text -> Maybe Text
     findExt = snd . splitExtension . fromText
 
-    convertToLang :: Maybe T.Text -> Maybe T.Text
+    convertToLang :: Maybe Text -> Maybe Text
     convertToLang (Just ext) = case ext of
       "" -> Nothing
       "." -> Nothing
-      a -> Just $ T.toUpper a
+      a -> Just $ toUpper a
     convertToLang _ = Nothing
 addMissingLang hb = hb
 
@@ -168,7 +166,7 @@ addMissingLang hb = hb
 storeHeartbeats ::
   Pool ->
   ApiToken ->
-  Maybe T.Text ->
+  Maybe Text ->
   [HeartbeatPayload] ->
   AppM (Either DbOps.DatabaseException [Int64])
 storeHeartbeats p token machineId heartbeats =

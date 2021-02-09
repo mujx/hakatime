@@ -10,15 +10,10 @@ module Haka.Authentication
 where
 
 import Control.Exception.Safe (throw)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (asks)
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.ByteString.Char8 as Bs
-import Data.Text (Text)
-import Data.Text.Encoding (encodeUtf8)
 import Data.Time (addUTCTime)
 import Data.Time.Clock (UTCTime (..), getCurrentTime)
-import GHC.Generics
 import Haka.App (AppCtx (..), AppM, RegistrationStatus (..), ServerSettings (..))
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
@@ -32,6 +27,7 @@ import Katip
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
+import qualified Relude.Unsafe as Unsafe
 import Servant
 import Web.Cookie
 
@@ -144,7 +140,7 @@ mkRefreshTokenCookie tknData apiPrefix =
   where
     removeSlash p =
       Bs.pack $ case not $ null p of
-        True -> if last p == '/' then init p else p
+        True -> if Unsafe.last p == '/' then Unsafe.init p else p
         False -> p
 
 mkLoginResponse :: TokenData -> UTCTime -> LoginResponse

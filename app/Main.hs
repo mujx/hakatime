@@ -5,10 +5,6 @@ where
 
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Exception.Safe (catchAny, try)
-import Control.Monad (forever, when)
-import Control.Monad.Trans.Except (ExceptT (..))
-import Data.Maybe (fromMaybe)
-import Data.Text (pack)
 import qualified GHC.IO.Encoding
 import qualified Haka.Api as Api
 import Haka.App
@@ -63,7 +59,7 @@ initApp settings unApp = do
   logenv <-
     Log.setupLogEnv
       (hakaRunEnv settings)
-      (fromMaybe InfoS (textToSeverity $ pack $ hakaLogLevel settings))
+      (fromMaybe InfoS (textToSeverity $ toText $ hakaLogLevel settings))
   let logState' =
         LogState
           { lsNamespace = Namespace {unNamespace = ["server"]},
@@ -83,7 +79,7 @@ initApp settings unApp = do
       runAppT appCtx Import.handleImportRequest
         `catchAny` ( \e -> do
                        runKatipT logenv $ Log.logMs ErrorS "Failed to execute import request"
-                       runKatipT logenv $ Log.logMs ErrorS (pack $ show e)
+                       runKatipT logenv $ Log.logMs ErrorS (show e)
                        threadDelay 1000000
                    )
 

@@ -13,17 +13,12 @@ module Haka.Utils
     rollingGroupBy,
     countDuration,
     fmtDate,
-    sum',
   )
 where
 
 import Control.Exception (bracket_)
-import qualified Data.ByteString as Bs
 import Data.ByteString.Base64 (encode)
-import Data.Int (Int64)
-import Data.List (foldl')
-import Data.Text (Text, pack, splitOn)
-import Data.Text.Encoding (decodeUtf8, encodeUtf8)
+import Data.Text (splitOn)
 import Data.Time (addDays, diffDays)
 import Data.Time.Clock (UTCTime (..))
 import Data.Time.Format (defaultTimeLocale, formatTime)
@@ -31,12 +26,10 @@ import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
 import Hasql.Pool (UsageError (..))
 import qualified Hasql.Session as S
+import qualified Relude.Unsafe as Unsafe
 import Safe (headMay)
-import System.IO (hFlush, hGetEcho, hSetEcho, stdin, stdout)
+import System.IO (hFlush, hGetEcho, hSetEcho, putChar)
 import Web.Cookie
-
-sum' :: (Num a, Foldable t) => t a -> a
-sum' = foldl' (+) 0
 
 defaultLimit :: Int64
 defaultLimit = 15
@@ -58,7 +51,7 @@ rollingGroupBy predicate xs = go predicate xs [] []
       | pFn m y = go pFn ms [y, m] total
       | otherwise = go pFn ms [m] (curr : total)
     go pFn (m : ms) curr total
-      | pFn m (last curr) = go pFn ms (curr ++ [m]) total
+      | pFn m (Unsafe.last curr) = go pFn ms (curr ++ [m]) total
       | otherwise = go pFn ms [m] (curr : total)
 
 -- | Given a set of timestamps & a cut-off value determined the total number of minutes counted.
@@ -67,12 +60,12 @@ rollingGroupBy predicate xs = go predicate xs [] []
 -- >>> 12
 countDuration :: [Int] -> Int -> Int
 countDuration points interval =
-  sum' $ map countDiff $ groupByDiff points
+  sum $ map countDiff $ groupByDiff points
   where
     groupByDiff = rollingGroupBy (\x y -> abs (y - x) <= interval)
     countDiff [] = 0
     countDiff [_] = 0
-    countDiff (x : xs) = abs (x - last xs)
+    countDiff (x : xs) = abs (x - Unsafe.last xs)
 
 data EditorInfo = EditorInfo
   { editor :: Maybe Text,
@@ -112,9 +105,9 @@ passwordInput :: String -> IO Text
 passwordInput prompt = do
   putStr prompt
   hFlush stdout
-  pass <- withEcho False getLine
+  passwd <- withEcho False getLine
   putChar '\n'
-  return $ pack pass
+  return $ toText passwd
   where
     withEcho :: Bool -> IO a -> IO a
     withEcho echo action = do
@@ -147,9 +140,9 @@ toStrError
           (S.ResultError (S.UnexpectedResult err))
         )
     ) = err
-toStrError err = pack $ show err
+toStrError err = toText (show err :: String)
 
-getRefreshToken :: Bs.ByteString -> Maybe Text
+getRefreshToken :: ByteString -> Maybe Text
 getRefreshToken cookies =
   let value = headMay $ map snd $ filter (\(k, _) -> k == "refresh_token") (parseCookies cookies)
    in case value of

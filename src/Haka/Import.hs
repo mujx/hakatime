@@ -7,17 +7,10 @@ module Haka.Import
   )
 where
 
-import Control.Exception.Safe (Exception, Typeable, bracket, throw)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (ask, asks)
+import Control.Exception.Safe (bracket, throw)
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Char8 as Bs
-import Data.Foldable (traverse_)
-import Data.Int (Int64)
-import Data.Text (Text)
-import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Clock (UTCTime (..))
-import GHC.Generics
 import Haka.AesonHelpers (noPrefixOptions)
 import Haka.App (AppCtx (..), AppM, runAppT)
 import qualified Haka.Cli as Cli
@@ -35,6 +28,7 @@ import qualified Network.HTTP.Req as R
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
+import qualified Relude.Unsafe as Unsafe
 import Servant
 
 data JobStatus
@@ -186,7 +180,7 @@ convertForDb :: Text -> [UserAgentPayload] -> [ImportHeartbeatPayload] -> [Heart
 convertForDb user userAgents = map convertSchema
   where
     convertSchema payload =
-      let userAgentValue = uaValue $ head $ filter (\x -> uaId x == wUser_agent_id payload) userAgents
+      let userAgentValue = uaValue $ Unsafe.head $ filter (\x -> uaId x == wUser_agent_id payload) userAgents
        in HeartbeatPayload
             { branch = wBranch payload,
               category = wCategory payload,
@@ -246,7 +240,7 @@ handleImportRequest = do
       if null items
         then throw $ MalformedPaylod "Received empty payload list"
         else do
-          case A.fromJSON (head items) :: A.Result QueueItem of
+          case A.fromJSON (Unsafe.head items) :: A.Result QueueItem of
             A.Success item -> runAppT ctx $ process item
             A.Error e -> throw $ MalformedPaylod e
 
@@ -277,7 +271,7 @@ enqueueRequest payload = do
 
   case res of
     Left Nothing -> error "failed to acquire connection while enqueuing import request"
-    Left (Just e) -> error $ Bs.unpack e
+    Left (Just e) -> error $ decodeUtf8 e
     Right conn -> HasqlQueue.enqueue queueName conn E.json [payload]
 
 type ImportRequestHandler = Maybe ApiToken -> ImportRequestPayload -> AppM ImportRequestResponse

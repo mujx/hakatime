@@ -7,18 +7,9 @@ module Haka.Badges
 where
 
 import Control.Exception.Safe (throw)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (asks)
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.ByteString as Bs
-import qualified Data.ByteString.Lazy as LBs
-import Data.Int (Int64)
-import Data.List (mapAccumR)
-import Data.Maybe (fromMaybe)
-import Data.Text (Text, unpack)
-import Data.Text.Encoding (decodeUtf8)
 import qualified Data.UUID.Types as UUID
-import GHC.Generics
 import Haka.App (AppCtx (..), AppM, ServerSettings (..))
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
@@ -29,6 +20,7 @@ import Network.HTTP.Media ((//))
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
+import qualified Relude.Unsafe as Unsafe
 import Servant
 import Text.Printf (printf)
 
@@ -39,7 +31,7 @@ instance Accept SVG where
   contentType _ = "image" // "svg+xml"
 
 instance MimeRender SVG Bs.ByteString where
-  mimeRender _ = LBs.fromStrict
+  mimeRender _ = fromStrict
 
 type API = GetBadgeLink :<|> GetBadgeSvg
 
@@ -124,30 +116,30 @@ badgeSvgHandler badgeId daysParam = do
       ( hakaShieldsIOUrl ss
           <> "/static/v1?"
           <> "label="
-          <> unpack (badgeProject badgeRow)
-          <> "&message="
-          <> compoundDuration activityTime
+          <> toString (badgeProject badgeRow)
+          <> ("&message=" :: String)
+          <> toString (compoundDuration activityTime)
           <> "&color=blue"
       )
   response <- liftIO $ httpLbs request manager
 
-  return $ LBs.toStrict $ responseBody response
+  return $ toStrict $ responseBody response
 
 reduceBy :: Integral a => a -> [a] -> [a]
 n `reduceBy` xs = n' : ys where (n', ys) = mapAccumR quotRem n xs
 
-durLabs :: [(Int64, String)]
-durLabs = [(undefined, "wk"), (7, "day"), (24, "hrs"), (60, "min"), (60, "sec")]
+durLabs :: [(Int64, Text)]
+durLabs = [(0, "wk"), (7, "day"), (24, "hrs"), (60, "min"), (60, "sec")]
 
-computeDurations :: Int64 -> [(Int64, String)]
+computeDurations :: Int64 -> [(Int64, Text)]
 computeDurations t =
-  let ds = t `reduceBy` map fst (tail durLabs)
+  let ds = t `reduceBy` map fst (Unsafe.tail durLabs)
    in filter ((/= 0) . fst) $ zip ds (map snd durLabs)
 
-compoundDuration :: Maybe Int64 -> String
+compoundDuration :: Maybe Int64 -> Text
 compoundDuration Nothing = "no data"
 compoundDuration (Just v) =
   let durations = computeDurations v
    in if length durations > 0
-        then unwords $ map (uncurry $ printf "%d %s") $ init durations
+        then unwords $ map (toText . \(n, s) -> printf "%d %s" n s :: String) $ Unsafe.init durations
         else "no data"

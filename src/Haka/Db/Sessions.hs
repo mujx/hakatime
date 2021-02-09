@@ -22,13 +22,8 @@ module Haka.Db.Sessions
   )
 where
 
-import Control.Monad.IO.Class (liftIO)
 import qualified Crypto.Error as CErr
 import Data.Aeson as A
-import Data.Int (Int64)
-import Data.List (nub)
-import Data.Maybe (mapMaybe)
-import Data.Text (Text)
 import Data.Time.Clock (UTCTime, getCurrentTime)
 import qualified Haka.Db.Statements as Statements
 import Haka.Types
@@ -67,7 +62,7 @@ getUserByRefreshToken token = do
 deleteToken :: ApiToken -> Session ()
 deleteToken (ApiToken token) = do
   _ <- statement token Statements.deleteAuthToken
-  pure ()
+  pass
 
 deleteTokens :: ApiToken -> Text -> Session Int64
 deleteTokens (ApiToken token) refreshToken = do
@@ -92,7 +87,7 @@ saveHeartbeats payloadData = do
   mapM (`statement` Statements.insertHeartBeat) payloadData
   where
     uniqueProjects =
-      nub $
+      ordNub $
         mapMaybe
           ( \x ->
               case (sender x, project x) of
@@ -138,12 +133,12 @@ validateUser ::
   Text ->
   Text ->
   Session Bool
-validateUser validate name pass = do
+validateUser validate name passwd = do
   res <- statement name Statements.getUserByName
   case res of
     Nothing -> pure False
     Just savedUser ->
-      case validate savedUser name pass of
+      case validate savedUser name passwd of
         Left e -> do
           liftIO $
             putStrLn $

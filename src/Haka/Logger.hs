@@ -12,18 +12,13 @@ module Haka.Logger
   )
 where
 
-import Data.Text (Text)
-import qualified Data.Text as T
 import Data.Text.Internal.Builder
-import qualified Data.Text.Lazy as LT
 import Katip
 import Katip.Core (locationToString)
 import Katip.Format.Time (formatAsIso8601)
 import Katip.Scribes.Handle
 import qualified Network.Wai as Wai
 import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
-import System.IO
-import Prelude hiding (unwords)
 
 data EnvType = Dev | Prod deriving (Show, Eq)
 
@@ -70,10 +65,10 @@ pairFormat :: ItemFormatter a
 pairFormat withColor _ Item {..} =
   pair "ts" nowStr
     <> pair "level" (renderSeverity' _itemSeverity)
-    <> pair "host" (T.pack _itemHost)
+    <> pair "host" (toText _itemHost)
     <> pair "thread_id" (getThreadIdText _itemThread)
-    <> maybe mempty (pair "loc" . T.pack . locationToString) _itemLoc
-    <> pair "msg" (LT.toStrict $ toLazyText $ unLogStr _itemMessage)
+    <> maybe mempty (pair "loc" . toText . locationToString) _itemLoc
+    <> pair "msg" (toStrict $ toLazyText $ unLogStr _itemMessage)
   where
     nowStr = formatAsIso8601 _itemTime
     renderSeverity' severity =

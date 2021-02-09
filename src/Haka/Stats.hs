@@ -7,28 +7,23 @@ module Haka.Stats
 where
 
 import Control.Exception.Safe (throw)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (asks)
 import Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
-import Data.Int (Int64)
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
-import Data.Maybe (fromMaybe, mapMaybe)
-import Data.Text (Text)
 import Data.Time (addDays, diffDays, diffUTCTime)
 import Data.Time.Clock (UTCTime (..), getCurrentTime)
-import GHC.Generics
 import Haka.AesonHelpers (noPrefixOptions)
 import Haka.App (AppCtx (..), AppM)
 import qualified Haka.DatabaseOperations as DbOps
 import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), StatRow (..), TimelineRow (..))
-import Haka.Utils (defaultLimit, sum')
+import Haka.Utils (defaultLimit)
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
 import PostgreSQL.Binary.Data (Scientific)
+import qualified Relude.Unsafe as Unsafe
 import Servant
 
 data ResourceStats = ResourceStats
@@ -241,7 +236,7 @@ fillMissing times rows = go times rows ([] :: [[StatRow]])
     go [] _ res = res
     go _ [] res = res
     go (t : ts) rows'@(r : rs) res =
-      if utctDay t == utctDay (rDay $ head r)
+      if utctDay t == utctDay (rDay $ Unsafe.head r)
         then go ts rs (res ++ [r])
         else go ts rows' (res ++ [[]])
 
@@ -262,7 +257,7 @@ toStatsPayload t0 t1 xs =
       startDate = t0,
       endDate = t1,
       dailyAvg = dailyAvgSecs,
-      dailyTotal = map (sum' . map rTotalSeconds) byDate,
+      dailyTotal = map (sum . map rTotalSeconds) byDate,
       projects = getSegment rProject,
       editors = getSegment rEditor,
       languages = getSegment rLanguage,
@@ -278,18 +273,18 @@ toStatsPayload t0 t1 xs =
        in map
             ( \name ->
                 let (secs', pct', dailyPct') =
-                      unzip3 $ map (\(_, m') -> Data.Maybe.fromMaybe (0, 0, 0) (Map.lookup name m')) all'
+                      unzip3 $ map (\(_, m') -> fromMaybe (0, 0, 0) (Map.lookup name m')) all'
                  in ResourceStats
                       { pName = name,
-                        pTotalSeconds = sum' secs',
-                        pTotalPct = sum' pct',
+                        pTotalSeconds = sum secs',
+                        pTotalPct = sum pct',
                         pTotalDaily = secs',
                         pPctDaily = dailyPct'
                       }
             )
             uniqProjectNames
     allSecs :: Int64
-    allSecs = sum' $ [rTotalSeconds x | x <- xs]
+    allSecs = sum $ [rTotalSeconds x | x <- xs]
     dailyAvgSecs :: Double
     dailyAvgSecs = fromIntegral allSecs / numOfDays
     byDate :: [[StatRow]]
@@ -311,7 +306,7 @@ aggregateBy ::
   -- | Total seconds of activity per field for that day.
   Maybe (UTCTime, Map.Map Text CalcStatistics)
 -- aggregateBy _ [] = Nothing
-aggregateBy f rows = Just (rDay $ head rows, go rows Map.empty)
+aggregateBy f rows = Just (rDay $ Unsafe.head rows, go rows Map.empty)
   where
     go :: [StatRow] -> Map.Map Text CalcStatistics -> Map.Map Text CalcStatistics
     go [] m' = m'

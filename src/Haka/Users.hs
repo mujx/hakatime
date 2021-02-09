@@ -8,13 +8,8 @@ module Haka.Users
 where
 
 import Control.Exception.Safe (throw)
-import Control.Monad (when)
-import Control.Monad.Reader (asks)
 import Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
-import Data.Maybe (fromJust, isNothing)
-import Data.Text (Text)
-import Data.Text.Encoding (encodeUtf8)
-import GHC.Generics
+import Data.Maybe (fromJust)
 import Haka.AesonHelpers (noPrefixOptions)
 import Haka.App (AppCtx (..), AppM)
 import qualified Haka.DatabaseOperations as DbOps

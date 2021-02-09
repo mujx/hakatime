@@ -2,12 +2,12 @@
 , bytestring, case-insensitive, containers, contravariant-extras
 , cookie, cryptonite, fakedata, file-embed, hasql, hasql-pool
 , hasql-queue, hasql-transaction, http-client, http-client-tls
-, http-media, http-types, katip, mr-env, mtl, optparse-applicative
+, http-media, http-types, katip, mr-env, optparse-applicative
 , polysemy, polysemy-plugin, postgresql-binary, random
-, raw-strings-qq, req, safe, safe-exceptions, servant
+, raw-strings-qq, relude, req, safe, safe-exceptions, servant
 , servant-client, servant-server, stdenv, system-filepath, text
-, time, transformers, unix, unliftio-core, uuid, uuid-types, wai
-, wai-cors, wai-extra, wai-logger, warp
+, time, unix, unliftio-core, uuid, uuid-types, wai, wai-cors
+, wai-extra, wai-logger, warp
 }:
 mkDerivation {
   pname = "hakatime";
@@ -19,18 +19,18 @@ mkDerivation {
     aeson base base64-bytestring bits blaze-builder bytestring
     case-insensitive containers contravariant-extras cookie cryptonite
     file-embed hasql hasql-pool hasql-queue hasql-transaction
-    http-client http-client-tls http-media http-types katip mr-env mtl
+    http-client http-client-tls http-media http-types katip mr-env
     optparse-applicative polysemy polysemy-plugin postgresql-binary
-    raw-strings-qq req safe safe-exceptions servant servant-server
-    system-filepath text time transformers unix unliftio-core uuid
-    uuid-types wai
+    raw-strings-qq relude req safe safe-exceptions servant
+    servant-server system-filepath text time unix unliftio-core uuid
+    uuid-types wai wai-extra
   ];
   executableHaskellDepends = [
-    aeson base base64-bytestring bytestring fakedata hasql hasql-pool
-    hasql-queue http-client http-client-tls katip mr-env mtl
-    optparse-applicative polysemy polysemy-plugin random
-    safe-exceptions servant servant-client servant-server text time
-    transformers unix wai wai-cors wai-extra wai-logger warp
+    aeson base base64-bytestring fakedata hasql hasql-pool hasql-queue
+    http-client http-client-tls katip mr-env optparse-applicative
+    polysemy polysemy-plugin random relude safe-exceptions servant
+    servant-client servant-server time unix wai wai-cors wai-extra
+    wai-logger warp
   ];
   testHaskellDepends = [ base ];
   doHaddock = false;

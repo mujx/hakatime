@@ -22,8 +22,6 @@ import Control.Exception.Safe (MonadThrow, throw)
 import Data.Aeson (FromJSON (..), ToJSON (..), encode, genericParseJSON, genericToJSON)
 import qualified Data.ByteString.Char8 as C
 import Data.CaseInsensitive (mk)
-import Data.Text (Text, pack)
-import GHC.Generics
 import Haka.AesonHelpers (noPrefixOptions, untagged)
 import Haka.Types (BulkHeartbeatData, HearbeatData)
 import qualified Hasql.Pool as HqPool
@@ -136,7 +134,7 @@ toJSONError :: DatabaseException -> ServerError
 toJSONError UnknownApiToken = invalidTokenError
 toJSONError ExpiredToken = expiredToken
 toJSONError InvalidCredentials = invalidCredentials
-toJSONError (SessionException e) = genericError (pack $ show e)
+toJSONError (SessionException e) = genericError (show e :: Text)
 toJSONError (OperationException e) = genericError e
 toJSONError (UsernameExists _) = usernameExists
 toJSONError (RegistrationFailed _) = registerError
@@ -144,5 +142,5 @@ toJSONError MissingRefreshTokenCookie = missingRefreshTokenCookie
 
 logError :: (KatipContext m, MonadThrow m) => DatabaseException -> m b
 logError e = do
-  $(logTM) ErrorS (logStr $ show e)
+  $(logTM) ErrorS (logStr (show e :: String))
   throw $ toJSONError e

@@ -30,11 +30,7 @@ where
 
 import Contravariant.Extras.Contrazip (contrazip3, contrazip4, contrazip5)
 import Data.Aeson as A
-import qualified Data.ByteString as Bs
 import Data.FileEmbed
-import Data.Functor.Contravariant ((>$<))
-import Data.Int (Int64)
-import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Haka.Types
@@ -57,7 +53,7 @@ import Text.RawString.QQ (r)
 updateTokenUsage :: Statement Text ()
 updateTokenUsage = Statement query params D.noResult True
   where
-    query :: Bs.ByteString
+    query :: ByteString
     query =
       [r|
       UPDATE auth_tokens
@@ -71,7 +67,7 @@ updateTokenUsage = Statement query params D.noResult True
 listApiTokens :: Statement Text [StoredApiToken]
 listApiTokens = Statement query params result True
   where
-    query :: Bs.ByteString
+    query :: ByteString
     query =
       [r| 
       select
@@ -100,7 +96,7 @@ createAPIToken = Statement query params D.noResult True
   where
     params :: E.Params (Text, Text)
     params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
-    query :: Bs.ByteString
+    query :: ByteString
     query = [r| INSERT INTO auth_tokens(owner, token) values($1, $2); |]
 
 createAccessTokens :: Int64 -> Statement TokenData ()
@@ -112,7 +108,7 @@ createAccessTokens refreshTokenExpiryHours = Statement query params D.noResult T
         <> (tknToken >$< E.param (E.nonNullable E.text))
         <> (tknRefreshToken >$< E.param (E.nonNullable E.text))
         <> (const refreshTokenExpiryHours >$< E.param (E.nonNullable E.int8))
-    query :: Bs.ByteString
+    query :: ByteString
     query =
       [r|
       WITH x AS (
@@ -137,7 +133,7 @@ deleteExpiredTokens = Statement query params D.noResult True
       (tknOwner >$< E.param (E.nonNullable E.text))
         <> (tknToken >$< E.param (E.nonNullable E.text))
         <> (tknRefreshToken >$< E.param (E.nonNullable E.text))
-    query :: Bs.ByteString
+    query :: ByteString
     query =
       [r|
       WITH x AS (
@@ -152,7 +148,7 @@ deleteRefreshToken = Statement query params D.rowsAffected True
   where
     params :: E.Params Text
     params = E.param (E.nonNullable E.text)
-    query :: Bs.ByteString
+    query :: ByteString
     query = [r| DELETE FROM refresh_tokens WHERE refresh_token = $1; |]
 
 deleteAuthToken :: Statement Text Int64
@@ -160,7 +156,7 @@ deleteAuthToken = Statement query params D.rowsAffected True
   where
     params :: E.Params Text
     params = E.param (E.nonNullable E.text)
-    query :: Bs.ByteString
+    query :: ByteString
     query = [r| DELETE FROM auth_tokens WHERE token = $1; |]
 
 doubleToUTCTime :: Real a => a -> UTCTime
@@ -176,7 +172,7 @@ insertToken =
     D.noResult
     True
   where
-    query :: Bs.ByteString
+    query :: ByteString
     query =
       [r|
         INSERT INTO auth_tokens 
@@ -190,7 +186,7 @@ insertToken =
 getUserByName :: Statement Text (Maybe RegisteredUser)
 getUserByName = Statement query (E.param (E.nonNullable E.text)) userDecoder True
   where
-    query :: Bs.ByteString
+    query :: ByteString
     query = [r| SELECT * FROM users WHERE username = $1;|]
     userDecoder :: D.Result (Maybe RegisteredUser)
     userDecoder = D.rowMaybe user
@@ -211,7 +207,7 @@ getTotalActivityTime = Statement query params result True
         (E.param (E.nonNullable E.text))
         (E.param (E.nonNullable E.int8))
         (E.param (E.nonNullable E.text))
-    query :: Bs.ByteString
+    query :: ByteString
     query = $(embedFile "sql/get_total_project_time.sql")
     result :: D.Result (Maybe Int64)
     result = D.rowMaybe $ (D.column . D.nonNullable) D.int8
@@ -226,7 +222,7 @@ insertUser = Statement query params D.noResult True
       )
         <> (hashedPassword >$< E.param (E.nonNullable E.bytea))
         <> (saltUsed >$< E.param (E.nonNullable E.bytea))
-    query :: Bs.ByteString
+    query :: ByteString
     query =
       [r|
         INSERT INTO users 
@@ -241,7 +237,7 @@ insertUser = Statement query params D.noResult True
 isUserAvailable :: Statement Text (Maybe RegisteredUser)
 isUserAvailable = Statement query (E.param (E.nonNullable E.text)) userDecoder True
   where
-    query :: Bs.ByteString
+    query :: ByteString
     query = [r| SELECT * FROM users WHERE username = $1 |]
 
     userDecoder :: D.Result (Maybe RegisteredUser)
@@ -266,7 +262,7 @@ getUserByToken =
   where
     -- NOTE: On auth tokens the expiry date might not be set.
     -- The tokens created by the CLI do not expire.
-    query :: Bs.ByteString
+    query :: ByteString
     query =
       [r| 
         SELECT owner FROM auth_tokens 
@@ -287,7 +283,7 @@ getUserByRefreshToken =
     (D.rowMaybe ((D.column . D.nonNullable) D.text))
     True
   where
-    query :: Bs.ByteString
+    query :: ByteString
     query =
       [r| 
       SELECT owner FROM refresh_tokens 
@@ -301,7 +297,7 @@ insertProject = Statement query params D.noResult True
   where
     params :: E.Params (Text, Text)
     params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
-    query :: Bs.ByteString
+    query :: ByteString
     query =
       [r|
         INSERT INTO projects (owner, name) VALUES ( $1, $2 ) ON CONFLICT DO NOTHING;
@@ -314,7 +310,7 @@ createBadgeLink = Statement query params result True
     params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
     result :: D.Result UUID
     result = D.singleRow (D.column (D.nonNullable D.uuid))
-    query :: Bs.ByteString
+    query :: ByteString
     query =
       [r|
         INSERT INTO badges(username, project) values($1, $2)
@@ -333,7 +329,7 @@ getBadgeLinkInfo = Statement query params result True
         ( BadgeRow <$> (D.column . D.nonNullable) D.text
             <*> (D.column . D.nonNullable) D.text
         )
-    query :: Bs.ByteString
+    query :: ByteString
     query = [r| SELECT username, project FROM badges WHERE link_id = $1; |]
 
 insertHeartBeat :: Statement HeartbeatPayload Int64
@@ -341,7 +337,7 @@ insertHeartBeat = Statement query params result True
   where
     result :: D.Result Int64
     result = D.singleRow (D.column (D.nonNullable D.int8))
-    query :: Bs.ByteString
+    query :: ByteString
     query = $(embedFile "sql/insert_heartbeat.sql")
     params :: E.Params HeartbeatPayload
     params =
@@ -357,7 +353,7 @@ insertHeartBeat = Statement query params result True
         <> ( dependencies
                >$< E.param
                  ( E.nullable
-                     ( E.array (E.dimension foldl (E.element (E.nonNullable E.text)))
+                     ( E.array (E.dimension foldl' (E.element (E.nonNullable E.text)))
                      )
                  )
            )
@@ -379,7 +375,7 @@ insertHeartBeat = Statement query params result True
 getProjectStats :: Statement (Text, Text, UTCTime, UTCTime, Int64) [ProjectStatRow]
 getProjectStats = Statement query params result True
   where
-    query :: Bs.ByteString
+    query :: ByteString
     query = $(embedFile "sql/get_projects_stats.sql")
     params :: E.Params (Text, Text, UTCTime, UTCTime, Int64)
     params =
@@ -406,7 +402,7 @@ getProjectStats = Statement query params result True
 getUserActivity :: Statement (Text, UTCTime, UTCTime, Int64) [StatRow]
 getUserActivity = Statement query params result True
   where
-    query :: Bs.ByteString
+    query :: ByteString
     query = $(embedFile "sql/get_user_activity.sql")
     params :: E.Params (Text, UTCTime, UTCTime, Int64)
     params =
@@ -435,7 +431,7 @@ getUserActivity = Statement query params result True
 getTimeline :: Statement (Text, UTCTime, UTCTime, Int64) [TimelineRow]
 getTimeline = Statement query params result True
   where
-    query :: Bs.ByteString
+    query :: ByteString
     query = $(embedFile "sql/get_timeline.sql")
     params :: E.Params (Text, UTCTime, UTCTime, Int64)
     params =
@@ -459,7 +455,7 @@ deleteFailedJobs = Statement query params D.rowsAffected True
   where
     params :: E.Params A.Value
     params = E.param (E.nonNullable E.json)
-    query :: Bs.ByteString
+    query :: ByteString
     query = [r| DELETE FROM payloads WHERE value::text = $1::text; |]
 
 getJobStatus :: Statement A.Value (Maybe Text)
@@ -467,5 +463,5 @@ getJobStatus = Statement query params (D.rowMaybe ((D.column . D.nonNullable) D.
   where
     params :: E.Params A.Value
     params = E.param (E.nonNullable E.json)
-    query :: Bs.ByteString
+    query :: ByteString
     query = [r| SELECT state FROM payloads WHERE value::text = $1::text; |]

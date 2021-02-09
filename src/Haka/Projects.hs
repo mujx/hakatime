@@ -8,28 +8,23 @@ module Haka.Projects
 where
 
 import Control.Exception.Safe (throw)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (asks)
 import Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
-import Data.Int (Int64)
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
-import Data.Maybe (fromMaybe, mapMaybe)
-import Data.Text (Text)
 import Data.Time (addDays, diffDays)
 import Data.Time.Clock (UTCTime (..), getCurrentTime)
-import GHC.Generics
 import Haka.AesonHelpers (noPrefixOptions)
 import Haka.App (AppCtx (..), AppM)
 import qualified Haka.DatabaseOperations as DbOps
 import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), ProjectStatRow (..))
-import Haka.Utils (defaultLimit, sum')
+import Haka.Utils (defaultLimit)
 import Polysemy (runM)
 import Polysemy.Error (runError)
 import Polysemy.IO (embedToMonadIO)
 import PostgreSQL.Binary.Data (Scientific)
+import qualified Relude.Unsafe as Unsafe
 import Servant
 
 data ResourceStats = ResourceStats
@@ -142,7 +137,7 @@ toStatsPayload t0 t1 xs =
     { totalSeconds = allSecs,
       startDate = t0,
       endDate = t1,
-      dailyTotal = map (sum' . map prTotalSeconds) byDate,
+      dailyTotal = map (sum . map prTotalSeconds) byDate,
       languages = getSegment prLanguage,
       files = getSegment prEntity,
       weekDay = getSegment prWeekday,
@@ -157,18 +152,18 @@ toStatsPayload t0 t1 xs =
        in map
             ( \name ->
                 let (secs', pct', dailyPct') =
-                      unzip3 $ map (\(_, m') -> Data.Maybe.fromMaybe (0, 0, 0) (Map.lookup name m')) all'
+                      unzip3 $ map (\(_, m') -> fromMaybe (0, 0, 0) (Map.lookup name m')) all'
                  in ResourceStats
                       { pName = name,
-                        pTotalSeconds = sum' secs',
-                        pTotalPct = sum' pct',
+                        pTotalSeconds = sum secs',
+                        pTotalPct = sum pct',
                         pTotalDaily = secs',
                         pPctDaily = dailyPct'
                       }
             )
             uniqProjectNames
     allSecs :: Int64
-    allSecs = sum' $ [prTotalSeconds x | x <- xs]
+    allSecs = sum $ [prTotalSeconds x | x <- xs]
     byDate :: [[ProjectStatRow]]
     byDate = fillMissing (genDates t0 t1) (List.groupBy (\a b -> prDay a == prDay b) xs)
 
@@ -179,7 +174,7 @@ fillMissing times rows = go times rows ([] :: [[ProjectStatRow]])
     go [] _ res = res
     go _ [] res = res
     go (t : ts) rows'@(r : rs) res =
-      if utctDay t == utctDay (prDay $ head r)
+      if utctDay t == utctDay (prDay $ Unsafe.head r)
         then go ts rs (res ++ [r])
         else go ts rows' (res ++ [[]])
 
@@ -206,7 +201,7 @@ aggregateBy ::
   -- | Total seconds of activity per field for that day.
   Maybe (UTCTime, Map.Map Text CalcStatistics)
 -- aggregateBy _ [] = Nothing
-aggregateBy f rows = Just (prDay $ head rows, go rows Map.empty)
+aggregateBy f rows = Just (prDay $ Unsafe.head rows, go rows Map.empty)
   where
     go :: [ProjectStatRow] -> Map.Map Text CalcStatistics -> Map.Map Text CalcStatistics
     go [] m' = m'

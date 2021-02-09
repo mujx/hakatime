@@ -27,10 +27,7 @@ module Haka.DatabaseOperations
   )
 where
 
-import Control.Monad.IO.Class (liftIO)
 import Data.Aeson as A
-import Data.Int (Int64)
-import Data.Text (Text, pack)
 import Data.Time.Clock (UTCTime)
 import qualified Haka.Db.Sessions as Sessions
 import Haka.Errors (DatabaseException (..))
@@ -120,8 +117,8 @@ interpretDatabaseIO =
     GetUserByRefreshToken pool token -> do
       res <- liftIO $ HqPool.use pool (Sessions.getUserByRefreshToken token)
       either (throw . SessionException) pure res
-    ValidateCredentials pool user pass -> do
-      res <- liftIO $ HqPool.use pool (Sessions.validateUser PUtils.validatePassword user pass)
+    ValidateCredentials pool user passwd -> do
+      res <- liftIO $ HqPool.use pool (Sessions.validateUser PUtils.validatePassword user passwd)
       either
         (throw . SessionException)
         ( \isValid -> if isValid then pure $ Just user else pure Nothing
@@ -148,12 +145,12 @@ interpretDatabaseIO =
     CreateWebToken pool user expiry -> do
       tknData <- liftIO $ mkTokenData user
       res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens expiry tknData)
-      either (throw . SessionException) (\_ -> pure tknData) res
-    RegisterUser pool user pass expiry -> do
+      whenLeft tknData res (throw . SessionException)
+    RegisterUser pool user passwd expiry -> do
       tknData <- liftIO $ mkTokenData user
-      hashUser <- liftIO $ PUtils.mkUser user pass
+      hashUser <- liftIO $ PUtils.mkUser user passwd
       case hashUser of
-        Left err -> throw $ RegistrationFailed (pack $ show err)
+        Left err -> throw $ RegistrationFailed (show err)
         Right hashUser' -> do
           u <- liftIO $ PUtils.createUser pool hashUser'
           case u of
@@ -162,7 +159,7 @@ interpretDatabaseIO =
               if userCreated
                 then do
                   res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens expiry tknData)
-                  either (throw . SessionException) (\_ -> pure tknData) res
+                  whenLeft tknData res (throw . SessionException)
                 else throw $ UsernameExists "Username already exists"
     ListApiTokens pool user -> do
       res <- liftIO $ HqPool.use pool (Sessions.listApiTokens user)
@@ -305,8 +302,8 @@ createAuthTokens ::
   HqPool.Pool ->
   Int64 ->
   Sem r TokenData
-createAuthTokens user pass pool expiry = do
-  res <- validateCredentials pool user pass
+createAuthTokens user passwd pool expiry = do
+  res <- validateCredentials pool user passwd
   case res of
     Nothing -> throw InvalidCredentials
     Just u -> createWebToken pool u expiry
@@ -343,7 +340,7 @@ clearTokens token (Just refreshToken) pool = do
   case res of
     0 -> throw InvalidCredentials
     1 -> throw InvalidCredentials
-    2 -> pure ()
+    2 -> pass
     _ -> throw (OperationException "failed to delete all the tokens while logout")
 
 getApiTokens ::

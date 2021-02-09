@@ -3,10 +3,7 @@ module Haka.Middleware (jsonResponse) where
 import Blaze.ByteString.Builder (toLazyByteString)
 import Blaze.ByteString.Builder.ByteString (fromByteString)
 import Data.Aeson
-import Data.ByteString.Lazy (toStrict)
-import Data.Text
-import qualified Data.Text.Lazy as TL
-import Data.Text.Lazy.Encoding (decodeUtf8)
+import Data.Text (isInfixOf)
 import Network.HTTP.Types
 import Network.Wai
 import Network.Wai.Internal
@@ -24,7 +21,7 @@ responseModifier r
   | otherwise = r
 
 customErrorBody :: Response -> Text -> Text
-customErrorBody (ResponseBuilder _ _ b) _ = TL.toStrict $ decodeUtf8 $ toLazyByteString b
+customErrorBody (ResponseBuilder _ _ b) _ = toStrict $ decodeUtf8 $ toLazyByteString b
 customErrorBody (ResponseRaw _ res) e = customErrorBody res e
 customErrorBody _ e = e
 

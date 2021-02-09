@@ -7,7 +7,6 @@ module Haka.Cli
 where
 
 import Data.Bits.Extras (w16)
-import Data.Text (Text, unpack)
 import Data.Version (showVersion)
 import qualified Haka.PasswordUtils as PasswordUtils
 import qualified Haka.Utils as Utils
@@ -16,7 +15,6 @@ import qualified Hasql.Pool as HasqlPool
 import qualified Options.Applicative as Opt
 import Paths_hakatime (version)
 import System.Environment.MrEnv (envAsInt)
-import System.Exit (die)
 import System.Posix.Env.ByteString (getEnvDefault)
 
 getDbSettings :: IO HasqlConn.Settings
@@ -92,22 +90,22 @@ handleCommand :: ServerCommand -> IO () -> IO ()
 handleCommand Run action = action
 handleCommand (CreateToken ops) _ = do
   dbSettings <- getDbSettings
-  pass <- Utils.passwordInput "Password: "
+  passwd <- Utils.passwordInput "Password: "
   pool <- HasqlPool.acquire (10, 1, dbSettings)
-  token <- PasswordUtils.createToken pool username pass
+  token <- PasswordUtils.createToken pool username passwd
   case token of
-    Left err -> die $ unpack err
+    Left err -> die $ toString err
     Right val ->
       putStrLn $
         "Please save the token. You won't be able to retrieve it again.\n"
-          <> unpack val
+          <> toString val
   where
     username = tUsername ops
 handleCommand (CreateUser ops) _ = do
   dbSettings <- getDbSettings
-  pass <- Utils.passwordInput "Set a password: "
+  passwd <- Utils.passwordInput "Set a password: "
   pool <- HasqlPool.acquire (10, 1, dbSettings)
-  hashUser <- PasswordUtils.mkUser username pass
+  hashUser <- PasswordUtils.mkUser username passwd
   case hashUser of
     Left err -> die (show err)
     Right user -> do
@@ -116,10 +114,10 @@ handleCommand (CreateUser ops) _ = do
         handleError
         ( \_ -> do
             putStrLn $ "User " <> show username <> " created."
-            putStrLn $ "Run \"hakatime create-token -u " <> unpack username <> "\" to generate a token."
+            putStrLn $ "Run \"hakatime create-token -u " <> toString username <> "\" to generate a token."
         )
         res
   where
     username = cUsername ops
     handleError :: HasqlPool.UsageError -> IO ()
-    handleError = die . unpack . Utils.toStrError
+    handleError = die . toString . Utils.toStrError

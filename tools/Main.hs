@@ -1,8 +1,6 @@
 --
 -- CLI tool that generates fake activity hearbeats.
 --
-import Control.Monad (replicateM)
-import Data.Text (Text, pack)
 import Data.Time (addUTCTime)
 import Data.Time.Clock.POSIX
 import Faker
@@ -78,7 +76,7 @@ fakeFilename = do
         "resources"
       ]
   ext <- elements [".cpp", ".go", ".hs", ".json", ".js", ".ts", ".py", ".rb", ".yaml", ".rs"]
-  pure $ pack $ filename ++ ext
+  pure $ toText $ filename ++ ext
 
 generateTimeline :: IO [HeartbeatPayload]
 generateTimeline = do
@@ -181,7 +179,7 @@ runClient = do
   mgr <- mkMgr parsedConf
   r <-
     runClientM
-      (sendHeartbeats (Just "laptop") (Just $ ApiToken (pack $ token parsedConf)) timelineBeats)
+      (sendHeartbeats (Just "laptop") (Just $ ApiToken (toText $ token parsedConf)) timelineBeats)
       (mkEnv mgr parsedConf)
   case r of
     Left e -> print e

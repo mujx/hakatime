@@ -1,5 +1,8 @@
-index-state: 2020-09-26T11:49:41Z
+index-state: 2021-01-25T10:18:41Z
 packages: *.cabal
+
+package *
+  ghc-options: -fwrite-ide-info
 
 package hakatime
   optimization: 2
