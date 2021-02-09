@@ -5,8 +5,8 @@
 }:
 mkDerivation {
   pname = "servant-client-core";
-  version = "0.17";
-  sha256 = "ce65f5d2fd0d07918f8a660527d21929f4a273591e6e9e82842825925bdd53f7";
+  version = "0.18";
+  sha256 = "16e6213755e3d009773b9495fc579957983bc5e228e8ad76019f0c1f658f13a5";
   libraryHaskellDepends = [
     aeson base base-compat base64-bytestring bytestring containers
     deepseq exceptions free http-media http-types network-uri safe

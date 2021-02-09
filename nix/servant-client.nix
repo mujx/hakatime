@@ -8,8 +8,8 @@
 }:
 mkDerivation {
   pname = "servant-client";
-  version = "0.17";
-  sha256 = "47c62942cf1d3bd04884edf1d50118cf36c134aa8b16de632eb512e9a6d9c104";
+  version = "0.18";
+  sha256 = "31a483e773ce2d05755f2cf704394b0d0acbfaaa89457ef0cded2ae2a662a09e";
   libraryHaskellDepends = [
     base base-compat bytestring containers deepseq exceptions
     http-client http-media http-types kan-extensions monad-control mtl

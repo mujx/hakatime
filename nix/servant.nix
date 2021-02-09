@@ -6,8 +6,8 @@
 }:
 mkDerivation {
   pname = "servant";
-  version = "0.17";
-  sha256 = "7a06ec2ac64279c3b48ec43f92e349c890a8088ac87085395fdcd8c8d2e23843";
+  version = "0.18";
+  sha256 = "721747edb750d2856538f73d155d83023fa1617057d37b10a8d1098eb0488bb5";
   libraryHaskellDepends = [
     aeson attoparsec base base-compat bifunctors bytestring
     case-insensitive deepseq http-api-data http-media http-types mmorph
@@ -19,8 +19,6 @@ mkDerivation {
     quickcheck-instances string-conversions text transformers
   ];
   testToolDepends = [ hspec-discover ];
-  doHaddock = false;
-  doCheck = false;
   homepage = "http://docs.servant.dev/";
   description = "A family of combinators for defining webservices APIs";
   license = stdenv.lib.licenses.bsd3;
