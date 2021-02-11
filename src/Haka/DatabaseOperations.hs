@@ -195,29 +195,26 @@ processHeartbeatRequest ::
   ) =>
   HqPool.Pool ->
   ApiToken ->
-  Maybe Text ->
   [HeartbeatPayload] ->
   Sem r [Int64]
-processHeartbeatRequest pool token machineId heartbeats = do
+processHeartbeatRequest pool token heartbeats = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UnknownApiToken
     Just userName -> do
       updateTokenUsage pool token
-      saveHeartbeats pool (updateHeartbeats heartbeats userName machineId)
+      saveHeartbeats pool (updateHeartbeats heartbeats userName)
 
 editorInfo :: [HeartbeatPayload] -> [Utils.EditorInfo]
 editorInfo = map (Utils.userAgentInfo . user_agent)
 
--- Update the missing fields with info gatherred from the user-agent
--- header field & the machine id.
-updateHeartbeats :: [HeartbeatPayload] -> Text -> Maybe Text -> [HeartbeatPayload]
-updateHeartbeats heartbeats name machineId =
+-- Update the missing fields with info gatherred from the user-agent.
+updateHeartbeats :: [HeartbeatPayload] -> Text -> [HeartbeatPayload]
+updateHeartbeats heartbeats name =
   map
     ( \(info, beat) ->
         beat
           { sender = Just name,
-            machine = machineId,
             editor = Utils.editor info,
             plugin = Utils.plugin info,
             platform = Utils.platform info
@@ -225,9 +222,15 @@ updateHeartbeats heartbeats name machineId =
     )
     (zip (editorInfo heartbeats) heartbeats)
 
-importHeartbeats :: forall r. (Member Database r) => HqPool.Pool -> Text -> Maybe Text -> [HeartbeatPayload] -> Sem r [Int64]
-importHeartbeats pool username machineId heartbeats = do
-  saveHeartbeats pool (updateHeartbeats heartbeats username machineId)
+importHeartbeats ::
+  forall r.
+  (Member Database r) =>
+  HqPool.Pool ->
+  Text ->
+  [HeartbeatPayload] ->
+  Sem r [Int64]
+importHeartbeats pool username heartbeats = do
+  saveHeartbeats pool (updateHeartbeats heartbeats username)
 
 generateStatistics ::
   forall r.

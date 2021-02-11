@@ -169,11 +169,13 @@ storeHeartbeats ::
   Maybe Text ->
   [HeartbeatPayload] ->
   AppM (Either DbOps.DatabaseException [Int64])
-storeHeartbeats p token machineId heartbeats =
+storeHeartbeats p token machineId heartbeats = do
+  let updatedHeartbeats = map ((\beat -> beat {machine = machineId}) . addMissingLang) heartbeats
+
   runM
     . embedToMonadIO
     . runError
     $ DbOps.interpretDatabaseIO $
-      DbOps.processHeartbeatRequest p token machineId (map addMissingLang heartbeats)
+      DbOps.processHeartbeatRequest p token updatedHeartbeats
 
 -- TODO: Discard timestamps from the future

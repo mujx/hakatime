@@ -127,6 +127,23 @@ instance A.FromJSON UserAgentPayload where
 instance A.FromJSON UserAgentList where
   parseJSON = A.genericParseJSON noPrefixOptions
 
+newtype MachineNameList = MachineNameList
+  { machineData :: [MachineNamePayload]
+  }
+  deriving (Show, Generic)
+
+data MachineNamePayload = MachineNamePayload
+  { machineId :: Text,
+    machineValue :: Text
+  }
+  deriving (Show, Generic)
+
+instance A.FromJSON MachineNameList where
+  parseJSON = A.genericParseJSON noPrefixOptions
+
+instance A.FromJSON MachineNamePayload where
+  parseJSON = A.genericParseJSON noPrefixOptions
+
 logExceptions :: LogEnv -> SomeException -> IO ()
 logExceptions logenv e = do
   let logError msg = runKatipT logenv $ Log.logMs ErrorS msg
@@ -169,7 +186,16 @@ process item = do
       R.jsonResponse
       header
 
+  machinesRes <-
+    R.req
+      R.GET
+      (R.https wakatimeApi /: "api" /: "v1" /: "users" /: "current" /: "machine_names")
+      R.NoReqBody
+      R.jsonResponse
+      header
+
   let userAgents = (R.responseBody uaRes :: UserAgentList)
+  let machineNames = (R.responseBody machinesRes :: MachineNameList)
 
   traverse_
     ( \day -> do
@@ -188,6 +214,7 @@ process item = do
         let heartbeats =
               convertForDb
                 (requester item)
+                (machineData machineNames)
                 (uaData userAgents)
                 (listData heartbeatList)
 
@@ -198,7 +225,7 @@ process item = do
             . embedToMonadIO
             . runError
             $ DbOps.interpretDatabaseIO $
-              DbOps.importHeartbeats pool' (requester item) (Just "wakatime-import") heartbeats
+              DbOps.importHeartbeats pool' (requester item) heartbeats
 
         either Err.logError pure res
     )
@@ -206,11 +233,16 @@ process item = do
 
   $(logTM) InfoS "import completed"
 
-convertForDb :: Text -> [UserAgentPayload] -> [ImportHeartbeatPayload] -> [HeartbeatPayload]
-convertForDb user userAgents = map convertSchema
+convertForDb :: Text -> [MachineNamePayload] -> [UserAgentPayload] -> [ImportHeartbeatPayload] -> [HeartbeatPayload]
+convertForDb user machineNames userAgents = map convertSchema
   where
+    getMachineName :: [MachineNamePayload] -> Maybe Text
+    getMachineName [] = Just "wakatime-import"
+    getMachineName xs = Just $ machineValue $ Unsafe.head xs
+
     convertSchema payload =
       let userAgentValue = uaValue $ Unsafe.head $ filter (\x -> uaId x == wUser_agent_id payload) userAgents
+          machineName = getMachineName $ filter (\x -> (Just $ machineId x) == wMachine_name_id payload) machineNames
        in HeartbeatPayload
             { branch = wBranch payload,
               category = wCategory payload,
@@ -219,7 +251,7 @@ convertForDb user userAgents = map convertSchema
               editor = Nothing,
               plugin = Nothing,
               platform = Nothing,
-              machine = Nothing,
+              machine = machineName,
               entity = wEntity payload,
               file_lines = wLines payload,
               is_write = wIs_write payload,
