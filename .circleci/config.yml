@@ -8,6 +8,9 @@ jobs:
       - run:
           name: "Build"
           command: nix-build --pure release.nix
+      - run:
+          name: "HLint"
+          command: nix-shell --run "hlint src && hlint app"
   build_dashboard:
     docker:
       - image: circleci/node:12.18

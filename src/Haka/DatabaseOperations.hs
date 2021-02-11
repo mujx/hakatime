@@ -211,8 +211,8 @@ editorInfo = map (Utils.userAgentInfo . user_agent)
 -- Update the missing fields with info gatherred from the user-agent.
 updateHeartbeats :: [HeartbeatPayload] -> Text -> [HeartbeatPayload]
 updateHeartbeats heartbeats name =
-  map
-    ( \(info, beat) ->
+  zipWith
+    ( \info beat ->
         beat
           { sender = Just name,
             editor = Utils.editor info,
@@ -220,7 +220,8 @@ updateHeartbeats heartbeats name =
             platform = Utils.platform info
           }
     )
-    (zip (editorInfo heartbeats) heartbeats)
+    (editorInfo heartbeats)
+    heartbeats
 
 importHeartbeats ::
   forall r.

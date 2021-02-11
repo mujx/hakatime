@@ -242,7 +242,7 @@ convertForDb user machineNames userAgents = map convertSchema
 
     convertSchema payload =
       let userAgentValue = uaValue $ Unsafe.head $ filter (\x -> uaId x == wUser_agent_id payload) userAgents
-          machineName = getMachineName $ filter (\x -> (Just $ machineId x) == wMachine_name_id payload) machineNames
+          machineName = getMachineName $ filter (\x -> Just (machineId x) == wMachine_name_id payload) machineNames
        in HeartbeatPayload
             { branch = wBranch payload,
               category = wCategory payload,

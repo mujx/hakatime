@@ -138,10 +138,8 @@ mkRefreshTokenCookie tknData apiPrefix =
       setCookieHttpOnly = True
     }
   where
-    removeSlash p =
-      Bs.pack $ case not $ null p of
-        True -> if Unsafe.last p == '/' then Unsafe.init p else p
-        False -> p
+    removeSlash [] = Bs.empty
+    removeSlash p = Bs.pack $ if Unsafe.last p == '/' then Unsafe.init p else p
 
 mkLoginResponse :: TokenData -> UTCTime -> LoginResponse
 mkLoginResponse tknData now =
@@ -154,8 +152,7 @@ mkLoginResponse tknData now =
 loginHandler :: AuthRequest -> AppM LoginResponse'
 loginHandler creds = do
   now <- liftIO getCurrentTime
-  dbPool <- asks pool
-  ss <- asks srvSettings
+  ctx <- ask
 
   $(logTM) InfoS ("login for user " <> showLS (username creds))
 
@@ -167,43 +164,46 @@ loginHandler creds = do
         DbOps.createAuthTokens
           (username creds)
           (password creds)
-          dbPool
-          (hakaSessionExpiry ss)
+          (pool ctx)
+          (hakaSessionExpiry $ srvSettings ctx)
 
   tknData <- either Err.logError pure res
 
-  let cookie = mkRefreshTokenCookie tknData (hakaApiPrefix ss)
-
-  return $ addHeader cookie $ mkLoginResponse tknData now
+  return $
+    addHeader (mkRefreshTokenCookie tknData (hakaApiPrefix $ srvSettings ctx)) $
+      mkLoginResponse tknData now
 
 registerHandler :: RegistrationStatus -> AuthRequest -> AppM LoginResponse'
 registerHandler DisabledRegistration _ = throw Err.disabledRegistration
-registerHandler EnabledRegistration creds = do
-  now <- liftIO getCurrentTime
-  dbPool <- asks pool
-  ss <- asks srvSettings
+registerHandler EnabledRegistration creds =
+  do
+    now <- liftIO getCurrentTime
+    ctx <- ask
 
-  $(logTM) InfoS ("registering user " <> showLS (username creds))
+    $(logTM) InfoS ("registering user " <> showLS (username creds))
 
-  res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
-        DbOps.registerUser dbPool (username creds) (password creds) (hakaSessionExpiry ss)
+    res <-
+      runM
+        . embedToMonadIO
+        . runError
+        $ DbOps.interpretDatabaseIO $
+          DbOps.registerUser
+            (pool ctx)
+            (username creds)
+            (password creds)
+            (hakaSessionExpiry $ srvSettings ctx)
 
-  tknData <- either Err.logError pure res
+    tknData <- either Err.logError pure res
 
-  let cookie = mkRefreshTokenCookie tknData (hakaApiPrefix ss)
-
-  return $ addHeader cookie $ mkLoginResponse tknData now
+    return $
+      addHeader (mkRefreshTokenCookie tknData (hakaApiPrefix $ srvSettings ctx)) $
+        mkLoginResponse tknData now
 
 refreshTokenHandler :: Maybe Text -> AppM LoginResponse'
 refreshTokenHandler Nothing = throw Err.missingRefreshTokenCookie
 refreshTokenHandler (Just cookies) = do
   now <- liftIO getCurrentTime
-  dbPool <- asks pool
-  ss <- asks srvSettings
+  ctx <- ask
 
   $(logTM) DebugS "refresh token request"
 
@@ -214,14 +214,14 @@ refreshTokenHandler (Just cookies) = do
       $ DbOps.interpretDatabaseIO $
         DbOps.refreshAuthTokens
           (getRefreshToken (encodeUtf8 cookies))
-          dbPool
-          (hakaSessionExpiry ss)
+          (pool ctx)
+          (hakaSessionExpiry $ srvSettings ctx)
 
   tknData <- either Err.logError pure res
 
-  let cookie = mkRefreshTokenCookie tknData (hakaApiPrefix ss)
-
-  return $ addHeader cookie $ mkLoginResponse tknData now
+  return $
+    addHeader (mkRefreshTokenCookie tknData (hakaApiPrefix $ srvSettings ctx)) $
+      mkLoginResponse tknData now
 
 logoutHandler :: Maybe ApiToken -> Maybe Text -> AppM NoContent
 logoutHandler Nothing _ = throw Err.missingAuthError
