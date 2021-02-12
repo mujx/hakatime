@@ -129,6 +129,8 @@ data DatabaseException
   | OperationException Text
   deriving (Show)
 
+instance Exception DatabaseException
+
 -- | Convert a database exception to a serializable error message.
 toJSONError :: DatabaseException -> ServerError
 toJSONError UnknownApiToken = invalidTokenError

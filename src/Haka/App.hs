@@ -15,7 +15,7 @@ module Haka.App
   )
 where
 
-import Control.Exception.Safe (MonadThrow, throw)
+import Control.Exception.Safe (MonadCatch, MonadThrow, throw)
 import qualified Haka.Logger as Log
 import qualified Hasql.Pool as HqPool
 import Katip as K
@@ -42,6 +42,7 @@ newtype AppT m a = AppT
       Monad,
       MonadIO,
       MonadThrow,
+      MonadCatch,
       MonadReader AppCtx
     )
 

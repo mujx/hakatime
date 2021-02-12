@@ -9,7 +9,7 @@ module Haka.Import
 where
 
 import Control.Concurrent (threadDelay)
-import Control.Exception.Safe (bracket, throw)
+import Control.Exception.Safe (bracket, throw, try)
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Char8 as Bs
 import Data.Time.Clock (UTCTime (..))
@@ -29,9 +29,6 @@ import Katip
 import qualified Network.HTTP.Client as HttpClient
 import Network.HTTP.Req ((/:), (=:))
 import qualified Network.HTTP.Req as R
-import Polysemy (runM)
-import Polysemy.Error (runError)
-import Polysemy.IO (embedToMonadIO)
 import qualified Relude.Unsafe as Unsafe
 import Servant
 
@@ -220,12 +217,7 @@ process item = do
 
         pool' <- asks pool
 
-        res <-
-          runM
-            . embedToMonadIO
-            . runError
-            $ DbOps.interpretDatabaseIO $
-              DbOps.importHeartbeats pool' (requester item) heartbeats
+        res <- try $ liftIO $ DbOps.importHeartbeats pool' (requester item) heartbeats
 
         either Err.logError pure res
     )
@@ -346,12 +338,7 @@ checkRequestStatusHandler Nothing _ = throw Err.missingAuthError
 checkRequestStatusHandler (Just token) payload = do
   p <- asks pool
 
-  res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
-        DbOps.getUserByToken p token
+  res <- try $ liftIO $ DbOps.getUserByToken p token
 
   user <- either Err.logError pure res
 
@@ -364,12 +351,7 @@ checkRequestStatusHandler (Just token) payload = do
               reqPayload = payload
             }
 
-  statusResult <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
-        DbOps.getJobStatus p item
+  statusResult <- try $ liftIO $ DbOps.getJobStatus p item
 
   statusMaybe <- either Err.logError pure statusResult
 
@@ -384,12 +366,7 @@ importRequestHandler Nothing _ = throw Err.missingAuthError
 importRequestHandler (Just token) payload = do
   p <- asks pool
 
-  userResult <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
-        DbOps.getUserByToken p token
+  userResult <- try $ liftIO $ DbOps.getUserByToken p token
 
   user <- either Err.logError pure userResult
 
@@ -403,12 +380,7 @@ importRequestHandler (Just token) payload = do
             }
 
   -- Delete previous failed jobs with the same parameters.
-  affectedRows <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
-        DbOps.deleteFailedJobs p item
+  affectedRows <- try $ liftIO $ DbOps.deleteFailedJobs p item
 
   _ <- either Err.logError pure affectedRows
 

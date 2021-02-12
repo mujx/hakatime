@@ -7,7 +7,7 @@ module Haka.Users
   )
 where
 
-import Control.Exception.Safe (throw)
+import Control.Exception.Safe (throw, try)
 import Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
 import Data.Maybe (fromJust)
 import Haka.AesonHelpers (noPrefixOptions)
@@ -15,9 +15,6 @@ import Haka.App (AppCtx (..), AppM)
 import qualified Haka.DatabaseOperations as DbOps
 import qualified Haka.Errors as Err
 import Haka.Utils (getRefreshToken)
-import Polysemy (runM)
-import Polysemy.Error (runError)
-import Polysemy.IO (embedToMonadIO)
 import Servant
 
 type API = CurrentUser
@@ -76,12 +73,7 @@ server (Just cookies) = do
 
   when (isNothing refreshTkn) (throw Err.missingRefreshTokenCookie)
 
-  res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
-        DbOps.getUserByRefreshToken p (fromJust refreshTkn)
+  res <- try $ liftIO $ DbOps.getUserByRefreshToken p (fromJust refreshTkn)
 
   userM <- either Err.logError pure res
 

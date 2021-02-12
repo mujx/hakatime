@@ -6,7 +6,7 @@ module Haka.Badges
   )
 where
 
-import Control.Exception.Safe (throw)
+import Control.Exception.Safe (throw, try)
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.ByteString as Bs
 import qualified Data.UUID.Types as UUID
@@ -17,9 +17,6 @@ import Haka.Types (ApiToken (..), BadgeRow (..))
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Media ((//))
-import Polysemy (runM)
-import Polysemy.Error (runError)
-import Polysemy.IO (embedToMonadIO)
 import qualified Relude.Unsafe as Unsafe
 import Servant
 import Text.Printf (printf)
@@ -68,12 +65,7 @@ badgeLinkHandler _ Nothing = throw Err.missingAuthError
 badgeLinkHandler proj (Just tkn) = do
   p <- asks pool
   ss <- asks srvSettings
-  res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
-        DbOps.mkBadgeLink p proj tkn
+  res <- try $ liftIO $ DbOps.mkBadgeLink p proj tkn
 
   badgeId <- either Err.logError pure res
 
@@ -86,20 +78,13 @@ badgeSvgHandler :: UUID.UUID -> Maybe Int64 -> AppM Bs.ByteString
 badgeSvgHandler badgeId daysParam = do
   p <- asks pool
 
-  badgeInfoResult <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
-        DbOps.getBadgeLinkInfo p badgeId
+  badgeInfoResult <- try $ liftIO $ DbOps.getBadgeLinkInfo p badgeId
 
   badgeRow <- either Err.logError pure badgeInfoResult
 
   timeResult <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
+    try $
+      liftIO $
         DbOps.getTotalActivityTime
           p
           (badgeUsername badgeRow)

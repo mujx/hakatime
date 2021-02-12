@@ -9,7 +9,7 @@ module Haka.Authentication
   )
 where
 
-import Control.Exception.Safe (throw)
+import Control.Exception.Safe (throw, try)
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.ByteString.Char8 as Bs
 import Data.Time (addUTCTime)
@@ -24,9 +24,6 @@ import Haka.Types
   )
 import Haka.Utils (getRefreshToken)
 import Katip
-import Polysemy (runM)
-import Polysemy.Error (runError)
-import Polysemy.IO (embedToMonadIO)
 import qualified Relude.Unsafe as Unsafe
 import Servant
 import Web.Cookie
@@ -120,11 +117,7 @@ getStoredApiTokensHandler :: Maybe ApiToken -> AppM [StoredApiToken]
 getStoredApiTokensHandler Nothing = throw Err.missingAuthError
 getStoredApiTokensHandler (Just tkn) = do
   dbPool <- asks pool
-  res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $ DbOps.getApiTokens dbPool tkn
+  res <- try $ liftIO $ DbOps.getApiTokens dbPool tkn
 
   either Err.logError pure res
 
@@ -157,10 +150,8 @@ loginHandler creds = do
   $(logTM) InfoS ("login for user " <> showLS (username creds))
 
   res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
+    try $
+      liftIO $
         DbOps.createAuthTokens
           (username creds)
           (password creds)
@@ -183,10 +174,8 @@ registerHandler EnabledRegistration creds =
     $(logTM) InfoS ("registering user " <> showLS (username creds))
 
     res <-
-      runM
-        . embedToMonadIO
-        . runError
-        $ DbOps.interpretDatabaseIO $
+      try $
+        liftIO $
           DbOps.registerUser
             (pool ctx)
             (username creds)
@@ -208,10 +197,8 @@ refreshTokenHandler (Just cookies) = do
   $(logTM) DebugS "refresh token request"
 
   res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
+    try $
+      liftIO $
         DbOps.refreshAuthTokens
           (getRefreshToken (encodeUtf8 cookies))
           (pool ctx)
@@ -229,12 +216,7 @@ logoutHandler _ Nothing = throw Err.missingRefreshTokenCookie
 logoutHandler (Just tkn) (Just cookies) =
   do
     dbPool <- asks pool
-    res <-
-      runM
-        . embedToMonadIO
-        . runError
-        $ DbOps.interpretDatabaseIO $
-          DbOps.clearTokens tkn (getRefreshToken (encodeUtf8 cookies)) dbPool
+    res <- try $ liftIO $ DbOps.clearTokens tkn (getRefreshToken (encodeUtf8 cookies)) dbPool
 
     _ <- either Err.logError pure res
 
@@ -245,12 +227,7 @@ createAPITokenHandler Nothing = throw Err.missingAuthError
 createAPITokenHandler (Just tkn) =
   do
     dbPool <- asks pool
-    res <-
-      runM
-        . embedToMonadIO
-        . runError
-        $ DbOps.interpretDatabaseIO $
-          DbOps.createNewApiToken dbPool tkn
+    res <- try $ liftIO $ DbOps.createNewApiToken dbPool tkn
 
     t <- either Err.logError pure res
 
@@ -260,11 +237,7 @@ deleteTokenHandler :: Text -> Maybe ApiToken -> AppM NoContent
 deleteTokenHandler _ Nothing = throw Err.missingAuthError
 deleteTokenHandler tokenId (Just tkn) = do
   dbPool <- asks pool
-  res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $ DbOps.deleteApiToken dbPool tkn tokenId
+  res <- try $ liftIO $ DbOps.deleteApiToken dbPool tkn tokenId
 
   _ <- either Err.logError pure res
 

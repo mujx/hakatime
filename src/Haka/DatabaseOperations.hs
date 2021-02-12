@@ -1,12 +1,9 @@
 {-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Haka.DatabaseOperations
   ( processHeartbeatRequest,
     importHeartbeats,
     deleteFailedJobs,
-    interpretDatabaseIO,
     getUserByRefreshToken,
     getUserByToken,
     getBadgeLinkInfo,
@@ -27,6 +24,7 @@ module Haka.DatabaseOperations
   )
 where
 
+import Control.Exception.Safe (MonadThrow, throw)
 import Data.Aeson as A
 import Data.Time.Clock (UTCTime)
 import qualified Haka.Db.Sessions as Sessions
@@ -44,53 +42,144 @@ import Haka.Types
   )
 import qualified Haka.Utils as Utils
 import qualified Hasql.Pool as HqPool
-import Polysemy
-import Polysemy.Error
 import PostgreSQL.Binary.Data (UUID)
 
 data OperationError = UsageError | Text
   deriving (Show)
 
--- Effect model
-data Database m a where
+class (Monad m, MonadThrow m) => Db m where
   -- | Given an Api token return the user that it belongs to.
-  GetUser :: HqPool.Pool -> ApiToken -> Database m (Maybe Text)
+  getUser :: HqPool.Pool -> ApiToken -> m (Maybe Text)
+
   -- | Given a refresh token return the user that it belongs to.
-  GetUserByRefreshToken :: HqPool.Pool -> Text -> Database m (Maybe Text)
+  getUserByRefreshToken :: HqPool.Pool -> Text -> m (Maybe Text)
+
   -- | Check if the credentials are valid.
-  ValidateCredentials :: HqPool.Pool -> Text -> Text -> Database m (Maybe Text)
-  -- | Store the given heartbeats in the database and return their IDs.
-  SaveHeartbeats :: HqPool.Pool -> [HeartbeatPayload] -> Database m [Int64]
+  validateCredentials :: HqPool.Pool -> Text -> Text -> m (Maybe Text)
+
+  -- | Store the given heartbeats in the Db and return their IDs.
+  saveHeartbeats :: HqPool.Pool -> [HeartbeatPayload] -> m [Int64]
+
   -- | Retrieve a list of statistics within the given time range.
-  GetTotalStats :: HqPool.Pool -> Text -> (UTCTime, UTCTime) -> Int64 -> Database m [StatRow]
+  getTotalStats :: HqPool.Pool -> Text -> (UTCTime, UTCTime) -> Int64 -> m [StatRow]
+
   -- | Retrieve the activity timeline for a period of time.
-  GetTimelineStats :: HqPool.Pool -> Text -> (UTCTime, UTCTime) -> Int64 -> Database m [TimelineRow]
+  getTimelineStats :: HqPool.Pool -> Text -> (UTCTime, UTCTime) -> Int64 -> m [TimelineRow]
+
   -- | Retrieve a list of statistics within the given time range.
-  GetProjectStats :: HqPool.Pool -> Text -> Text -> (UTCTime, UTCTime) -> Int64 -> Database m [ProjectStatRow]
+  getProjectStats :: HqPool.Pool -> Text -> Text -> (UTCTime, UTCTime) -> Int64 -> m [ProjectStatRow]
+
   -- | Create a pair of an access token a refresh token for use on web interface.
-  CreateWebToken :: HqPool.Pool -> Text -> Int64 -> Database m TokenData
+  createWebToken :: HqPool.Pool -> Text -> Int64 -> m TokenData
+
   -- | Register a new user.
-  RegisterUser :: HqPool.Pool -> Text -> Text -> Int64 -> Database m TokenData
-  -- | Delete the given auth and refresh tokens from the database.
-  DeleteTokens :: HqPool.Pool -> ApiToken -> Text -> Database m Int64
+  registerUser :: HqPool.Pool -> Text -> Text -> Int64 -> m TokenData
+
+  -- | Delete the given auth and refresh tokens from the Db.
+  deleteTokens :: HqPool.Pool -> ApiToken -> Text -> m Int64
+
   -- | Create a new API token that can be used on the client (no expiry date).
-  CreateAPIToken :: HqPool.Pool -> Text -> Database m Text
+  createAPIToken :: HqPool.Pool -> Text -> m Text
+
   -- | Return a list of active API tokens.
-  ListApiTokens :: HqPool.Pool -> Text -> Database m [StoredApiToken]
+  listApiTokens :: HqPool.Pool -> Text -> m [StoredApiToken]
+
   -- | Delete an API token.
-  DeleteToken :: HqPool.Pool -> ApiToken -> Database m ()
+  deleteToken :: HqPool.Pool -> ApiToken -> m ()
+
   -- | Update the last used timestamp for the token.
-  UpdateTokenUsage :: HqPool.Pool -> ApiToken -> Database m ()
+  updateTokenUsage :: HqPool.Pool -> ApiToken -> m ()
+
   -- | Get the total number of seconds spent on a given user/project combination.
-  GetTotalActivityTime :: HqPool.Pool -> Text -> Int64 -> Text -> Database m (Maybe Int64)
+  getTotalActivityTime :: HqPool.Pool -> Text -> Int64 -> Text -> m (Maybe Int64)
+
   -- | Create a unique badge link for the user/project combination.
-  CreateBadgeLink :: HqPool.Pool -> Text -> Text -> Database m UUID
+  createBadgeLink :: HqPool.Pool -> Text -> Text -> m UUID
+
   -- | Find the user/project combination from the badge id.
-  GetBadgeLinkInfo :: HqPool.Pool -> UUID -> Database m BadgeRow
+  getBadgeLinkInfo :: HqPool.Pool -> UUID -> m BadgeRow
+
   -- | Get the status of a queue item.
-  GetJobStatus :: HqPool.Pool -> A.Value -> Database m (Maybe Text)
+  getJobStatus :: HqPool.Pool -> A.Value -> m (Maybe Text)
+
   -- | Delete stale failed jobs.
-  DeleteFailedJobs :: HqPool.Pool -> A.Value -> Database m Int64
+  deleteFailedJobs :: HqPool.Pool -> A.Value -> m Int64
+
+instance Db IO where
+  getUser pool token = do
+    res <- HqPool.use pool (Sessions.getUser token)
+    either (throw . SessionException) pure res
+  getUserByRefreshToken pool token = do
+    res <- HqPool.use pool (Sessions.getUserByRefreshToken token)
+    either (throw . SessionException) pure res
+  validateCredentials pool user passwd = do
+    res <- HqPool.use pool (Sessions.validateUser PUtils.validatePassword user passwd)
+    either
+      (throw . SessionException)
+      ( \isValid -> if isValid then pure $ Just user else pure Nothing
+      )
+      res
+  saveHeartbeats pool heartbeats = do
+    res <- HqPool.use pool (Sessions.saveHeartbeats heartbeats)
+    either (throw . SessionException) pure res
+  getTotalStats pool user trange cutOffLimit = do
+    res <- HqPool.use pool (Sessions.getTotalStats user trange cutOffLimit)
+    either (throw . SessionException) pure res
+  getTimelineStats pool user trange cutOffLimit = do
+    res <- HqPool.use pool (Sessions.getTimeline user trange cutOffLimit)
+    either (throw . SessionException) pure res
+  getProjectStats pool user proj trange cutOffLimit = do
+    res <- HqPool.use pool (Sessions.getProjectStats user proj trange cutOffLimit)
+    either (throw . SessionException) pure res
+  deleteTokens pool token refreshToken = do
+    res <- HqPool.use pool (Sessions.deleteTokens token refreshToken)
+    either (throw . SessionException) pure res
+  createAPIToken pool user = do
+    res <- HqPool.use pool (Sessions.createAPIToken user)
+    either (throw . SessionException) pure res
+  createWebToken pool user expiry = do
+    tknData <- mkTokenData user
+    res <- HqPool.use pool (Sessions.createAccessTokens expiry tknData)
+    whenLeft tknData res (throw . SessionException)
+  registerUser pool user passwd expiry = do
+    tknData <- mkTokenData user
+    hashUser <- PUtils.mkUser user passwd
+    case hashUser of
+      Left err -> throw $ RegistrationFailed (show err)
+      Right hashUser' -> do
+        u <- PUtils.createUser pool hashUser'
+        case u of
+          Left e -> throw $ OperationException (Utils.toStrError e)
+          Right userCreated ->
+            if userCreated
+              then do
+                res <- HqPool.use pool (Sessions.createAccessTokens expiry tknData)
+                whenLeft tknData res (throw . SessionException)
+              else throw $ UsernameExists "Username already exists"
+  listApiTokens pool user = do
+    res <- HqPool.use pool (Sessions.listApiTokens user)
+    either (throw . SessionException) pure res
+  deleteToken pool tkn = do
+    res <- HqPool.use pool (Sessions.deleteToken tkn)
+    either (throw . SessionException) pure res
+  updateTokenUsage pool (ApiToken tkn) = do
+    res <- HqPool.use pool (Sessions.updateTokenUsage tkn)
+    either (throw . SessionException) pure res
+  getTotalActivityTime pool user days proj = do
+    res <- HqPool.use pool (Sessions.getTotalActivityTime user days proj)
+    either (throw . SessionException) pure res
+  createBadgeLink pool user proj = do
+    res <- HqPool.use pool (Sessions.createBadgeLink user proj)
+    either (throw . SessionException) pure res
+  getBadgeLinkInfo pool badgeId = do
+    res <- HqPool.use pool (Sessions.getBadgeLinkInfo badgeId)
+    either (throw . SessionException) pure res
+  getJobStatus pool payload = do
+    res <- HqPool.use pool (Sessions.getJobStatus payload)
+    either (throw . SessionException) pure res
+  deleteFailedJobs pool payload = do
+    res <- HqPool.use pool (Sessions.deleteFailedJobs payload)
+    either (throw . SessionException) pure res
 
 mkTokenData :: Text -> IO TokenData
 mkTokenData user = do
@@ -103,100 +192,7 @@ mkTokenData user = do
         tknRefreshToken = refreshToken
       }
 
-interpretDatabaseIO ::
-  ( Member (Embed IO) r,
-    Member (Error DatabaseException) r
-  ) =>
-  Sem (Database : r) a ->
-  Sem r a
-interpretDatabaseIO =
-  interpret $ \case
-    GetUser pool token -> do
-      res <- liftIO $ HqPool.use pool (Sessions.getUser token)
-      either (throw . SessionException) pure res
-    GetUserByRefreshToken pool token -> do
-      res <- liftIO $ HqPool.use pool (Sessions.getUserByRefreshToken token)
-      either (throw . SessionException) pure res
-    ValidateCredentials pool user passwd -> do
-      res <- liftIO $ HqPool.use pool (Sessions.validateUser PUtils.validatePassword user passwd)
-      either
-        (throw . SessionException)
-        ( \isValid -> if isValid then pure $ Just user else pure Nothing
-        )
-        res
-    SaveHeartbeats pool heartbeats -> do
-      res <- liftIO $ HqPool.use pool (Sessions.saveHeartbeats heartbeats)
-      either (throw . SessionException) pure res
-    GetTotalStats pool user trange cutOffLimit -> do
-      res <- liftIO $ HqPool.use pool (Sessions.getTotalStats user trange cutOffLimit)
-      either (throw . SessionException) pure res
-    GetTimelineStats pool user trange cutOffLimit -> do
-      res <- liftIO $ HqPool.use pool (Sessions.getTimeline user trange cutOffLimit)
-      either (throw . SessionException) pure res
-    GetProjectStats pool user proj trange cutOffLimit -> do
-      res <- liftIO $ HqPool.use pool (Sessions.getProjectStats user proj trange cutOffLimit)
-      either (throw . SessionException) pure res
-    DeleteTokens pool token refreshToken -> do
-      res <- liftIO $ HqPool.use pool (Sessions.deleteTokens token refreshToken)
-      either (throw . SessionException) pure res
-    CreateAPIToken pool user -> do
-      res <- liftIO $ HqPool.use pool (Sessions.createAPIToken user)
-      either (throw . SessionException) pure res
-    CreateWebToken pool user expiry -> do
-      tknData <- liftIO $ mkTokenData user
-      res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens expiry tknData)
-      whenLeft tknData res (throw . SessionException)
-    RegisterUser pool user passwd expiry -> do
-      tknData <- liftIO $ mkTokenData user
-      hashUser <- liftIO $ PUtils.mkUser user passwd
-      case hashUser of
-        Left err -> throw $ RegistrationFailed (show err)
-        Right hashUser' -> do
-          u <- liftIO $ PUtils.createUser pool hashUser'
-          case u of
-            Left e -> throw $ OperationException (Utils.toStrError e)
-            Right userCreated ->
-              if userCreated
-                then do
-                  res <- liftIO $ HqPool.use pool (Sessions.createAccessTokens expiry tknData)
-                  whenLeft tknData res (throw . SessionException)
-                else throw $ UsernameExists "Username already exists"
-    ListApiTokens pool user -> do
-      res <- liftIO $ HqPool.use pool (Sessions.listApiTokens user)
-      either (throw . SessionException) pure res
-    DeleteToken pool tkn -> do
-      res <- liftIO $ HqPool.use pool (Sessions.deleteToken tkn)
-      either (throw . SessionException) pure res
-    UpdateTokenUsage pool (ApiToken tkn) -> do
-      res <- liftIO $ HqPool.use pool (Sessions.updateTokenUsage tkn)
-      either (throw . SessionException) pure res
-    GetTotalActivityTime pool user days proj -> do
-      res <- liftIO $ HqPool.use pool (Sessions.getTotalActivityTime user days proj)
-      either (throw . SessionException) pure res
-    CreateBadgeLink pool user proj -> do
-      res <- liftIO $ HqPool.use pool (Sessions.createBadgeLink user proj)
-      either (throw . SessionException) pure res
-    GetBadgeLinkInfo pool badgeId -> do
-      res <- liftIO $ HqPool.use pool (Sessions.getBadgeLinkInfo badgeId)
-      either (throw . SessionException) pure res
-    GetJobStatus pool payload -> do
-      res <- liftIO $ HqPool.use pool (Sessions.getJobStatus payload)
-      either (throw . SessionException) pure res
-    DeleteFailedJobs pool payload -> do
-      res <- liftIO $ HqPool.use pool (Sessions.deleteFailedJobs payload)
-      either (throw . SessionException) pure res
-
-makeSem ''Database
-
-processHeartbeatRequest ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
-  HqPool.Pool ->
-  ApiToken ->
-  [HeartbeatPayload] ->
-  Sem r [Int64]
+processHeartbeatRequest :: Db m => HqPool.Pool -> ApiToken -> [HeartbeatPayload] -> m [Int64]
 processHeartbeatRequest pool token heartbeats = do
   retrievedUser <- getUser pool token
   case retrievedUser of
@@ -223,26 +219,17 @@ updateHeartbeats heartbeats name =
     (editorInfo heartbeats)
     heartbeats
 
-importHeartbeats ::
-  forall r.
-  (Member Database r) =>
-  HqPool.Pool ->
-  Text ->
-  [HeartbeatPayload] ->
-  Sem r [Int64]
+importHeartbeats :: Db m => HqPool.Pool -> Text -> [HeartbeatPayload] -> m [Int64]
 importHeartbeats pool username heartbeats = do
   saveHeartbeats pool (updateHeartbeats heartbeats username)
 
 generateStatistics ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
+  Db m =>
   HqPool.Pool ->
   ApiToken ->
   Int64 ->
   (UTCTime, UTCTime) ->
-  Sem r [StatRow]
+  m [StatRow]
 generateStatistics pool token timeLimit tmRange = do
   retrievedUser <- getUser pool token
   case retrievedUser of
@@ -250,15 +237,12 @@ generateStatistics pool token timeLimit tmRange = do
     Just username -> getTotalStats pool username tmRange timeLimit
 
 getTimeline ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
+  Db m =>
   HqPool.Pool ->
   ApiToken ->
   Int64 ->
   (UTCTime, UTCTime) ->
-  Sem r [TimelineRow]
+  m [TimelineRow]
 getTimeline pool token timeLimit tmRange = do
   retrievedUser <- getUser pool token
   case retrievedUser of
@@ -266,61 +250,34 @@ getTimeline pool token timeLimit tmRange = do
     Just username -> getTimelineStats pool username tmRange timeLimit
 
 genProjectStatistics ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
+  Db m =>
   HqPool.Pool ->
   ApiToken ->
   Text ->
   Int64 ->
   (UTCTime, UTCTime) ->
-  Sem r [ProjectStatRow]
+  m [ProjectStatRow]
 genProjectStatistics pool token proj timeLimit tmRange = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UnknownApiToken
     Just username -> getProjectStats pool username proj tmRange timeLimit
 
-createNewApiToken ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
-  HqPool.Pool ->
-  ApiToken ->
-  Sem r Text
+createNewApiToken :: Db m => HqPool.Pool -> ApiToken -> m Text
 createNewApiToken pool token = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UnknownApiToken
     Just username -> createAPIToken pool username
 
-createAuthTokens ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
-  Text ->
-  Text ->
-  HqPool.Pool ->
-  Int64 ->
-  Sem r TokenData
+createAuthTokens :: Db m => Text -> Text -> HqPool.Pool -> Int64 -> m TokenData
 createAuthTokens user passwd pool expiry = do
   res <- validateCredentials pool user passwd
   case res of
     Nothing -> throw InvalidCredentials
     Just u -> createWebToken pool u expiry
 
-refreshAuthTokens ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
-  Maybe Text ->
-  HqPool.Pool ->
-  Int64 ->
-  Sem r TokenData
+refreshAuthTokens :: Db m => Maybe Text -> HqPool.Pool -> Int64 -> m TokenData
 refreshAuthTokens Nothing _ _ = throw MissingRefreshTokenCookie
 refreshAuthTokens (Just refreshToken) pool expiry = do
   res <- getUserByRefreshToken pool refreshToken
@@ -328,15 +285,7 @@ refreshAuthTokens (Just refreshToken) pool expiry = do
     Nothing -> throw ExpiredToken
     Just u -> createWebToken pool u expiry
 
-clearTokens ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
-  ApiToken ->
-  Maybe Text ->
-  HqPool.Pool ->
-  Sem r ()
+clearTokens :: Db m => ApiToken -> Maybe Text -> HqPool.Pool -> m ()
 clearTokens _ Nothing _ = throw MissingRefreshTokenCookie
 clearTokens token (Just refreshToken) pool = do
   res <- deleteTokens pool token refreshToken
@@ -347,58 +296,28 @@ clearTokens token (Just refreshToken) pool = do
     2 -> pass
     _ -> throw (OperationException "failed to delete all the tokens while logout")
 
-getApiTokens ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
-  HqPool.Pool ->
-  ApiToken ->
-  Sem r [StoredApiToken]
+getApiTokens :: Db m => HqPool.Pool -> ApiToken -> m [StoredApiToken]
 getApiTokens pool token = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UnknownApiToken
     Just username -> listApiTokens pool username
 
-deleteApiToken ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
-  HqPool.Pool ->
-  ApiToken ->
-  Text ->
-  Sem r ()
+deleteApiToken :: Db m => HqPool.Pool -> ApiToken -> Text -> m ()
 deleteApiToken pool token tokenId = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UnknownApiToken
     Just _ -> deleteToken pool (ApiToken tokenId)
 
-mkBadgeLink ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
-  HqPool.Pool ->
-  Text ->
-  ApiToken ->
-  Sem r UUID
+mkBadgeLink :: Db m => HqPool.Pool -> Text -> ApiToken -> m UUID
 mkBadgeLink pool proj token = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UnknownApiToken
     Just user -> createBadgeLink pool user proj
 
-getUserByToken ::
-  forall r.
-  ( Member Database r,
-    Member (Error DatabaseException) r
-  ) =>
-  HqPool.Pool ->
-  ApiToken ->
-  Sem r Text
+getUserByToken :: Db m => HqPool.Pool -> ApiToken -> m Text
 getUserByToken pool token = do
   retrievedUser <- getUser pool token
   case retrievedUser of

@@ -7,7 +7,7 @@ module Haka.Projects
   )
 where
 
-import Control.Exception.Safe (throw)
+import Control.Exception.Safe (throw, try)
 import Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
@@ -20,9 +20,6 @@ import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), ProjectStatRow (..))
 import Haka.Utils (defaultLimit)
-import Polysemy (runM)
-import Polysemy.Error (runError)
-import Polysemy.IO (embedToMonadIO)
 import PostgreSQL.Binary.Data (Scientific)
 import qualified Relude.Unsafe as Unsafe
 import Servant
@@ -102,12 +99,8 @@ server project t0Param t1Param timeLimit (Just token) = do
         (Nothing, Just b) -> (removeAWeek b, b)
         (Just a, Nothing) -> (a, addAWeek a)
         (Just a, Just b) -> (max a (removeAYear b), b)
-  res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
-        DbOps.genProjectStatistics p token project (fromMaybe defaultLimit timeLimit) (t0, t1)
+
+  res <- try $ liftIO $ DbOps.genProjectStatistics p token project (fromMaybe defaultLimit timeLimit) (t0, t1)
 
   rows <- either Err.logError pure res
 

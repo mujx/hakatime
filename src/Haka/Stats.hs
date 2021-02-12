@@ -6,7 +6,7 @@ module Haka.Stats
   )
 where
 
-import Control.Exception.Safe (throw)
+import Control.Exception.Safe (throw, try)
 import Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
@@ -19,9 +19,6 @@ import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), StatRow (..), TimelineRow (..))
 import Haka.Utils (defaultLimit)
-import Polysemy (runM)
-import Polysemy.Error (runError)
-import Polysemy.IO (embedToMonadIO)
 import PostgreSQL.Binary.Data (Scientific)
 import qualified Relude.Unsafe as Unsafe
 import Servant
@@ -172,12 +169,7 @@ timelineStatsHandler _ _ _ Nothing = throw missingAuthError
 timelineStatsHandler t0Param t1Param timeLimit (Just token) = do
   p <- asks pool
   (t0, t1) <- liftIO $ defaultTimeRange t0Param t1Param
-  res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
-        DbOps.getTimeline p token (fromMaybe defaultLimit timeLimit) (t0, t1)
+  res <- try $ liftIO $ DbOps.getTimeline p token (fromMaybe defaultLimit timeLimit) (t0, t1)
 
   rows <- either Err.logError pure res
 
@@ -218,12 +210,7 @@ statsHandler _ _ _ Nothing = throw missingAuthError
 statsHandler t0Param t1Param timeLimit (Just token) = do
   p <- asks pool
   (t0, t1) <- liftIO $ defaultTimeRange t0Param t1Param
-  res <-
-    runM
-      . embedToMonadIO
-      . runError
-      $ DbOps.interpretDatabaseIO $
-        DbOps.generateStatistics p token (fromMaybe defaultLimit timeLimit) (t0, t1)
+  res <- try $ liftIO $ DbOps.generateStatistics p token (fromMaybe defaultLimit timeLimit) (t0, t1)
 
   rows <- either Err.logError pure res
 

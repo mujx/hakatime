@@ -9,7 +9,7 @@ module Haka.Heartbeats
   )
 where
 
-import Control.Exception.Safe (throw)
+import Control.Exception.Safe (throw, try)
 import Data.Aeson (ToJSON)
 import Data.Text (toUpper)
 import Data.Time.Calendar (Day)
@@ -22,9 +22,6 @@ import qualified Haka.Errors as Err
 import Haka.Types
 import Hasql.Pool (Pool)
 import Katip
-import Polysemy (runM)
-import Polysemy.Error (runError)
-import Polysemy.IO (embedToMonadIO)
 import qualified Relude.Unsafe as Unsafe
 import Servant
 
@@ -172,10 +169,6 @@ storeHeartbeats ::
 storeHeartbeats p token machineId heartbeats = do
   let updatedHeartbeats = map ((\beat -> beat {machine = machineId}) . addMissingLang) heartbeats
 
-  runM
-    . embedToMonadIO
-    . runError
-    $ DbOps.interpretDatabaseIO $
-      DbOps.processHeartbeatRequest p token updatedHeartbeats
+  try $ liftIO $ DbOps.processHeartbeatRequest p token updatedHeartbeats
 
 -- TODO: Discard timestamps from the future
