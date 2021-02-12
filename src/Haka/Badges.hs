@@ -11,7 +11,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.ByteString as Bs
 import qualified Data.UUID.Types as UUID
 import Haka.App (AppCtx (..), AppM, ServerSettings (..))
-import qualified Haka.DatabaseOperations as DbOps
+import qualified Haka.Database as Db
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), BadgeRow (..))
 import Network.HTTP.Client
@@ -65,7 +65,7 @@ badgeLinkHandler _ Nothing = throw Err.missingAuthError
 badgeLinkHandler proj (Just tkn) = do
   p <- asks pool
   ss <- asks srvSettings
-  res <- try $ liftIO $ DbOps.mkBadgeLink p proj tkn
+  res <- try $ liftIO $ Db.mkBadgeLink p proj tkn
 
   badgeId <- either Err.logError pure res
 
@@ -78,14 +78,14 @@ badgeSvgHandler :: UUID.UUID -> Maybe Int64 -> AppM Bs.ByteString
 badgeSvgHandler badgeId daysParam = do
   p <- asks pool
 
-  badgeInfoResult <- try $ liftIO $ DbOps.getBadgeLinkInfo p badgeId
+  badgeInfoResult <- try $ liftIO $ Db.getBadgeLinkInfo p badgeId
 
   badgeRow <- either Err.logError pure badgeInfoResult
 
   timeResult <-
     try $
       liftIO $
-        DbOps.getTotalActivityTime
+        Db.getTotalActivityTime
           p
           (badgeUsername badgeRow)
           (fromMaybe 7 daysParam)

@@ -16,7 +16,7 @@ import Data.Time.Calendar (Day)
 import Filesystem.Path (splitExtension)
 import Filesystem.Path.CurrentOS (fromText)
 import Haka.App (AppCtx (..), AppM)
-import qualified Haka.DatabaseOperations as DbOps
+import qualified Haka.Database as Db
 import Haka.Errors (HeartbeatApiResponse (..))
 import qualified Haka.Errors as Err
 import Haka.Types
@@ -135,7 +135,7 @@ multiHeartbeatHandler machineId (Just token) heartbeats = do
   mkResponse res
 
 -- | Construct an API Heartbeat response depending on the size of the response.
-mkResponse :: Either DbOps.DatabaseException [Int64] -> AppM HeartbeatApiResponse
+mkResponse :: Either Db.DatabaseException [Int64] -> AppM HeartbeatApiResponse
 mkResponse res = do
   values <- either Err.logError pure res
 
@@ -165,10 +165,10 @@ storeHeartbeats ::
   ApiToken ->
   Maybe Text ->
   [HeartbeatPayload] ->
-  AppM (Either DbOps.DatabaseException [Int64])
+  AppM (Either Db.DatabaseException [Int64])
 storeHeartbeats p token machineId heartbeats = do
   let updatedHeartbeats = map ((\beat -> beat {machine = machineId}) . addMissingLang) heartbeats
 
-  try $ liftIO $ DbOps.processHeartbeatRequest p token updatedHeartbeats
+  try $ liftIO $ Db.processHeartbeatRequest p token updatedHeartbeats
 
 -- TODO: Discard timestamps from the future

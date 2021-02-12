@@ -14,7 +14,7 @@ import Data.Time (addDays, diffDays, diffUTCTime)
 import Data.Time.Clock (UTCTime (..), getCurrentTime)
 import Haka.AesonHelpers (noPrefixOptions)
 import Haka.App (AppCtx (..), AppM)
-import qualified Haka.DatabaseOperations as DbOps
+import qualified Haka.Database as Db
 import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), StatRow (..), TimelineRow (..))
@@ -169,7 +169,7 @@ timelineStatsHandler _ _ _ Nothing = throw missingAuthError
 timelineStatsHandler t0Param t1Param timeLimit (Just token) = do
   p <- asks pool
   (t0, t1) <- liftIO $ defaultTimeRange t0Param t1Param
-  res <- try $ liftIO $ DbOps.getTimeline p token (fromMaybe defaultLimit timeLimit) (t0, t1)
+  res <- try $ liftIO $ Db.getTimeline p token (fromMaybe defaultLimit timeLimit) (t0, t1)
 
   rows <- either Err.logError pure res
 
@@ -210,7 +210,7 @@ statsHandler _ _ _ Nothing = throw missingAuthError
 statsHandler t0Param t1Param timeLimit (Just token) = do
   p <- asks pool
   (t0, t1) <- liftIO $ defaultTimeRange t0Param t1Param
-  res <- try $ liftIO $ DbOps.generateStatistics p token (fromMaybe defaultLimit timeLimit) (t0, t1)
+  res <- try $ liftIO $ Db.generateStatistics p token (fromMaybe defaultLimit timeLimit) (t0, t1)
 
   rows <- either Err.logError pure res
 

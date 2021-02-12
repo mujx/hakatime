@@ -15,7 +15,7 @@ import qualified Data.ByteString.Char8 as Bs
 import Data.Time (addUTCTime)
 import Data.Time.Clock (UTCTime (..), getCurrentTime)
 import Haka.App (AppCtx (..), AppM, RegistrationStatus (..), ServerSettings (..))
-import qualified Haka.DatabaseOperations as DbOps
+import qualified Haka.Database as Db
 import qualified Haka.Errors as Err
 import Haka.Types
   ( ApiToken,
@@ -117,7 +117,7 @@ getStoredApiTokensHandler :: Maybe ApiToken -> AppM [StoredApiToken]
 getStoredApiTokensHandler Nothing = throw Err.missingAuthError
 getStoredApiTokensHandler (Just tkn) = do
   dbPool <- asks pool
-  res <- try $ liftIO $ DbOps.getApiTokens dbPool tkn
+  res <- try $ liftIO $ Db.getApiTokens dbPool tkn
 
   either Err.logError pure res
 
@@ -152,7 +152,7 @@ loginHandler creds = do
   res <-
     try $
       liftIO $
-        DbOps.createAuthTokens
+        Db.createAuthTokens
           (username creds)
           (password creds)
           (pool ctx)
@@ -176,7 +176,7 @@ registerHandler EnabledRegistration creds =
     res <-
       try $
         liftIO $
-          DbOps.registerUser
+          Db.registerUser
             (pool ctx)
             (username creds)
             (password creds)
@@ -199,7 +199,7 @@ refreshTokenHandler (Just cookies) = do
   res <-
     try $
       liftIO $
-        DbOps.refreshAuthTokens
+        Db.refreshAuthTokens
           (getRefreshToken (encodeUtf8 cookies))
           (pool ctx)
           (hakaSessionExpiry $ srvSettings ctx)
@@ -216,7 +216,7 @@ logoutHandler _ Nothing = throw Err.missingRefreshTokenCookie
 logoutHandler (Just tkn) (Just cookies) =
   do
     dbPool <- asks pool
-    res <- try $ liftIO $ DbOps.clearTokens tkn (getRefreshToken (encodeUtf8 cookies)) dbPool
+    res <- try $ liftIO $ Db.clearTokens tkn (getRefreshToken (encodeUtf8 cookies)) dbPool
 
     _ <- either Err.logError pure res
 
@@ -227,7 +227,7 @@ createAPITokenHandler Nothing = throw Err.missingAuthError
 createAPITokenHandler (Just tkn) =
   do
     dbPool <- asks pool
-    res <- try $ liftIO $ DbOps.createNewApiToken dbPool tkn
+    res <- try $ liftIO $ Db.createNewApiToken dbPool tkn
 
     t <- either Err.logError pure res
 
@@ -237,7 +237,7 @@ deleteTokenHandler :: Text -> Maybe ApiToken -> AppM NoContent
 deleteTokenHandler _ Nothing = throw Err.missingAuthError
 deleteTokenHandler tokenId (Just tkn) = do
   dbPool <- asks pool
-  res <- try $ liftIO $ DbOps.deleteApiToken dbPool tkn tokenId
+  res <- try $ liftIO $ Db.deleteApiToken dbPool tkn tokenId
 
   _ <- either Err.logError pure res
 

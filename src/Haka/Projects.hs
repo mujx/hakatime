@@ -15,7 +15,7 @@ import Data.Time (addDays, diffDays)
 import Data.Time.Clock (UTCTime (..), getCurrentTime)
 import Haka.AesonHelpers (noPrefixOptions)
 import Haka.App (AppCtx (..), AppM)
-import qualified Haka.DatabaseOperations as DbOps
+import qualified Haka.Database as Db
 import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), ProjectStatRow (..))
@@ -100,7 +100,7 @@ server project t0Param t1Param timeLimit (Just token) = do
         (Just a, Nothing) -> (a, addAWeek a)
         (Just a, Just b) -> (max a (removeAYear b), b)
 
-  res <- try $ liftIO $ DbOps.genProjectStatistics p token project (fromMaybe defaultLimit timeLimit) (t0, t1)
+  res <- try $ liftIO $ Db.genProjectStatistics p token project (fromMaybe defaultLimit timeLimit) (t0, t1)
 
   rows <- either Err.logError pure res
 

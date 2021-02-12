@@ -12,7 +12,7 @@ import Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
 import Data.Maybe (fromJust)
 import Haka.AesonHelpers (noPrefixOptions)
 import Haka.App (AppCtx (..), AppM)
-import qualified Haka.DatabaseOperations as DbOps
+import qualified Haka.Database as Db
 import qualified Haka.Errors as Err
 import Haka.Utils (getRefreshToken)
 import Servant
@@ -73,10 +73,10 @@ server (Just cookies) = do
 
   when (isNothing refreshTkn) (throw Err.missingRefreshTokenCookie)
 
-  res <- try $ liftIO $ DbOps.getUserByRefreshToken p (fromJust refreshTkn)
+  res <- try $ liftIO $ Db.getUserByRefreshToken p (fromJust refreshTkn)
 
   userM <- either Err.logError pure res
 
   case userM of
-    Nothing -> throw Err.expiredToken
+    Nothing -> throw Err.expiredRefreshToken
     Just u -> return $ defaultUserStatus u

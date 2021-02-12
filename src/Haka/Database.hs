@@ -1,21 +1,16 @@
 {-# LANGUAGE BlockArguments #-}
 
-module Haka.DatabaseOperations
+module Haka.Database
   ( processHeartbeatRequest,
     importHeartbeats,
-    deleteFailedJobs,
-    getUserByRefreshToken,
+    Db (..),
     getUserByToken,
-    getBadgeLinkInfo,
-    getTotalActivityTime,
     mkBadgeLink,
     getApiTokens,
     deleteApiToken,
     genProjectStatistics,
     getTimeline,
-    registerUser,
     createNewApiToken,
-    getJobStatus,
     clearTokens,
     generateStatistics,
     DatabaseException (..),
@@ -155,7 +150,7 @@ instance Db IO where
               then do
                 res <- HqPool.use pool (Sessions.createAccessTokens expiry tknData)
                 whenLeft tknData res (throw . SessionException)
-              else throw $ UsernameExists "Username already exists"
+              else throw $ UsernameExists user
   listApiTokens pool user = do
     res <- HqPool.use pool (Sessions.listApiTokens user)
     either (throw . SessionException) pure res
@@ -282,7 +277,7 @@ refreshAuthTokens Nothing _ _ = throw MissingRefreshTokenCookie
 refreshAuthTokens (Just refreshToken) pool expiry = do
   res <- getUserByRefreshToken pool refreshToken
   case res of
-    Nothing -> throw ExpiredToken
+    Nothing -> throw ExpiredRefreshToken
     Just u -> createWebToken pool u expiry
 
 clearTokens :: Db m => ApiToken -> Maybe Text -> HqPool.Pool -> m ()

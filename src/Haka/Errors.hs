@@ -13,7 +13,7 @@ module Haka.Errors
     usernameExists,
     registerError,
     mkApiError,
-    expiredToken,
+    expiredRefreshToken,
     invalidCredentials,
   )
 where
@@ -21,7 +21,7 @@ where
 import Control.Exception.Safe (MonadThrow, throw)
 import Data.Aeson (FromJSON (..), ToJSON (..), encode, genericParseJSON, genericToJSON)
 import qualified Data.ByteString.Char8 as C
-import Data.CaseInsensitive (mk)
+import Data.CaseInsensitive (CI, mk)
 import Haka.AesonHelpers (noPrefixOptions, untagged)
 import Haka.Types (BulkHeartbeatData, HearbeatData)
 import qualified Hasql.Pool as HqPool
@@ -52,6 +52,7 @@ instance FromJSON ApiErrorData where
 mkApiError :: Text -> HeartbeatApiResponse
 mkApiError msg = ApiError $ ApiErrorData {apiError = msg}
 
+contentTypeHeader :: [(CI ByteString, ByteString)]
 contentTypeHeader = [(mk (C.pack "Content-Type"), C.pack "application/json;charset=utf-8")]
 
 missingAuthError :: ServerError
@@ -75,8 +76,8 @@ invalidTokenError =
       errHeaders = contentTypeHeader
     }
 
-expiredToken :: ServerError
-expiredToken =
+expiredRefreshToken :: ServerError
+expiredRefreshToken =
   err403
     { errBody = encode $ mkApiError "The given api token has expired",
       errHeaders = contentTypeHeader
@@ -89,10 +90,10 @@ disabledRegistration =
       errHeaders = contentTypeHeader
     }
 
-usernameExists :: ServerError
-usernameExists =
+usernameExists :: Text -> ServerError
+usernameExists u =
   err409
-    { errBody = encode $ mkApiError "The username already exists",
+    { errBody = encode $ mkApiError $ "The username " <> u <> " already exists",
       errHeaders = contentTypeHeader
     }
 
@@ -123,7 +124,7 @@ data DatabaseException
   | UnknownApiToken
   | InvalidCredentials
   | MissingRefreshTokenCookie
-  | ExpiredToken
+  | ExpiredRefreshToken
   | UsernameExists Text
   | RegistrationFailed Text
   | OperationException Text
@@ -134,15 +135,27 @@ instance Exception DatabaseException
 -- | Convert a database exception to a serializable error message.
 toJSONError :: DatabaseException -> ServerError
 toJSONError UnknownApiToken = invalidTokenError
-toJSONError ExpiredToken = expiredToken
+toJSONError ExpiredRefreshToken = expiredRefreshToken
 toJSONError InvalidCredentials = invalidCredentials
 toJSONError (SessionException e) = genericError (show e :: Text)
 toJSONError (OperationException e) = genericError e
-toJSONError (UsernameExists _) = usernameExists
+toJSONError (UsernameExists u) = usernameExists u
 toJSONError (RegistrationFailed _) = registerError
 toJSONError MissingRefreshTokenCookie = missingRefreshTokenCookie
 
 logError :: (KatipContext m, MonadThrow m) => DatabaseException -> m b
+logError e@MissingRefreshTokenCookie = do
+  $(logTM) WarningS (logStr ("Missing refresh_token cookie from auth call" :: String))
+  throw $ toJSONError e
+logError e@(UsernameExists u) = do
+  $(logTM) WarningS (logStr ("Registration attempt for existing username: " <> u))
+  throw $ toJSONError e
+logError e@UnknownApiToken = do
+  $(logTM) WarningS (logStr ("Failed to identify a user with the given token" :: String))
+  throw $ toJSONError e
+logError e@ExpiredRefreshToken = do
+  $(logTM) WarningS (logStr ("The given refresh token expired" :: String))
+  throw $ toJSONError e
 logError e = do
   $(logTM) ErrorS (logStr (show e :: String))
   throw $ toJSONError e

@@ -16,7 +16,7 @@ import Data.Time.Clock (UTCTime (..))
 import Haka.AesonHelpers (noPrefixOptions)
 import Haka.App (AppCtx (..), AppM, runAppT)
 import qualified Haka.Cli as Cli
-import qualified Haka.DatabaseOperations as DbOps
+import qualified Haka.Database as Db
 import qualified Haka.Errors as Err
 import qualified Haka.Logger as Log
 import Haka.Types (ApiToken, EntityType (..), HeartbeatPayload (..))
@@ -217,7 +217,7 @@ process item = do
 
         pool' <- asks pool
 
-        res <- try $ liftIO $ DbOps.importHeartbeats pool' (requester item) heartbeats
+        res <- try $ liftIO $ Db.importHeartbeats pool' (requester item) heartbeats
 
         either Err.logError pure res
     )
@@ -338,7 +338,7 @@ checkRequestStatusHandler Nothing _ = throw Err.missingAuthError
 checkRequestStatusHandler (Just token) payload = do
   p <- asks pool
 
-  res <- try $ liftIO $ DbOps.getUserByToken p token
+  res <- try $ liftIO $ Db.getUserByToken p token
 
   user <- either Err.logError pure res
 
@@ -351,7 +351,7 @@ checkRequestStatusHandler (Just token) payload = do
               reqPayload = payload
             }
 
-  statusResult <- try $ liftIO $ DbOps.getJobStatus p item
+  statusResult <- try $ liftIO $ Db.getJobStatus p item
 
   statusMaybe <- either Err.logError pure statusResult
 
@@ -366,7 +366,7 @@ importRequestHandler Nothing _ = throw Err.missingAuthError
 importRequestHandler (Just token) payload = do
   p <- asks pool
 
-  userResult <- try $ liftIO $ DbOps.getUserByToken p token
+  userResult <- try $ liftIO $ Db.getUserByToken p token
 
   user <- either Err.logError pure userResult
 
@@ -380,7 +380,7 @@ importRequestHandler (Just token) payload = do
             }
 
   -- Delete previous failed jobs with the same parameters.
-  affectedRows <- try $ liftIO $ DbOps.deleteFailedJobs p item
+  affectedRows <- try $ liftIO $ Db.deleteFailedJobs p item
 
   _ <- either Err.logError pure affectedRows
 
