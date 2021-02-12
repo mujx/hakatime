@@ -8,6 +8,8 @@ where
 
 import Data.Bits.Extras (w16)
 import Data.Version (showVersion)
+import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple.Migration
 import qualified Haka.PasswordUtils as PasswordUtils
 import qualified Haka.Utils as Utils
 import qualified Hasql.Connection as HasqlConn
@@ -45,10 +47,17 @@ createUser =
     <$> Opt.strOption
       (Opt.long "username" <> Opt.short 'u' <> Opt.help "The user to create")
 
+migrations :: Opt.Parser ServerCommand
+migrations =
+  RunMigrations
+    <$> Opt.strOption
+      (Opt.long "dir" <> Opt.short 'd' <> Opt.help "The directory with the migration files")
+
 data ServerCommand
   = Run
   | CreateToken TokenOpts
   | CreateUser UserOpts
+  | RunMigrations FilePath
   deriving (Eq, Show)
 
 serverCommands :: Opt.Parser ServerCommand
@@ -60,6 +69,9 @@ serverCommands =
         <> Opt.command
           "create-user"
           (Opt.info createUser (Opt.progDesc "Create a new user account"))
+        <> Opt.command
+          "run-migrations"
+          (Opt.info migrations (Opt.progDesc "Apply pending database migrations"))
         <> Opt.command
           "run"
           (Opt.info runCmd (Opt.progDesc "Start the server"))
@@ -121,3 +133,27 @@ handleCommand (CreateUser ops) _ = do
     username = cUsername ops
     handleError :: HasqlPool.UsageError -> IO ()
     handleError = die . toString . Utils.toStrError
+handleCommand (RunMigrations dir) _ = do
+  putStrLn ("Running migrations from files found in " <> dir)
+  settings <- getDbSettings
+  conn <- connectPostgreSQL settings
+
+  -- Initialize the database with the migration schema.
+  initRes <-
+    withTransaction conn $
+      runMigration $
+        MigrationContext MigrationInitialization True conn
+
+  case initRes of
+    MigrationError e -> die e
+    MigrationSuccess -> putStrLn "Migrations schema initialized"
+
+  -- Apply the migration files.
+  res <-
+    withTransaction conn $
+      runMigration $
+        MigrationContext (MigrationDirectory dir) True conn
+
+  case res of
+    MigrationError e -> die e
+    MigrationSuccess -> putStrLn "Migrations applied succesfully"

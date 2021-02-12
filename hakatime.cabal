@@ -90,10 +90,10 @@ library libhaka
                      , hasql                == 1.4.*
                      , hasql-pool           == 0.5.*
                      , hasql-queue          == 1.2.*
+                     , hasql-transaction    == 1.0.*
                      , http-media
                      , http-client
                      , http-client-tls
-                     , hasql-transaction    == 1.0.*
                      , uuid-types
                      , katip                == 0.8.*
                      , mr-env               == 0.1.*
@@ -118,6 +118,8 @@ library libhaka
                      , http-types
                      , blaze-builder
                      , relude               >= 0.6.0.0
+                     , postgresql-simple
+                     , postgresql-simple-migration
 
   ghc-options:         -Wall
                        -Wcompat

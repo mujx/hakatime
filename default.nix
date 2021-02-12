@@ -3,11 +3,11 @@
 , cookie, cryptonite, fakedata, file-embed, hasql, hasql-pool
 , hasql-queue, hasql-transaction, http-client, http-client-tls
 , http-media, http-types, katip, mr-env, optparse-applicative
-, polysemy, polysemy-plugin, postgresql-binary, random
-, raw-strings-qq, relude, req, safe, safe-exceptions, servant
-, servant-client, servant-server, stdenv, system-filepath, text
-, time, unix, unliftio-core, uuid, uuid-types, wai, wai-cors
-, wai-extra, wai-logger, warp
+, polysemy, polysemy-plugin, postgresql-binary, postgresql-simple
+, postgresql-simple-migration, random, raw-strings-qq, relude, req
+, safe, safe-exceptions, servant, servant-client, servant-server
+, stdenv, system-filepath, text, time, unix, unliftio-core, uuid
+, uuid-types, wai, wai-cors, wai-extra, wai-logger, warp
 }:
 mkDerivation {
   pname = "hakatime";
@@ -21,9 +21,9 @@ mkDerivation {
     file-embed hasql hasql-pool hasql-queue hasql-transaction
     http-client http-client-tls http-media http-types katip mr-env
     optparse-applicative polysemy polysemy-plugin postgresql-binary
-    raw-strings-qq relude req safe safe-exceptions servant
-    servant-server system-filepath text time unix unliftio-core uuid
-    uuid-types wai wai-extra
+    postgresql-simple postgresql-simple-migration raw-strings-qq relude
+    req safe safe-exceptions servant servant-server system-filepath
+    text time unix unliftio-core uuid uuid-types wai wai-extra
   ];
   executableHaskellDepends = [
     aeson base base64-bytestring fakedata hasql hasql-pool hasql-queue

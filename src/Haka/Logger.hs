@@ -14,7 +14,6 @@ where
 
 import Data.Text.Internal.Builder
 import Katip
-import Katip.Core (locationToString)
 import Katip.Format.Time (formatAsIso8601)
 import Katip.Scribes.Handle
 import qualified Network.Wai as Wai
@@ -66,8 +65,6 @@ pairFormat withColor _ Item {..} =
   pair "ts" nowStr
     <> pair "level" (renderSeverity' _itemSeverity)
     <> pair "host" (toText _itemHost)
-    <> pair "thread_id" (getThreadIdText _itemThread)
-    <> maybe mempty (pair "loc" . toText . locationToString) _itemLoc
     <> pair "msg" (toStrict $ toLazyText $ unLogStr _itemMessage)
   where
     nowStr = formatAsIso8601 _itemTime

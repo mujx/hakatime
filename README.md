@@ -190,6 +190,7 @@ Available options:
 Available commands:
   create-token             Create a new auth token
   create-user              Create a new user account
+  run-migrations           Apply pending database migrations
   run                      Start the Server
 ```
 
