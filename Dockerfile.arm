@@ -12,9 +12,12 @@ RUN yarn install && yarn run prod
 #
 # Build the server.
 #
-FROM mujx/hakatime-arm-deps:latest as server-builder
+FROM debian:stretch-slim as server-builder
 
 WORKDIR /build
+
+RUN apt-get update -y -qq && \
+    apt-get install -y ghc cabal-install libffi-dev libgmp-dev libncurses-dev libpq-dev zlib1g-dev llvm
 
 COPY UNLICENSE      ./
 COPY app/           ./app
@@ -26,24 +29,29 @@ COPY sql/           ./sql
 COPY test/          ./test
 COPY tools/         ./tools
 
-RUN cabal build -j1 exe:hakatime && mkdir -p /app/bin && \
+RUN cabal update
+RUN cabal build -j2 --dependencies-only exe:hakatime
+
+WORKDIR /build
+
+RUN cabal build -j2 exe:hakatime && mkdir -p /app/bin && \
     cp /build/dist-newstyle/build/*-linux/ghc-*/hakatime-*/x/hakatime/opt/build/hakatime/hakatime /app/bin/hakatime
 
-FROM debian:testing-slim
+FROM debian:stretch-slim
 
 RUN apt-get update -y -qq && \
-    apt-get install -y libffi-dev libgmp-dev libncurses-dev libpq-dev zlib1g-dev && \
+    apt-get install -y libffi-dev libgmp-dev libncurses-dev libpq-dev zlib1g-dev postgresql && \
     apt-get clean && \
     apt-get autoclean
 
 RUN rm -rf /usr/lib/gcc/*-gnu/10/
 
 COPY --from=dashboard-builder /usr/src/app/dist /app/bin/dashboard
-COPY --from=server-builder /app/bin/hakatime /app/bin/hakatime
-
-EXPOSE 8080
+COPY --from=server-builder    /app/bin/hakatime /app/bin/hakatime
+COPY docker/init.sql          /app/init.sql
+COPY docker/start.sh          /app/start.sh
 
 ENV HAKA_PORT           8080
 ENV HAKA_DASHBOARD_PATH /app/bin/dashboard
 
-CMD ["/app/bin/hakatime", "run"]
+CMD ["/app/start.sh"]

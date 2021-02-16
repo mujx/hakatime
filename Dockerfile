@@ -52,9 +52,11 @@ FROM alpine:3.12
 
 RUN apk add --no-cache \
         libffi-dev \
+        bash \
         gmp-dev \
         zlib-dev \
         ncurses-dev \
+        postgresql \
         postgresql-dev && \
     # Remove files that we don't' need.
     rm -rf /usr/lib/libLLVM* \
@@ -64,9 +66,11 @@ RUN apk add --no-cache \
            /usr/include
 
 COPY --from=dashboard-builder /usr/src/app/dist /app/bin/dashboard
-COPY --from=server-builder /app/bin/hakatime /app/bin/hakatime
+COPY --from=server-builder    /app/bin/hakatime /app/bin/hakatime
+COPY docker/init.sql          /app/init.sql
+COPY docker/start.sh          /app/start.sh
 
 ENV HAKA_PORT           8080
 ENV HAKA_DASHBOARD_PATH /app/bin/dashboard
 
-CMD ["/app/bin/hakatime", "run"]
+CMD ["/app/start.sh"]

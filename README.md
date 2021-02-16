@@ -9,7 +9,7 @@ Hakatime is a server implementation of [Wakatime](https://wakatime.com/). It pro
 (`/api/v1/users/current/heartbeats.bulk`) that the Wakatime client can use to send heartbeats containing info
 about your coding activity.
 
-It comes together with a simple dashboard which provides a graphical representation of the collected data.
+It comes together with a dashboard which provides a graphical representation of the collected data.
 
 ## Features
 
@@ -48,18 +48,14 @@ You can use the following docker-compose setup for testing locally or an actual
 deployment. Change `HAKA_BADGE_URL` to match the actual external endpoint of your
 instance.
 
-Deploying on ARM is also possible using `mujx/hakatime:latest-arm64` for the `arm64` architecture
-(builds on every commit) or with `mujx/hakatime:latest-arm` (manual semi-regular updates for `arm/v7` & `arm64`)
-or by building the image yourself with the dedicated Dockerfile (`Dockerfile.arm`).
-
-:warning: This setup relies on `./docker` directory located in this repository, please run it after making `git clone` to evade issues.
+Deploying on ARM is also possible using the dedicated Dockerfile ([`Dockerfile.arm`](/Dockerfile.arm)) to build the image.
 
 ```yaml
 version: "3"
 services:
   server:
     container_name: hakatime
-    image: mujx/hakatime:latest
+    image: mujx/hakatime:1.0.0
     environment:
       # DB settings.
       HAKA_DB_HOST: haka_db
@@ -71,6 +67,7 @@ services:
       # Fill out this field if the api is behind another path (e.g behind a reverse proxy).
       # This will adjust the Set-Cookie path for all the /auth related API calls.
       HAKA_API_PREFIX: ""
+      # Update this with the external endpoint that you use to access hakatime.
       HAKA_BADGE_URL: "http://localhost:8080"
       HAKA_PORT: 8080
       HAKA_SHIELDS_IO_URL: "https://img.shields.io"
@@ -78,19 +75,18 @@ services:
       # Number of hours after which inactive browser sessions will expire (login required).
       HAKA_SESSION_EXPIRY: "24"
       HAKA_LOG_LEVEL: "info" # Control the verbosity of the logger.
-      HAKA_ENV: "prod" # Use a json logger for production, otherwise key=value pairs.
+      HAKA_ENV: "dev" # Use a json logger for production, otherwise key=value pairs.
       HAKA_HTTP_LOG: "true" # If you want to log http requests.
     ports:
       - "127.0.0.1:8080:8080"
   haka_db:
     container_name: haka_db
-    image: postgres:11-alpine
+    image: postgres:12-alpine
     environment:
       POSTGRES_DB: test
       POSTGRES_PASSWORD: test
       POSTGRES_USER: test
     volumes:
-      - ./docker/:/docker-entrypoint-initdb.d/
       - deploy_db_data:/var/lib/postgresql/data
 
 volumes:
@@ -111,7 +107,7 @@ and navigate to [http://localhost:8080](http://localhost:8080) to access the UI.
 
 Requirements:
 
-- [GHC](https://www.haskell.org/ghc/) (tested with 8.8)
+- [GHC](https://www.haskell.org/ghc/) (tested with 8.8 & 8.10)
 - [libpq](https://www.postgresql.org/docs/11/libpq.html) (for PostgreSQL bindings)
 - [cabal-install](https://www.haskell.org/cabal/) (If building with cabal)
 
@@ -121,12 +117,16 @@ Using [nix](https://nixos.org/nix/) requires the least amount of manual interven
 
 ```bash
 nix-build release.nix
+
+./result/bin/hakatime run
 ```
 
 #### cabal
 
 ```bash
 cabal build
+
+cabal run exe:hakatime -- run
 ```
 
 ### Dashboard
@@ -179,7 +179,7 @@ hakatime run
 ## CLI options
 
 ```
-hakatime :: v0.1.0
+hakatime :: v1.0.0
 
 Usage: hakatime COMMAND
   Wakatime server implementation
