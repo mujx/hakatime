@@ -35,7 +35,7 @@ logMs sev msg =
 
 devEnv :: Severity -> IO LogEnv
 devEnv sev = do
-  logEnv <- initLogEnv (Namespace [""]) (Environment {getEnvironment = "dev"})
+  logEnv <- initLogEnv (Namespace []) (Environment {getEnvironment = "dev"})
   scribe <-
     mkHandleScribeWithFormatter
       pairFormat
@@ -47,7 +47,7 @@ devEnv sev = do
 
 prodEnv :: Severity -> IO LogEnv
 prodEnv sev = do
-  logEnv <- initLogEnv (Namespace [""]) (Environment {getEnvironment = "prod"})
+  logEnv <- initLogEnv (Namespace []) (Environment {getEnvironment = "prod"})
   scribe <-
     mkHandleScribeWithFormatter
       jsonFormat

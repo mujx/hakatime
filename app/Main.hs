@@ -62,7 +62,7 @@ initApp settings unApp = do
       (fromMaybe InfoS (textToSeverity $ toText $ hakaLogLevel settings))
   let logState' =
         LogState
-          { lsNamespace = Namespace {unNamespace = ["server"]},
+          { lsNamespace = Namespace {unNamespace = ["api"]},
             lsLogEnv = logenv,
             lsContext = mempty
           }
