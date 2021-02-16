@@ -5,20 +5,22 @@
 [![BuiltWithNix](https://img.shields.io/badge/Built_With-Nix-5277C3.svg?logo=nixos&labelColor=73C3D5)](https://nixos.org/)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 
-Hakatime is a server implementation of [Wakatime](https://wakatime.com/). It provides a single API endpoint
-(`/api/v1/users/current/heartbeats.bulk`) that the Wakatime client can use to send heartbeats containing info
-about your coding activity.
+Hakatime is a server implementation of [Wakatime](https://wakatime.com/). You can use it as a self-hosted alternative.
 
 It comes together with a dashboard which provides a graphical representation of the collected data.
 
 ## Features
 
-- Total activity view.
-- Per project activity view.
-- User registration & login.
-- Import data from Wakatime.
-- Badge generation for a project (using shields.io compatible endpoint). [![my-app](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=7)](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=7)
-- API token management.
+- Import Wakatime activity using an API token and a range of dates.
+- User registration & login through the UI.
+- Badge generation for a project that displays that total amount of hours spent for a configurable
+  time period. [![my-app](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=14)](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=7)
+- Global and per project charts
+  - Breakdown by project or language.
+  - Breakdown by day of week and hour of the day.
+  - Timeline of activity for a configurable time-frame.
+  - Total time spent per file.
+- API token management & generation.
 
 ## Demo
 
@@ -150,9 +152,8 @@ npm run dev # Development server with hot reloading.
 
 ### Database
 
-The server needs a database to store its data, so we will have to create a PostgreSQL instance and initialize
-it with the schema found in the [docker/](docker/) directory. You can use the provided solution using
-docker-compose (`docker-compose up -d`) or do it manually, depending on your system.
+The server needs a database to store its data, so we will have to create a PostgreSQL instance.
+Hakatime will take care of initializing an empty database and performing the necessary migrations.
 
 ### Server
 
@@ -173,8 +174,8 @@ hakatime run
 ### Dashboard
 
 1. Point your browser to [http://localhost:8080](http://localhost:8080)
-2. Create a new user.
-3. Create an API token and set up your Wakatime client with it.
+2. Navigate to the registration page and create a new user.
+3. Create an API token from the UI and set up your Wakatime client with it.
 
 ## CLI options
 
