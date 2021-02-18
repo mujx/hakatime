@@ -155,6 +155,8 @@ addMissingLang hb@HeartbeatPayload {language = Nothing, ty = FileType} =
     convertToLang (Just ext) = case ext of
       "" -> Nothing
       "." -> Nothing
+      "purs" -> Just "PureScript"
+      "dhall" -> Just "Dhall"
       a -> Just $ toUpper a
     convertToLang _ = Nothing
 addMissingLang hb = hb
