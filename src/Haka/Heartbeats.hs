@@ -155,6 +155,13 @@ addMissingLang hb@HeartbeatPayload {language = Nothing, ty = FileType} =
     convertToLang (Just ext) = case ext of
       "" -> Nothing
       "." -> Nothing
+      "org" -> Just "Org"
+      "jinja" -> Just "Jinja"
+      "jinja2" -> Just "Jinja"
+      "tfvars" -> Just "Terraform"
+      "cabal" -> Just "Cabal Config"
+      "gotmpl" -> Just "Go template"
+      "zig" -> Just "Zig"
       "purs" -> Just "PureScript"
       "dhall" -> Just "Dhall"
       a -> Just $ toUpper a
