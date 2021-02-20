@@ -53,7 +53,11 @@ initApp settings unApp = do
   -- Set up the db schema for the postgres queue.
   res <- HasqlConn.acquire dbSettings
   case res of
-    Left e -> error $ "Failed to setup queue schema: " <> show e
+    Left e -> do
+      let errMsg = "Failed to connect to the database:\n"
+      case e of
+        Just errS -> die $ errMsg <> decodeUtf8 errS
+        Nothing -> die errMsg
     Right conn -> migrate conn "json"
 
   logenv <-

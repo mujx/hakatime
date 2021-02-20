@@ -116,6 +116,8 @@ passwordInput prompt = do
 
 -- | Convert a `UsageError` to a user friendly `Text` representation.
 toStrError :: UsageError -> Text
+toStrError (ConnectionError (Just e)) = decodeUtf8 e
+toStrError (ConnectionError Nothing) = "Failed to connect to the database"
 toStrError
   ( SessionError
       ( S.QueryError
