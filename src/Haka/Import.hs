@@ -156,8 +156,11 @@ logExceptions logenv e = do
       logError ("json decoding failed: " <> show s)
     Nothing ->
       case fromException e :: Maybe ImportRequestException of
-        Just (ConnectionError s) -> do
-          logError ("failed to connect to postgres: " <> show s)
+        Just (ConnectionError (Just s)) -> do
+          logError ("failed to connect to postgres: " <> decodeUtf8 s)
+          threadDelay 5000000
+        Just (ConnectionError Nothing) -> do
+          logError "failed to connect to postgres"
           threadDelay 5000000
         Just (InvalidToken s) ->
           logError ("invalid token was given: " <> show s)

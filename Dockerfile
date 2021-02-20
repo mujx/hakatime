@@ -18,9 +18,12 @@ FROM alpine:3.13 as server-builder
 
 WORKDIR /build
 
+ENV BOOTSTRAP_HASKELL_NONINTERACTIVE "1"
+ENV BOOTSTRAP_HASKELL_GHC_VERSION    "8.10.4"
+
 RUN apk upgrade --update-cache --available && \
-    apk add ghc alpine-sdk zlib-dev ncurses-dev postgresql-dev cabal ca-certificates && \
-    cabal update
+    apk add curl binutils-gold zlib-dev alpine-sdk gmp-dev libffi-dev xz tar perl ncurses-dev postgresql-dev ca-certificates && \
+    curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 
 COPY UNLICENSE      ./
 COPY app/           ./app
@@ -32,10 +35,9 @@ COPY sql/           ./sql
 COPY test/          ./test
 COPY tools/         ./tools
 
-RUN cabal build -j2 --dependencies-only all
-
-RUN cabal build -j2 exe:hakatime && \
-    mkdir -p /app/bin                && \
+RUN source "/root/.ghcup/env" && \
+    cabal build -j2 exe:hakatime && \
+    mkdir -p /app/bin                             && \
     cp /build/dist-newstyle/build/*-linux/ghc-*/hakatime-*/x/hakatime/opt/build/hakatime/hakatime /app/bin/hakatime
 
 FROM alpine:3.13
