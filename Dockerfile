@@ -14,23 +14,13 @@ RUN rm -rf .git
 #
 # Build the server.
 #
-FROM alpine:3.12 as server-builder
+FROM alpine:3.13 as server-builder
 
 WORKDIR /build
 
 RUN apk upgrade --update-cache --available && \
-    apk add ghc \
-            alpine-sdk \
-            gmp-dev \
-            libffi \
-            libffi-dev \
-            musl-dev \
-            zlib-dev \
-            ncurses-dev \
-            postgresql-dev \
-            cabal \
-            ca-certificates && \
-            cabal update
+    apk add ghc alpine-sdk zlib-dev ncurses-dev postgresql-dev cabal ca-certificates && \
+    cabal update
 
 COPY UNLICENSE      ./
 COPY app/           ./app
@@ -48,7 +38,12 @@ RUN cabal build -j2 exe:hakatime && \
     mkdir -p /app/bin                && \
     cp /build/dist-newstyle/build/*-linux/ghc-*/hakatime-*/x/hakatime/opt/build/hakatime/hakatime /app/bin/hakatime
 
-FROM alpine:3.12
+FROM alpine:3.13
+
+COPY --from=dashboard-builder /usr/src/app/dist /app/bin/dashboard
+COPY --from=server-builder    /app/bin/hakatime /app/bin/hakatime
+COPY docker/init.sql          /app/init.sql
+COPY docker/start.sh          /app/start.sh
 
 RUN apk add --no-cache \
         libffi-dev \
@@ -57,18 +52,18 @@ RUN apk add --no-cache \
         zlib-dev \
         ncurses-dev \
         postgresql \
+        upx \
         postgresql-dev && \
+    upx /app/bin/hakatime && apk del upx && \
     # Remove files that we don't' need.
-    rm -rf /usr/lib/libLLVM* \
-           /usr/lib/libclang* \
+    rm -rf /usr/lib/libLLVM-10.so \
+           /usr/lib/libclang.so.10 \
+           /usr/lib/libclang-cpp.so.10 \
            /usr/lib/llvm10 \
            /usr/lib/clang \
-           /usr/include
+           /usr/include \
+           /usr/bin/c-index-test
 
-COPY --from=dashboard-builder /usr/src/app/dist /app/bin/dashboard
-COPY --from=server-builder    /app/bin/hakatime /app/bin/hakatime
-COPY docker/init.sql          /app/init.sql
-COPY docker/start.sh          /app/start.sh
 
 ENV HAKA_PORT           8080
 ENV HAKA_DASHBOARD_PATH /app/bin/dashboard
