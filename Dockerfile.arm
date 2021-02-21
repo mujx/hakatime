@@ -1,23 +1,27 @@
 #
 # Build the frontend.
 #
-FROM node:lts as dashboard-builder
+FROM node:12.18 as dashboard-builder
 
 WORKDIR /usr/src/app
 
 COPY dashboard ./
 
-RUN yarn install && yarn run prod
+RUN yarn install --network-timeout 1000000000
+
+COPY .git ./
+
+RUN yarn run prod && rm -rf .git
 
 #
 # Build the server.
 #
-FROM debian:stretch-slim as server-builder
+FROM ubuntu:20.10 as server-builder
 
 WORKDIR /build
 
 RUN apt-get update -y -qq && \
-    apt-get install -y ghc cabal-install libffi-dev libgmp-dev libncurses-dev libpq-dev zlib1g-dev llvm
+    apt-get install --no-install-recommends -y curl ghc cabal-install libffi-dev libpq-dev libgmp-dev zlib1g-dev
 
 COPY UNLICENSE      ./
 COPY app/           ./app
@@ -29,22 +33,22 @@ COPY sql/           ./sql
 COPY test/          ./test
 COPY tools/         ./tools
 
-RUN cabal update
-RUN cabal build -j2 --dependencies-only exe:hakatime
-
 WORKDIR /build
 
-RUN cabal build -j2 exe:hakatime && mkdir -p /app/bin && \
+RUN cabal update
+
+RUN cabal configure --disable-optimization && \
+    cabal build -j2 exe:hakatime && mkdir -p /app/bin && \
     cp /build/dist-newstyle/build/*-linux/ghc-*/hakatime-*/x/hakatime/opt/build/hakatime/hakatime /app/bin/hakatime
 
-FROM debian:stretch-slim
+FROM ubuntu:20.10
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y -qq && \
-    apt-get install -y libffi-dev libgmp-dev libncurses-dev libpq-dev zlib1g-dev postgresql && \
+    apt-get install --no-install-recommends -y libffi-dev libgmp-dev libpq-dev zlib1g-dev postgresql && \
     apt-get clean && \
     apt-get autoclean
-
-RUN rm -rf /usr/lib/gcc/*-gnu/10/
 
 COPY --from=dashboard-builder /usr/src/app/dist /app/bin/dashboard
 COPY --from=server-builder    /app/bin/hakatime /app/bin/hakatime

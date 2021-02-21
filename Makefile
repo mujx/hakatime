@@ -21,4 +21,4 @@ build-img:
 	docker build -t hakatime:latest .
 
 arm:
-	docker buildx build --platform=linux/arm,linux/arm64 -f Dockerfile.arm . -t mujx/hakatime:latest-arm --push
+	docker buildx build --platform=linux/arm64 -f Dockerfile.arm . -t mujx/hakatime:latest-arm --push
