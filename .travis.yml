@@ -17,7 +17,7 @@ before_install:
   - docker load -i docker_images/images.tar || true
 
 script:
-  - docker build -t mujx/hakatime:latest-arm64 -f Dockerfile.arm .
+  - travis_wait 40 docker build -t mujx/hakatime:latest-arm64 -f Dockerfile.arm .
   - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
   - docker push mujx/hakatime:latest-arm64
 
