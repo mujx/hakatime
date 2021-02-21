@@ -46,9 +46,11 @@ FROM ubuntu:20.10
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y -qq && \
-    apt-get install --no-install-recommends -y libffi-dev libgmp-dev libpq-dev zlib1g-dev postgresql && \
-    apt-get clean && \
-    apt-get autoclean
+    apt-get install --no-install-recommends -y netcat libffi-dev libgmp-dev libpq-dev zlib1g-dev postgresql && \
+    apt-get remove -y perl && \
+    apt-get autoremove -y && \
+    apt-get autoclean && \
+    rm -rf /usr/lib/x86_64-linux-gnu/libLLVM* /usr/lib/x86_64-linux-gnu/libicudata.so*
 
 COPY --from=dashboard-builder /usr/src/app/dist /app/bin/dashboard
 COPY --from=server-builder    /app/bin/hakatime /app/bin/hakatime

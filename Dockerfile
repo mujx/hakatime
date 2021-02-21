@@ -47,6 +47,7 @@ COPY docker/init.sql          /app/init.sql
 COPY docker/start.sh          /app/start.sh
 
 RUN apk add --no-cache \
+        bash \
         libffi-dev \
         gmp-dev \
         zlib-dev \
