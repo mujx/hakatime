@@ -27,7 +27,6 @@ import Data.UUID.V4 (nextRandom)
 import Hasql.Pool (UsageError (..))
 import qualified Hasql.Session as S
 import qualified Relude.Unsafe as Unsafe
-import Safe (headMay)
 import System.IO (hFlush, hGetEcho, hSetEcho, putChar)
 import Web.Cookie
 
@@ -146,7 +145,7 @@ toStrError err = toText (show err :: String)
 
 getRefreshToken :: ByteString -> Maybe Text
 getRefreshToken cookies =
-  let value = headMay $ map snd $ filter (\(k, _) -> k == "refresh_token") (parseCookies cookies)
+  let value = listToMaybe $ map snd $ filter (\(k, _) -> k == "refresh_token") (parseCookies cookies)
    in case value of
         Just v -> Just $ decodeUtf8 v
         Nothing -> Nothing

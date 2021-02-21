@@ -6,7 +6,6 @@ module Haka.Cli
   )
 where
 
-import Data.Bits.Extras (w16)
 import Data.Version (showVersion)
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.Migration
@@ -21,13 +20,13 @@ import System.Posix.Env.ByteString (getEnvDefault)
 
 getDbSettings :: IO HasqlConn.Settings
 getDbSettings = do
-  dbPort <- w16 <$> envAsInt "HAKA_DB_PORT" 5432
+  dbPort <- toIntegralSized <$> envAsInt "HAKA_DB_PORT" 5432
   dbHost <- getEnvDefault "HAKA_DB_HOST" "localhost"
   dbName <- getEnvDefault "HAKA_DB_NAME" "test"
   dbUser <- getEnvDefault "HAKA_DB_USER" "test"
   dbPass <- getEnvDefault "HAKA_DB_PASS" "test"
   return $
-    HasqlConn.settings dbHost dbPort dbUser dbPass dbName
+    HasqlConn.settings dbHost (fromMaybe 5432 dbPort) dbUser dbPass dbName
 
 newtype TokenOpts = TokenOpts {tUsername :: Text}
   deriving (Eq, Show)

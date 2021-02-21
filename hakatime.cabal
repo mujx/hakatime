@@ -77,7 +77,6 @@ library libhaka
   build-depends:       base                 >= 4.9 && < 4.15
                      , aeson                >= 1.4
                      , base64-bytestring
-                     , bits
                      , bytestring
                      , case-insensitive
                      , containers
@@ -101,7 +100,6 @@ library libhaka
                      , postgresql-binary    == 0.12.*
                      , raw-strings-qq
                      , safe-exceptions
-                     , safe
                      , servant              >= 0.17
                      , servant-server       >= 0.17
                      , system-filepath
@@ -112,7 +110,6 @@ library libhaka
                      , wai                  == 3.2.*
                      , wai-extra
                      , http-types
-                     , blaze-builder
                      , relude               >= 0.6.0.0
                      , postgresql-simple
                      , postgresql-simple-migration
