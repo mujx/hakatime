@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2021-02-23
+
+### Improvements
+
+- The following file extensions are now recognized (the wakatime plugin sends no values for these):
+  - `.gotmpl` -> `Go template`
+  - `.tfvars` -> `Terraform`
+  - `.dhall` -> `Dhall`
+  - `.zig` -> `Zig`
+  - `.org` -> `Org`
+  - `.purs` -> `PureScript`
+  - `.cabal` -> `Cabal config`
+  - `.jinja|.jinja2` -> `Jinja`
+- Updated the docker image to use GHC 8.10.
+- Reduced the size of the docker image down to ~85 MB.
+- Removed some unnecessary direct dependencies.
+
+### Bug fixes
+
+- Fixed the Dockerfile for ARM (#21). (TravisCI experiences random failures and it's currently not possible to
+  provide regular docker builds for ARM)
+
 ## [1.0.0] - 2021-02-16
 
 Initial versioned release.
