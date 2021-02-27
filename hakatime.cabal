@@ -105,7 +105,6 @@ library
                      , system-filepath
                      , text
                      , time
-                     , unliftio-core
                      , uuid
                      , wai                  == 3.2.*
                      , wai-extra
@@ -113,6 +112,7 @@ library
                      , relude               >= 0.6.0.0
                      , postgresql-simple
                      , postgresql-simple-migration
+                     , vector
 
   ghc-options:         -Wall
                        -Wcompat

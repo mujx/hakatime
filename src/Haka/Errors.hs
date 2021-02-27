@@ -23,10 +23,11 @@ import Data.Aeson (FromJSON (..), ToJSON (..), encode, genericParseJSON, generic
 import qualified Data.ByteString.Char8 as C
 import Data.CaseInsensitive (CI, mk)
 import Haka.AesonHelpers (noPrefixOptions, untagged)
-import Haka.Types (BulkHeartbeatData, HearbeatData)
+import Haka.Types (BulkHeartbeatData, HearbeatData, Project (..), StoredUser (..))
 import qualified Hasql.Pool as HqPool
 import Katip
 import Servant
+import Text.Printf (printf)
 
 data HeartbeatApiResponse
   = SingleHeartbeatApiResponse HearbeatData
@@ -73,6 +74,13 @@ invalidTokenError :: ServerError
 invalidTokenError =
   err403
     { errBody = encode $ mkApiError "The given api token doesn't belong to a user",
+      errHeaders = contentTypeHeader
+    }
+
+invalidRelation :: StoredUser -> Project -> ServerError
+invalidRelation (StoredUser user) (Project project) =
+  err404
+    { errBody = encode $ mkApiError (toText (printf "The user %s doesn't have access to project %s" user project :: String)),
       errHeaders = contentTypeHeader
     }
 
@@ -123,6 +131,7 @@ data DatabaseException
   = SessionException HqPool.UsageError
   | UnknownApiToken
   | InvalidCredentials
+  | InvalidRelation StoredUser Project
   | MissingRefreshTokenCookie
   | ExpiredRefreshToken
   | UsernameExists Text
@@ -135,6 +144,7 @@ instance Exception DatabaseException
 -- | Convert a database exception to a serializable error message.
 toJSONError :: DatabaseException -> ServerError
 toJSONError UnknownApiToken = invalidTokenError
+toJSONError (InvalidRelation user project) = invalidRelation user project
 toJSONError ExpiredRefreshToken = expiredRefreshToken
 toJSONError InvalidCredentials = invalidCredentials
 toJSONError (SessionException e) = genericError (show e :: Text)
@@ -155,6 +165,9 @@ logError e@UnknownApiToken = do
   throw $ toJSONError e
 logError e@ExpiredRefreshToken = do
   $(logTM) WarningS (logStr ("The given refresh token expired" :: String))
+  throw $ toJSONError e
+logError e@(InvalidRelation (StoredUser u) (Project p)) = do
+  $(logTM) WarningS (logStr (printf "User %s doesn't have a project named %s" u p :: String))
   throw $ toJSONError e
 logError e = do
   $(logTM) ErrorS (logStr (show e :: String))

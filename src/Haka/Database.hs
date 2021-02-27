@@ -5,6 +5,7 @@ module Haka.Database
     importHeartbeats,
     Db (..),
     getUserByToken,
+    validateUserAndProject,
     mkBadgeLink,
     getApiTokens,
     deleteApiToken,
@@ -22,6 +23,7 @@ where
 import Control.Exception.Safe (MonadThrow, throw)
 import Data.Aeson as A
 import Data.Time.Clock (UTCTime)
+import qualified Data.Vector as V
 import qualified Haka.Db.Sessions as Sessions
 import Haka.Errors (DatabaseException (..))
 import qualified Haka.PasswordUtils as PUtils
@@ -29,9 +31,11 @@ import Haka.Types
   ( ApiToken (..),
     BadgeRow (..),
     HeartbeatPayload (..),
+    Project (..),
     ProjectStatRow (..),
     StatRow (..),
     StoredApiToken,
+    StoredUser (..),
     TimelineRow (..),
     TokenData (..),
   )
@@ -99,6 +103,12 @@ class (Monad m, MonadThrow m) => Db m where
 
   -- | Delete stale failed jobs.
   deleteFailedJobs :: HqPool.Pool -> A.Value -> m Int64
+
+  -- | Attach the given tags to a project.
+  setTags :: HqPool.Pool -> StoredUser -> Project -> V.Vector Text -> m Int64
+
+  -- | Validate that a project has the given owner.
+  checkProjectOwner :: HqPool.Pool -> StoredUser -> Project -> m Bool
 
 instance Db IO where
   getUser pool token = do
@@ -174,6 +184,12 @@ instance Db IO where
     either (throw . SessionException) pure res
   deleteFailedJobs pool payload = do
     res <- HqPool.use pool (Sessions.deleteFailedJobs payload)
+    either (throw . SessionException) pure res
+  setTags pool user projectName tags = do
+    res <- HqPool.use pool (Sessions.setTags user projectName tags)
+    either (throw . SessionException) pure res
+  checkProjectOwner pool user projectName = do
+    res <- HqPool.use pool (Sessions.checkProjectOwner user projectName)
     either (throw . SessionException) pure res
 
 mkTokenData :: Text -> IO TokenData
@@ -318,3 +334,15 @@ getUserByToken pool token = do
   case retrievedUser of
     Nothing -> throw UnknownApiToken
     Just user -> pure user
+
+validateUserAndProject :: Db m => HqPool.Pool -> ApiToken -> Project -> m StoredUser
+validateUserAndProject pool token projectName = do
+  retrievedUser <- getUser pool token
+  case retrievedUser of
+    Nothing -> throw UnknownApiToken
+    Just user -> do
+      isOk <- checkProjectOwner pool (StoredUser user) projectName
+
+      if isOk
+        then pure $ StoredUser user
+        else throw (InvalidRelation (StoredUser user) projectName)

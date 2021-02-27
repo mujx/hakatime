@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Haka.Db.Sessions
   ( getUser,
     getUserByRefreshToken,
@@ -19,21 +21,26 @@ module Haka.Db.Sessions
     deleteTokens,
     getBadgeLinkInfo,
     createAccessTokens,
+    setTags,
+    checkProjectOwner,
   )
 where
 
 import qualified Crypto.Error as CErr
 import Data.Aeson as A
 import Data.Time.Clock (UTCTime, getCurrentTime)
+import qualified Data.Vector as V
 import qualified Haka.Db.Statements as Statements
 import Haka.Types
   ( ApiToken (..),
     BadgeRow (..),
     HeartbeatPayload (..),
+    Project (..),
     ProjectStatRow (..),
     RegisteredUser (..),
     StatRow (..),
     StoredApiToken,
+    StoredUser (..),
     TimelineRow (..),
     TokenData (..),
   )
@@ -173,3 +180,17 @@ deleteFailedJobs payload = statement payload Statements.deleteFailedJobs
 
 getJobStatus :: A.Value -> Session (Maybe Text)
 getJobStatus payload = statement payload Statements.getJobStatus
+
+setTags :: StoredUser -> Project -> V.Vector Text -> Session Int64
+setTags (StoredUser user) (Project projectName) tags = do
+  tagIds <- statement tags Statements.insertTags
+  statement (projectName, user) Statements.deleteExistingTags
+  statement (V.map (projectName,user,) tagIds) Statements.addTagsToProject
+
+checkProjectOwner :: StoredUser -> Project -> Session Bool
+checkProjectOwner (StoredUser user) (Project projectName) = do
+  res <- statement (projectName, user) Statements.checkProjectOwner
+
+  case res of
+    Just _ -> pure True
+    Nothing -> pure False

@@ -7,6 +7,8 @@ module Haka.Types
   ( HearbeatData (..),
     StoredApiToken (..),
     RegisteredUser (..),
+    StoredUser (..),
+    Project (..),
     BadgeRow (..),
     BulkHeartbeatData (..),
     HeartbeatId (..),
@@ -57,6 +59,12 @@ data TokenData = TokenData
     -- | The refresh token.
     tknRefreshToken :: Text
   }
+
+newtype StoredUser = StoredUser Text
+  deriving (Show)
+
+newtype Project = Project Text
+  deriving (Show)
 
 data RegisteredUser = RegisteredUser
   { username :: Text,

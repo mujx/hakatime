@@ -25,6 +25,10 @@ module Haka.Db.Statements
     insertToken,
     createAccessTokens,
     deleteExpiredTokens,
+    insertTags,
+    addTagsToProject,
+    checkProjectOwner,
+    deleteExistingTags,
   )
 where
 
@@ -33,6 +37,7 @@ import Data.Aeson as A
 import Data.FileEmbed
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+import qualified Data.Vector as V
 import Haka.Types
   ( BadgeRow (..),
     EntityType (..),
@@ -465,3 +470,60 @@ getJobStatus = Statement query params (D.rowMaybe ((D.column . D.nonNullable) D.
     params = E.param (E.nonNullable E.json)
     query :: ByteString
     query = [r| SELECT state FROM payloads WHERE value::text = $1::text; |]
+
+insertTags :: Statement (V.Vector Text) (V.Vector UUID)
+insertTags = Statement query params result True
+  where
+    query :: ByteString
+    query =
+      [r|
+      INSERT INTO tags (name) SELECT * FROM unnest ($1)
+      ON CONFLICT (name) DO UPDATE SET name=EXCLUDED.name RETURNING id;
+    |]
+    result :: D.Result (V.Vector UUID)
+    result = D.rowVector (D.column (D.nonNullable D.uuid))
+    params :: E.Params (V.Vector Text)
+    params =
+      E.param
+        . E.nonNullable
+        . E.array
+        . E.dimension foldl'
+        . E.element
+        . E.nonNullable
+        $ E.text
+
+deleteExistingTags :: Statement (Text, Text) ()
+deleteExistingTags = Statement query params D.noResult True
+  where
+    query :: ByteString
+    query = [r| DELETE FROM project_tags WHERE project_name = $1 AND project_owner = $2; |]
+    params :: E.Params (Text, Text)
+    params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
+
+addTagsToProject :: Statement (V.Vector (Text, Text, UUID)) Int64
+addTagsToProject = Statement query params decoder True
+  where
+    query :: ByteString
+    query =
+      [r|
+      INSERT INTO project_tags (project_name, project_owner, tag_id) SELECT * FROM unnest ($1, $2, $3)
+      ON CONFLICT DO NOTHING;;
+    |]
+    params :: E.Params (V.Vector (Text, Text, UUID))
+    params = contramap V.unzip3 $ contrazip3 (vector E.text) (vector E.text) (vector E.uuid)
+    vector =
+      E.param
+        . E.nonNullable
+        . E.array
+        . E.dimension foldl'
+        . E.element
+        . E.nonNullable
+    decoder = D.rowsAffected
+
+checkProjectOwner :: Statement (Text, Text) (Maybe Text)
+checkProjectOwner = Statement query params (D.rowMaybe ((D.column . D.nonNullable) D.text)) True
+  where
+    params :: E.Params (Text, Text)
+    params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
+    query :: ByteString
+    query = [r| SELECT name FROM projects WHERE name = $1 AND owner = $2; |]

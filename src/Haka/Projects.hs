@@ -1,4 +1,6 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Haka.Projects
@@ -13,13 +15,15 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import Data.Time (addDays, diffDays)
 import Data.Time.Clock (UTCTime (..), getCurrentTime)
+import qualified Data.Vector as V
 import Haka.AesonHelpers (noPrefixOptions)
 import Haka.App (AppCtx (..), AppM)
 import qualified Haka.Database as Db
 import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
-import Haka.Types (ApiToken (..), ProjectStatRow (..))
+import Haka.Types (ApiToken (..), Project (..), ProjectStatRow (..), StoredUser (..))
 import Haka.Utils (defaultLimit)
+import Katip
 import PostgreSQL.Binary.Data (Scientific)
 import qualified Relude.Unsafe as Unsafe
 import Servant
@@ -68,7 +72,24 @@ instance ToJSON ProjectStatistics
 
 instance FromJSON ProjectStatistics
 
-type API = ProjectStats
+newtype TagsPayload = TagsPayload
+  { tags :: V.Vector Text
+  }
+  deriving (Show, Generic)
+
+instance FromJSON TagsPayload
+
+type API = ProjectStats :<|> SetProjectTags
+
+type SetProjectTags =
+  "api"
+    :> "v1"
+    :> "projects"
+    :> Capture "project" Text
+    :> "tags"
+    :> Header "Authorization" ApiToken
+    :> ReqBody '[JSON] TagsPayload
+    :> PostNoContent
 
 type ProjectStats =
   "api"
@@ -84,14 +105,50 @@ type ProjectStats =
     :> Get '[JSON] ProjectStatistics
 
 server ::
+  ( Text ->
+    Maybe UTCTime ->
+    Maybe UTCTime ->
+    Maybe Int64 ->
+    Maybe ApiToken ->
+    AppM ProjectStatistics
+  )
+    :<|> (Text -> Maybe ApiToken -> TagsPayload -> AppM NoContent)
+server = projectStatsHandler :<|> setTagsHandler
+
+setTagsHandler :: Text -> Maybe ApiToken -> TagsPayload -> AppM NoContent
+setTagsHandler _ Nothing _ = throw Err.missingAuthError
+setTagsHandler project (Just token) tagsPayload = do
+  _pool <- asks pool
+
+  dbResult <- try $ liftIO $ Db.validateUserAndProject _pool token (Project project)
+  user@(StoredUser username) <- either Err.logError pure dbResult
+
+  $(logTM)
+    InfoS
+    ( "setting tags "
+        <> showLS (tags tagsPayload)
+        <> " to "
+        <> ls username
+        <> "/"
+        <> ls project
+    )
+
+  dbResult' <- try $ liftIO $ Db.setTags _pool user (Project project) (tags tagsPayload)
+  tagsNum <- either Err.logError pure dbResult'
+
+  $(logTM) InfoS ("inserted " <> showLS tagsNum <> " tags on " <> ls username <> "/" <> ls project)
+
+  return NoContent
+
+projectStatsHandler ::
   Text ->
   Maybe UTCTime ->
   Maybe UTCTime ->
   Maybe Int64 ->
   Maybe ApiToken ->
   AppM ProjectStatistics
-server _ _ _ _ Nothing = throw missingAuthError
-server project t0Param t1Param timeLimit (Just token) = do
+projectStatsHandler _ _ _ _ Nothing = throw missingAuthError
+projectStatsHandler project t0Param t1Param timeLimit (Just token) = do
   t1def <- liftIO getCurrentTime
   p <- asks pool
   let (t0, t1) = case (t0Param, t1Param) of

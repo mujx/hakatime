@@ -14,9 +14,9 @@ jsonResponse = modifyResponse responseModifier
 responseModifier :: Response -> Response
 responseModifier r
   | responseStatus r == status400 && not (isCustomMessage r "Bad Request") =
-    buildResponse status400 "Bad Request" (customErrorBody r "BadRequest")
+    buildResponse status400 "BadRequest" (customErrorBody r "BadRequest")
   | responseStatus r == status405 =
-    buildResponse status405 "Method Not Allowed" "Method Not Allowed"
+    buildResponse status400 "MethodNotAllowed" "Ensure that the Content-Type header field is set correctly"
   | otherwise = r
 
 customErrorBody :: Response -> Text -> Text
