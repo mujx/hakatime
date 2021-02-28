@@ -19,6 +19,7 @@ import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), StatRow (..), TimelineRow (..))
 import Haka.Utils (defaultLimit)
+import Katip
 import PostgreSQL.Binary.Data (Scientific)
 import qualified Relude.Unsafe as Unsafe
 import Servant
@@ -112,25 +113,13 @@ type TotalStats =
     :> "stats"
     :> QueryParam "start" UTCTime
     :> QueryParam "end" UTCTime
+    :> QueryParam "tag" Text
     :> QueryParam "timeLimit" Int64
     :> Header "Authorization" ApiToken
     :> Get '[JSON] StatsPayload
 
 type API = TotalStats :<|> TimelineStats
 
-server ::
-  ( Maybe UTCTime ->
-    Maybe UTCTime ->
-    Maybe Int64 ->
-    Maybe ApiToken ->
-    AppM StatsPayload
-  )
-    :<|> ( Maybe UTCTime ->
-           Maybe UTCTime ->
-           Maybe Int64 ->
-           Maybe ApiToken ->
-           AppM TimelinePayload
-         )
 server = statsHandler :<|> timelineStatsHandler
 
 defaultTimeRange :: Maybe UTCTime -> Maybe UTCTime -> IO (UTCTime, UTCTime)
@@ -203,14 +192,19 @@ timelineStatsHandler t0Param t1Param timeLimit (Just token) = do
 statsHandler ::
   Maybe UTCTime ->
   Maybe UTCTime ->
+  Maybe Text ->
   Maybe Int64 ->
   Maybe ApiToken ->
   AppM StatsPayload
-statsHandler _ _ _ Nothing = throw missingAuthError
-statsHandler t0Param t1Param timeLimit (Just token) = do
+statsHandler _ _ _ _ Nothing = throw missingAuthError
+statsHandler t0Param t1Param tagName timeLimit (Just token) = do
+  let ctx = sl "t0" t0Param <> sl "t1" t1Param <> sl "tag" tagName <> sl "limit" timeLimit
+
+  logF ctx "stats" DebugS "total user activity request"
+
   p <- asks pool
   (t0, t1) <- liftIO $ defaultTimeRange t0Param t1Param
-  res <- try $ liftIO $ Db.generateStatistics p token (fromMaybe defaultLimit timeLimit) (t0, t1)
+  res <- try $ liftIO $ Db.generateStatistics p token (fromMaybe defaultLimit timeLimit) tagName (t0, t1)
 
   rows <- either Err.logError pure res
 

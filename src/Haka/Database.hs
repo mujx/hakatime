@@ -60,7 +60,7 @@ class (Monad m, MonadThrow m) => Db m where
   saveHeartbeats :: HqPool.Pool -> [HeartbeatPayload] -> m [Int64]
 
   -- | Retrieve a list of statistics within the given time range.
-  getTotalStats :: HqPool.Pool -> Text -> (UTCTime, UTCTime) -> Int64 -> m [StatRow]
+  getTotalStats :: HqPool.Pool -> Text -> (UTCTime, UTCTime) -> Maybe Text -> Int64 -> m [StatRow]
 
   -- | Retrieve the activity timeline for a period of time.
   getTimelineStats :: HqPool.Pool -> Text -> (UTCTime, UTCTime) -> Int64 -> m [TimelineRow]
@@ -130,8 +130,8 @@ instance Db IO where
   saveHeartbeats pool heartbeats = do
     res <- HqPool.use pool (Sessions.saveHeartbeats heartbeats)
     either (throw . SessionException) pure res
-  getTotalStats pool user trange cutOffLimit = do
-    res <- HqPool.use pool (Sessions.getTotalStats user trange cutOffLimit)
+  getTotalStats pool user trange tagName cutOffLimit = do
+    res <- HqPool.use pool (Sessions.getTotalStats user trange tagName cutOffLimit)
     either (throw . SessionException) pure res
   getTimelineStats pool user trange cutOffLimit = do
     res <- HqPool.use pool (Sessions.getTimeline user trange cutOffLimit)
@@ -245,13 +245,14 @@ generateStatistics ::
   HqPool.Pool ->
   ApiToken ->
   Int64 ->
+  Maybe Text ->
   (UTCTime, UTCTime) ->
   m [StatRow]
-generateStatistics pool token timeLimit tmRange = do
+generateStatistics pool token timeLimit tagName tmRange = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UnknownApiToken
-    Just username -> getTotalStats pool username tmRange timeLimit
+    Just username -> getTotalStats pool username tmRange tagName timeLimit
 
 getTimeline ::
   Db m =>

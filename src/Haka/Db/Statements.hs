@@ -19,6 +19,7 @@ module Haka.Db.Statements
     deleteRefreshToken,
     deleteAuthToken,
     getUserActivity,
+    getUserActivityByTag,
     getProjectStats,
     insertUser,
     getUserByName,
@@ -405,6 +406,37 @@ getProjectStats = Statement query params result True
     result :: D.Result [ProjectStatRow]
     result = D.rowList projStateRow
 
+statRowDecoder :: D.Row StatRow
+statRowDecoder =
+  StatRow
+    <$> (D.column . D.nonNullable) D.timestamptz
+    <*> (D.column . D.nonNullable) D.text
+    <*> (D.column . D.nonNullable) D.text
+    <*> (D.column . D.nonNullable) D.text
+    <*> (D.column . D.nonNullable) D.text
+    <*> (D.column . D.nonNullable) D.text
+    <*> (D.column . D.nonNullable) D.text
+    <*> (D.column . D.nonNullable) D.text
+    <*> (D.column . D.nonNullable) D.int8
+    <*> (D.column . D.nonNullable) D.numeric
+    <*> (D.column . D.nonNullable) D.numeric
+
+getUserActivityByTag :: Statement (Text, UTCTime, UTCTime, Text, Int64) [StatRow]
+getUserActivityByTag = Statement query params result True
+  where
+    query :: ByteString
+    query = $(embedFile "sql/get_user_activity_by_tags.sql")
+    params :: E.Params (Text, UTCTime, UTCTime, Text, Int64)
+    params =
+      contrazip5
+        (E.param (E.nonNullable E.text))
+        (E.param (E.nonNullable E.timestamptz))
+        (E.param (E.nonNullable E.timestamptz))
+        (E.param (E.nonNullable E.text))
+        (E.param (E.nonNullable E.int8))
+    result :: D.Result [StatRow]
+    result = D.rowList statRowDecoder
+
 getUserActivity :: Statement (Text, UTCTime, UTCTime, Int64) [StatRow]
 getUserActivity = Statement query params result True
   where
@@ -417,22 +449,8 @@ getUserActivity = Statement query params result True
         (E.param (E.nonNullable E.timestamptz))
         (E.param (E.nonNullable E.timestamptz))
         (E.param (E.nonNullable E.int8))
-    statRow :: D.Row StatRow
-    statRow =
-      StatRow
-        <$> (D.column . D.nonNullable) D.timestamptz
-        <*> (D.column . D.nonNullable) D.text
-        <*> (D.column . D.nonNullable) D.text
-        <*> (D.column . D.nonNullable) D.text
-        <*> (D.column . D.nonNullable) D.text
-        <*> (D.column . D.nonNullable) D.text
-        <*> (D.column . D.nonNullable) D.text
-        <*> (D.column . D.nonNullable) D.text
-        <*> (D.column . D.nonNullable) D.int8
-        <*> (D.column . D.nonNullable) D.numeric
-        <*> (D.column . D.nonNullable) D.numeric
     result :: D.Result [StatRow]
-    result = D.rowList statRow
+    result = D.rowList statRowDecoder
 
 getTimeline :: Statement (Text, UTCTime, UTCTime, Int64) [TimelineRow]
 getTimeline = Statement query params result True

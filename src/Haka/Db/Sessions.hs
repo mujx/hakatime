@@ -115,9 +115,11 @@ getBadgeLinkInfo badgeId = statement badgeId Statements.getBadgeLinkInfo
 
 -- | TODO: Impose a max limit
 -- | Retrieve computed statistics for a given range.
-getTotalStats :: Text -> (UTCTime, UTCTime) -> Int64 -> Session [StatRow]
-getTotalStats user (startDate, endDate) cutOffLimit =
-  statement (user, startDate, endDate, cutOffLimit) Statements.getUserActivity
+getTotalStats :: Text -> (UTCTime, UTCTime) -> Maybe Text -> Int64 -> Session [StatRow]
+getTotalStats user (startDate, endDate) tagName cutOffLimit =
+  case tagName of
+    Nothing -> statement (user, startDate, endDate, cutOffLimit) Statements.getUserActivity
+    Just _tagName -> statement (user, startDate, endDate, _tagName, cutOffLimit) Statements.getUserActivityByTag
 
 getTimeline :: Text -> (UTCTime, UTCTime) -> Int64 -> Session [TimelineRow]
 getTimeline user (startDate, endDate) cutOffLimit =

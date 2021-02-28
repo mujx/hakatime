@@ -60,13 +60,15 @@ prodEnv sev = do
 pair :: Builder -> Text -> Builder
 pair k v = k <> fromText "=" <> fromText v <> fromText " "
 
-pairFormat :: ItemFormatter a
-pairFormat withColor _ Item {..} =
+pairFormat :: LogItem a => ItemFormatter a
+pairFormat withColor verb Item {..} =
   pair "ts" nowStr
     <> pair "level" (renderSeverity' _itemSeverity)
     <> pair "host" (toText _itemHost)
+    <> mconcat ks
     <> pair "msg" (toStrict $ toLazyText $ unLogStr _itemMessage)
   where
+    ks = map (\x -> x <> " ") $ getKeys verb _itemPayload
     nowStr = formatAsIso8601 _itemTime
     renderSeverity' severity =
       colorBySeverity withColor severity (renderSeverity severity)
