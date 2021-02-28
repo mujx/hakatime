@@ -9,6 +9,9 @@ import TimeRange from "../models/TimeRange.js";
 import OverviewState from "../models/State.js";
 import LocalState from "../models/ProjectState.js";
 
+// Modals
+import SetTagsModal from "../modals/SetTags.js";
+
 // Utils
 import { mkSingleStatCard } from "../single_stat_card.js";
 import cards from "../card_container.js";
@@ -597,6 +600,30 @@ export default {
       ]),
       m("div.mr-1", [
         m(
+          "button.btn.btn-primary[title='Add tags to this project']",
+          {
+            onclick: e => {
+              e.redraw = false;
+              api
+                .getTags({ project: LocalState.currentProject })
+                .then(function (res) {
+                  SetTagsModal.openModal({
+                    projectName: LocalState.currentProject,
+                    initialTags: res.tags
+                  });
+                })
+                .catch(function (e) {
+                  console.log(e.response);
+                  // TODO: Show this to the user
+                });
+            },
+            role: "button"
+          },
+          m("i.fas.fa-tags.fa-md.text-white-50")
+        )
+      ]),
+      m("div.mr-1", [
+        m(
           "button.btn.btn-primary[title='Copy shields.io badge to clipboard']",
           {
             onclick: e => {
@@ -614,7 +641,7 @@ export default {
             },
             role: "button"
           },
-          m("i.fas.fa-clone.fa-md.text-white-50")
+          m("i.fas.fa-link.fa-md.text-white-50")
         )
       ])
     ]);

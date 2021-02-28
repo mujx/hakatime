@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.15.1",
+    "@yaireo/tagify": "^3.23.0",
     "apexcharts": "3.24.0",
     "bootstrap": "4.6.0",
     "jquery": "3.5.1",
@@ -45,7 +46,11 @@
       ".css": "css",
       ".map": "css",
       ".js": "js",
-      "images": [".jpg", ".svg", ".png"]
+      "images": [
+        ".jpg",
+        ".svg",
+        ".png"
+      ]
     }
   }
 }

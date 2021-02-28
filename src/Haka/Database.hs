@@ -107,6 +107,9 @@ class (Monad m, MonadThrow m) => Db m where
   -- | Attach the given tags to a project.
   setTags :: HqPool.Pool -> StoredUser -> Project -> V.Vector Text -> m Int64
 
+  -- | Get the tags associated with a project.
+  getTags :: HqPool.Pool -> StoredUser -> Project -> m (V.Vector Text)
+
   -- | Validate that a project has the given owner.
   checkProjectOwner :: HqPool.Pool -> StoredUser -> Project -> m Bool
 
@@ -187,6 +190,9 @@ instance Db IO where
     either (throw . SessionException) pure res
   setTags pool user projectName tags = do
     res <- HqPool.use pool (Sessions.setTags user projectName tags)
+    either (throw . SessionException) pure res
+  getTags pool user projectName = do
+    res <- HqPool.use pool (Sessions.getTags user projectName)
     either (throw . SessionException) pure res
   checkProjectOwner pool user projectName = do
     res <- HqPool.use pool (Sessions.checkProjectOwner user projectName)

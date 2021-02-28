@@ -79,7 +79,9 @@ newtype TagsPayload = TagsPayload
 
 instance FromJSON TagsPayload
 
-type API = ProjectStats :<|> SetProjectTags
+instance ToJSON TagsPayload
+
+type API = ProjectStats :<|> SetProjectTags :<|> GetProjectTags
 
 type SetProjectTags =
   "api"
@@ -90,6 +92,15 @@ type SetProjectTags =
     :> Header "Authorization" ApiToken
     :> ReqBody '[JSON] TagsPayload
     :> PostNoContent
+
+type GetProjectTags =
+  "api"
+    :> "v1"
+    :> "projects"
+    :> Capture "project" Text
+    :> "tags"
+    :> Header "Authorization" ApiToken
+    :> Get '[JSON] TagsPayload
 
 type ProjectStats =
   "api"
@@ -104,16 +115,20 @@ type ProjectStats =
     :> Header "Authorization" ApiToken
     :> Get '[JSON] ProjectStatistics
 
-server ::
-  ( Text ->
-    Maybe UTCTime ->
-    Maybe UTCTime ->
-    Maybe Int64 ->
-    Maybe ApiToken ->
-    AppM ProjectStatistics
-  )
-    :<|> (Text -> Maybe ApiToken -> TagsPayload -> AppM NoContent)
-server = projectStatsHandler :<|> setTagsHandler
+server = projectStatsHandler :<|> setTagsHandler :<|> getTagsHandler
+
+getTagsHandler :: Text -> Maybe ApiToken -> AppM TagsPayload
+getTagsHandler _ Nothing = throw Err.missingAuthError
+getTagsHandler project (Just token) = do
+  _pool <- asks pool
+
+  dbResult <- try $ liftIO $ Db.validateUserAndProject _pool token (Project project)
+  user <- either Err.logError pure dbResult
+
+  dbResult' <- try $ liftIO $ Db.getTags _pool user (Project project)
+  retrievedTags <- either Err.logError pure dbResult'
+
+  return $ TagsPayload {tags = retrievedTags}
 
 setTagsHandler :: Text -> Maybe ApiToken -> TagsPayload -> AppM NoContent
 setTagsHandler _ Nothing _ = throw Err.missingAuthError

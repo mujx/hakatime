@@ -153,6 +153,31 @@ function checkJobStatus({ remoteServer, apiToken, startDate, endDate }) {
   });
 }
 
+function setTags({ tags, project }) {
+  return m.request({
+    method: "POST",
+    url: baseUrl() + `/api/v1/projects/${project}/tags`,
+    background: true,
+    body: {
+      tags
+    },
+    headers: {
+      authorization: storage.getHeaderToken()
+    }
+  });
+}
+
+function getTags({ project }) {
+  return m.request({
+    method: "GET",
+    url: baseUrl() + `/api/v1/projects/${project}/tags`,
+    background: true,
+    headers: {
+      authorization: storage.getHeaderToken()
+    }
+  });
+}
+
 export {
   createApiToken,
   checkJobStatus,
@@ -166,5 +191,7 @@ export {
   logout,
   refreshToken,
   register,
-  submitImportRequest
+  submitImportRequest,
+  setTags,
+  getTags
 };

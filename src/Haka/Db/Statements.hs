@@ -29,6 +29,7 @@ module Haka.Db.Statements
     addTagsToProject,
     checkProjectOwner,
     deleteExistingTags,
+    getTags,
   )
 where
 
@@ -527,3 +528,23 @@ checkProjectOwner = Statement query params (D.rowMaybe ((D.column . D.nonNullabl
     params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
     query :: ByteString
     query = [r| SELECT name FROM projects WHERE name = $1 AND owner = $2; |]
+
+getTags :: Statement (Text, Text) (V.Vector Text)
+getTags = Statement query params result True
+  where
+    result :: D.Result (V.Vector Text)
+    result = D.rowVector (D.column (D.nonNullable D.text))
+    params :: E.Params (Text, Text)
+    params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
+    query :: ByteString
+    query =
+      [r|
+      SELECT
+          name
+      FROM
+          project_tags
+          INNER JOIN tags ON project_tags.tag_id = tags.id
+      WHERE
+          project_name = $1
+          AND project_owner = $2;
+      |]

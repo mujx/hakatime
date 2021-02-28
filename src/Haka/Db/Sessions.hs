@@ -23,6 +23,7 @@ module Haka.Db.Sessions
     createAccessTokens,
     setTags,
     checkProjectOwner,
+    getTags,
   )
 where
 
@@ -186,6 +187,9 @@ setTags (StoredUser user) (Project projectName) tags = do
   tagIds <- statement tags Statements.insertTags
   statement (projectName, user) Statements.deleteExistingTags
   statement (V.map (projectName,user,) tagIds) Statements.addTagsToProject
+
+getTags :: StoredUser -> Project -> Session (V.Vector Text)
+getTags (StoredUser user) (Project projectName) = statement (projectName, user) Statements.getTags
 
 checkProjectOwner :: StoredUser -> Project -> Session Bool
 checkProjectOwner (StoredUser user) (Project projectName) = do
