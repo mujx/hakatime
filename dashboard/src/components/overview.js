@@ -14,6 +14,9 @@ import utils from "../utils.js";
 import cards from "../card_container.js";
 import config from "../config.js";
 import * as auth from "../auth.js";
+import * as api from "../api";
+import "@tarekraafat/autocomplete.js/dist/css/autoComplete.01.css";
+import Autocomplete from "@tarekraafat/autocomplete.js";
 
 // Easy access of all charts in the page.
 const Charts = {
@@ -481,14 +484,22 @@ function mkLangHeatMap() {
 
 let dateRangePicker;
 
-export default {
-  oninit: State.fetchItems,
+const OverviewComponent = {
   oncreate: () => {
-    // Silent refresh.
-    State.interval = setInterval(auth.checkInterval, 60000);
-  },
-  onremove: () => {
-    clearInterval(State.interval);
+    new Autocomplete({
+      data: {
+        src: State.tags
+      },
+      placeholder: "Filter by tags",
+      onSelection: feedback => {
+        const tagSelected = feedback.selection.value;
+
+        document.querySelector("#autoComplete").blur();
+        document.querySelector("#autoComplete").value = `#${tagSelected}`;
+
+        State.fetchStats(tagSelected)
+      }
+    });
   },
   onbeforeremove: () => {
     if (dateRangePicker) {
@@ -499,16 +510,16 @@ export default {
   view: () => {
     document.title = "Hakatime | Overview";
 
-    if (State.obj == null) {
-      return m("div.spinner", [
-        m("div.bounce1"),
-        m("div.bounce2"),
-        m("div.bounce3")
-      ]);
-    }
-
     const toolbar = m("div.d-flex.mb-4", [
       m("h1.h3.mr-auto.mb-0.text-gray-800", "Overview"),
+      m("div.autoComplete_wrapper", [
+        m(
+          "input[autocomplete=off][type=text][placeholder=Filter by tags][tabindex=1]",
+          {
+            id: "autoComplete"
+          }
+        )
+      ]),
       m("div.dropdown.mr-2", [
         m(
           "button.btn.btn-primary.dropdown-toggle.shadow-sm[data-toggle='dropdown'][aria-haspopup='true'][aria-expanded='false']",
@@ -527,8 +538,11 @@ export default {
             return m(
               "a.btn.dropdown-item",
               {
-                onclick: () => {
-                  if (TimeRange.setTimeLimit(r)) State.fetchItems();
+                onclick: e => {
+                  e.redraw = false;
+                  if (TimeRange.setTimeLimit(r)) {
+                    State.fetchItems();
+                  }
                 }
               },
               `${r} mins`
@@ -556,7 +570,8 @@ export default {
               return m(
                 "a.btn.dropdown-item",
                 {
-                  onclick: () => {
+                  onclick: e => {
+                    e.redraw = false;
                     if (TimeRange.setDaysFromToday(r)) State.fetchItems();
                   }
                 },
@@ -609,5 +624,29 @@ export default {
       ]),
       m("div.row", m("div.col-xl-12", mkTimeline()))
     ];
+  }
+};
+
+export default {
+  oninit: State.fetchItems,
+  oncreate: () => {
+    // Silent refresh.
+    State.interval = setInterval(auth.checkInterval, 60000);
+  },
+  onremove: () => {
+    clearInterval(State.interval);
+  },
+  view: () => {
+    document.title = "Hakatime | Overview";
+
+    if (State.obj == null) {
+      return m("div.spinner", [
+        m("div.bounce1"),
+        m("div.bounce2"),
+        m("div.bounce3")
+      ]);
+    }
+
+    return m(OverviewComponent);
   }
 };

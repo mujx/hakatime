@@ -167,7 +167,7 @@ function setTags({ tags, project }) {
   });
 }
 
-function getTags({ project }) {
+function getProjectTags({ project }) {
   return m.request({
     method: "GET",
     url: baseUrl() + `/api/v1/projects/${project}/tags`,
@@ -178,6 +178,16 @@ function getTags({ project }) {
   });
 }
 
+function getUserTags() {
+  return m.request({
+    method: "GET",
+    url: baseUrl() + "/api/v1/tags",
+    background: true,
+    headers: {
+      authorization: storage.getHeaderToken()
+    }
+  });
+}
 export {
   createApiToken,
   checkJobStatus,
@@ -193,5 +203,6 @@ export {
   register,
   submitImportRequest,
   setTags,
-  getTags
+  getProjectTags,
+  getUserTags
 };

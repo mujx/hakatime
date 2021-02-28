@@ -169,3 +169,8 @@ a.dropdown-item:hover {
     opacity: 0;
   }
 }
+
+.autoComplete_wrapper {
+  font-family: monospace;
+  width: 250px !important;
+}

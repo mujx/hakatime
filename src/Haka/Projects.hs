@@ -81,7 +81,11 @@ instance FromJSON TagsPayload
 
 instance ToJSON TagsPayload
 
-type API = ProjectStats :<|> SetProjectTags :<|> GetProjectTags
+type API =
+  ProjectStats
+    :<|> SetProjectTags
+    :<|> GetProjectTags
+    :<|> GetUserTags
 
 type SetProjectTags =
   "api"
@@ -102,6 +106,13 @@ type GetProjectTags =
     :> Header "Authorization" ApiToken
     :> Get '[JSON] TagsPayload
 
+type GetUserTags =
+  "api"
+    :> "v1"
+    :> "tags"
+    :> Header "Authorization" ApiToken
+    :> Get '[JSON] TagsPayload
+
 type ProjectStats =
   "api"
     :> "v1"
@@ -115,7 +126,21 @@ type ProjectStats =
     :> Header "Authorization" ApiToken
     :> Get '[JSON] ProjectStatistics
 
-server = projectStatsHandler :<|> setTagsHandler :<|> getTagsHandler
+server =
+  projectStatsHandler
+    :<|> setTagsHandler
+    :<|> getTagsHandler
+    :<|> getUserTagsHandler
+
+getUserTagsHandler :: Maybe ApiToken -> AppM TagsPayload
+getUserTagsHandler Nothing = throw Err.missingAuthError
+getUserTagsHandler (Just token) = do
+  _pool <- asks pool
+
+  dbResult <- try $ liftIO $ Db.getUserTags _pool token
+  allTags <- either Err.logError pure dbResult
+
+  return $ TagsPayload {tags = allTags}
 
 getTagsHandler :: Text -> Maybe ApiToken -> AppM TagsPayload
 getTagsHandler _ Nothing = throw Err.missingAuthError

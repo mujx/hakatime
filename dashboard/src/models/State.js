@@ -9,6 +9,7 @@ const Model = {
   // Timeline data.
   timeline: null,
   interval: null,
+  tags: [],
   // Date range.
   dates: null,
   clear: () => {
@@ -32,6 +33,23 @@ const Model = {
       })
       .catch(err => auth.retryCall(err, Model.fetchTimeline));
   },
+  fetchStats: tag => {
+    api
+      .getStats({
+        start: TimeRange.start().toISOString(),
+        end: TimeRange.end().toISOString(),
+        timeLimit: TimeRange.timeLimit,
+        tag
+      })
+      .then(function (obj) {
+        Model.obj = obj;
+        Model.dates = utils.getDaysBetween(
+          new Date(obj.startDate),
+          new Date(obj.endDate)
+        );
+      })
+      .catch(err => auth.retryCall(err, () => Model.fetchStats(tag)));
+  },
   // Fetch the statistics.
   fetchItems: (cb, d1, d2) => {
     Promise.all([
@@ -44,7 +62,8 @@ const Model = {
         start: utils.removeHours(new Date(), 12).toISOString(),
         end: new Date().toISOString(),
         timeLimit: TimeRange.timeLimit
-      })
+      }),
+      api.getUserTags()
     ])
       .then(function (values) {
         const obj = values[0];
@@ -56,6 +75,7 @@ const Model = {
         );
 
         Model.timeline = values[1];
+        Model.tags = values[2].tags;
 
         typeof cb === "function" && cb();
       })

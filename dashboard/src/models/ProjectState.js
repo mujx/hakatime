@@ -29,7 +29,10 @@ const Model = {
   },
   fetchProjectStats: (event, d1, d2) => {
     // If it was triggered by a click event.
-    if (event) Model.currentProject = event.target.innerHTML;
+    if (event) {
+      event.redraw = false;
+      Model.currentProject = event.target.innerHTML;
+    }
 
     const start = new Date();
     const today = new Date();

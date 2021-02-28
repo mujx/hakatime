@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Features
+
+- API endpoint & UI controls to attach tags to projects. (e.g "work", "web", "ui")
+- Ability to filter statistics by tag.
+
+## Bug fixes
+
+- Removed a small UI freeze by not redrawing immediately upon dropdown selection.
+
 ## [1.0.1] - 2021-02-23
 
 ### Improvements

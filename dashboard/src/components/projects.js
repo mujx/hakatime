@@ -527,7 +527,8 @@ export default {
             return m(
               "a.btn.dropdown-item",
               {
-                onclick: () => {
+                onclick: e => {
+                  e.redraw = false;
                   if (TimeRange.setTimeLimit(r)) LocalState.fetchProjectStats();
                 }
               },
@@ -556,7 +557,8 @@ export default {
               return m(
                 "a.btn.dropdown-item",
                 {
-                  onclick: () => {
+                  onclick: e => {
+                    e.redraw = false;
                     if (TimeRange.setDaysFromToday(r))
                       LocalState.fetchProjectStats();
                   }
@@ -605,7 +607,7 @@ export default {
             onclick: e => {
               e.redraw = false;
               api
-                .getTags({ project: LocalState.currentProject })
+                .getProjectTags({ project: LocalState.currentProject })
                 .then(function (res) {
                   SetTagsModal.openModal({
                     projectName: LocalState.currentProject,

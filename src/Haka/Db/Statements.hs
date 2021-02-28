@@ -31,6 +31,7 @@ module Haka.Db.Statements
     checkProjectOwner,
     deleteExistingTags,
     getTags,
+    getAllTags,
   )
 where
 
@@ -565,4 +566,23 @@ getTags = Statement query params result True
       WHERE
           project_name = $1
           AND project_owner = $2;
+      |]
+
+getAllTags :: Statement Text (V.Vector Text)
+getAllTags = Statement query params result True
+  where
+    result :: D.Result (V.Vector Text)
+    result = D.rowVector (D.column (D.nonNullable D.text))
+    params :: E.Params Text
+    params = E.param (E.nonNullable E.text)
+    query :: ByteString
+    query =
+      [r|
+      SELECT
+          DISTINCT name
+      FROM
+          project_tags
+          INNER JOIN tags ON project_tags.tag_id = tags.id
+      WHERE
+          project_owner = $1;
       |]

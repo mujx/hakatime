@@ -24,6 +24,7 @@ module Haka.Db.Sessions
     setTags,
     checkProjectOwner,
     getTags,
+    getAllTags,
   )
 where
 
@@ -192,6 +193,9 @@ setTags (StoredUser user) (Project projectName) tags = do
 
 getTags :: StoredUser -> Project -> Session (V.Vector Text)
 getTags (StoredUser user) (Project projectName) = statement (projectName, user) Statements.getTags
+
+getAllTags :: StoredUser -> Session (V.Vector Text)
+getAllTags (StoredUser user) = statement user Statements.getAllTags
 
 checkProjectOwner :: StoredUser -> Project -> Session Bool
 checkProjectOwner (StoredUser user) (Project projectName) = do

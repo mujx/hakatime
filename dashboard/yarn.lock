@@ -933,6 +933,11 @@
     file-type "^10.4.0"
     fse "^4.0.1"
 
+"@tarekraafat/autocomplete.js@^8.3.2":
+  version "8.3.2"
+  resolved "https://registry.yarnpkg.com/@tarekraafat/autocomplete.js/-/autocomplete.js-8.3.2.tgz#cb9c700e713f9c12793e3457d67ea96fdfcf06e5"
+  integrity sha512-qlZN47BjixzNRYUvASO5HeAo4R0RGbuLDgGemWeMnlmlMjauRge07rQfNXCqHvC32LWVLvPabx+rmKlqmk0UNQ==
+
 "@types/color-name@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"
