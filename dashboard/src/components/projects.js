@@ -595,8 +595,8 @@ const ProjectComponent = {
                   });
                 })
                 .catch(function (e) {
+                  utils.showError("Failed to fetch tags");
                   console.log(e.response);
-                  // TODO: Show this to the user
                 });
             },
             role: "button"
@@ -617,7 +617,7 @@ const ProjectComponent = {
                   utils.copyToCliboard(r.badgeUrl);
                 })
                 .catch(function (e) {
-                  // TODO: Show a visual to the user
+                  utils.showError("Failed to generate the badge link");
                   console.log(e);
                 });
             },

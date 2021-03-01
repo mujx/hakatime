@@ -48,7 +48,8 @@ function openModal(e) {
     .getTokens()
     .then(renderModal)
     .catch(function (e) {
-      // TODO: Notify the user about the error.
+      utils.showError("Failed to retrieve tokens");
+
       if (e && e.response) {
         console.log(e.response);
         return;

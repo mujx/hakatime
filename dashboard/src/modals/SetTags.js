@@ -23,17 +23,14 @@ function saveTags(e) {
 
   const tags = getValidTags(state.tagify.value);
 
-  console.log("Saving tags", tags);
-
   api
     .setTags({ project: state.projectName, tags: tags })
     .then(function () {
       closeModal();
     })
     .catch(function (e) {
-      console.log(e);
+      utils.showError("Failed to update tags");
       console.log(e.response);
-      // TODO: Show this to the user
     });
 }
 

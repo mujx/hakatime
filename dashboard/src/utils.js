@@ -1,4 +1,5 @@
 import _ from "lodash";
+import { Notyf } from "notyf";
 
 export default {
   truncate: function (input, num) {
@@ -97,7 +98,18 @@ export default {
   },
 
   formatDate: function (d) {
-    console.log(d);
     return new Date(d).toISOString().slice(0, 10);
+  },
+
+  showError: function (msg) {
+    const notyf = new Notyf({
+      duration: 3000,
+      dismissible: true,
+      position: {
+        y: "top"
+      }
+    });
+
+    notyf.error(msg);
   }
 };

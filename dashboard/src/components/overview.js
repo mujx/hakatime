@@ -492,8 +492,7 @@ const OverviewComponent = {
             const res = await api.getUserTags();
             return res.tags;
           } catch (e) {
-            // TODO: Show to the user.
-            console.log("Failed to fetch tags");
+            utils.showError("Failed to fetch tags");
           }
 
           return [];
