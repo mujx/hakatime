@@ -188,6 +188,19 @@ function getUserTags() {
     }
   });
 }
+
+function getUserProjects(params) {
+  return m.request({
+    method: "GET",
+    url: baseUrl() + "/api/v1/projects",
+    background: true,
+    headers: {
+      authorization: storage.getHeaderToken()
+    },
+    params: params
+  });
+}
+
 export {
   createApiToken,
   checkJobStatus,
@@ -204,5 +217,6 @@ export {
   submitImportRequest,
   setTags,
   getProjectTags,
-  getUserTags
+  getUserTags,
+  getUserProjects
 };

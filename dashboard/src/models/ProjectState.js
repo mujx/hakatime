@@ -17,9 +17,7 @@ const Model = {
     Model.obj = null;
   },
   initProjectList: projects => {
-    Model.projects = _.orderBy(projects, ["totalSeconds"], ["desc"])
-      .map(p => p.name)
-      .filter(n => n !== "Other");
+    Model.projects = projects;
 
     if (Model.projects.length > 0) {
       Model.currentProject = Model.projects[0];

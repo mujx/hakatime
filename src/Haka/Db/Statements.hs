@@ -604,7 +604,7 @@ getAllProjects = Statement query params result True
     query :: ByteString
     query =
       [r|
-        SELECT DISTINCT
+        SELECT
             name
         FROM
             projects
@@ -613,5 +613,7 @@ getAllProjects = Statement query params result True
         WHERE
             heartbeats.sender = $1
             AND heartbeats.time_sent >= $2
-            AND heartbeats.time_sent <= $3;
+            AND heartbeats.time_sent <= $3
+        GROUP BY projects.name
+        ORDER BY COUNT(*) DESC;
       |]

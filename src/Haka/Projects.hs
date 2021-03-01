@@ -232,6 +232,9 @@ projectStatsHandler project t0Param t1Param timeLimit (Just token) = do
         (Just a, Nothing) -> (a, addAWeek a)
         (Just a, Just b) -> (max a (removeAYear b), b)
 
+  dbResult <- try $ liftIO $ Db.validateUserAndProject p token (Project project)
+  _ <- either Err.logError pure dbResult
+
   res <- try $ liftIO $ Db.genProjectStatistics p token project (fromMaybe defaultLimit timeLimit) (t0, t1)
 
   rows <- either Err.logError pure res

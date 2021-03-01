@@ -453,18 +453,7 @@ function barChart() {
 
 let dateRangePicker;
 
-export default {
-  oninit: function () {
-    if (!OverviewState.obj) {
-      OverviewState.fetchItems(() => {
-        LocalState.initProjectList(OverviewState.obj.projects);
-      });
-
-      return;
-    }
-
-    LocalState.initProjectList(OverviewState.obj.projects);
-  },
+const ProjectComponent = {
   onremove: () => {
     if (dateRangePicker) {
       dateRangePicker.destroy();
@@ -473,14 +462,6 @@ export default {
   },
   view: () => {
     document.title = "Hakatime | Projects";
-
-    if (LocalState.obj == null) {
-      return m("div.spinner", [
-        m("div.bounce1"),
-        m("div.bounce2"),
-        m("div.bounce3")
-      ]);
-    }
 
     const toolbar = m("div.d-sm-flex.mb-4", [
       m(
@@ -661,5 +642,37 @@ export default {
       ]),
       m("div.row", [m("div.col-xl-12", mkFileChart())])
     ];
+  }
+};
+
+export default {
+  oninit: function () {
+    if (!LocalState.obj) {
+      api
+        .getUserProjects({
+          start: TimeRange.d1.toISOString(),
+          end: TimeRange.d2.toISOString()
+        })
+        .then(function ({ projects }) {
+          LocalState.initProjectList(projects);
+        })
+        .catch(function (e) {
+          // TODO: Show the error
+          console.log(e.response);
+        });
+    }
+  },
+  view: () => {
+    document.title = "Hakatime | Projects";
+
+    if (LocalState.obj == null) {
+      return m("div.spinner", [
+        m("div.bounce1"),
+        m("div.bounce2"),
+        m("div.bounce3")
+      ]);
+    }
+
+    return m(ProjectComponent);
   }
 };
