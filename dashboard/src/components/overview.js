@@ -497,7 +497,7 @@ const OverviewComponent = {
         document.querySelector("#autoComplete").blur();
         document.querySelector("#autoComplete").value = `#${tagSelected}`;
 
-        State.fetchStats(tagSelected)
+        State.fetchStats(tagSelected);
       }
     });
   },
@@ -593,7 +593,6 @@ const OverviewComponent = {
                         onSelect: (d1, d2) => {
                           if (TimeRange.setDays(d1, d2))
                             State.fetchItems(
-                              null,
                               d1.toISOString(),
                               d2.toISOString()
                             );
@@ -628,7 +627,7 @@ const OverviewComponent = {
 };
 
 export default {
-  oninit: State.fetchItems,
+  oninit: State.initialize,
   oncreate: () => {
     // Silent refresh.
     State.interval = setInterval(auth.checkInterval, 60000);

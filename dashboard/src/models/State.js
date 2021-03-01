@@ -50,12 +50,11 @@ const Model = {
       })
       .catch(err => auth.retryCall(err, () => Model.fetchStats(tag)));
   },
-  // Fetch the statistics.
-  fetchItems: (cb, d1, d2) => {
+  initialize: () => {
     Promise.all([
       api.getStats({
-        start: d1 || TimeRange.start().toISOString(),
-        end: d2 || TimeRange.end().toISOString(),
+        start: TimeRange.start().toISOString(),
+        end: TimeRange.end().toISOString(),
         timeLimit: TimeRange.timeLimit
       }),
       api.getTimeline({
@@ -76,10 +75,25 @@ const Model = {
 
         Model.timeline = values[1];
         Model.tags = values[2].tags;
-
-        typeof cb === "function" && cb();
       })
-      .catch(err => auth.retryCall(err, () => Model.fetchItems(cb)));
+      .catch(err => auth.retryCall(err, () => Model.initialize()));
+  },
+  // Fetch the statistics.
+  fetchItems: (d1, d2) => {
+    api
+      .getStats({
+        start: d1 || TimeRange.start().toISOString(),
+        end: d2 || TimeRange.end().toISOString(),
+        timeLimit: TimeRange.timeLimit
+      })
+      .then(function (obj) {
+        Model.obj = obj;
+        Model.dates = utils.getDaysBetween(
+          new Date(Model.obj.startDate),
+          new Date(Model.obj.endDate)
+        );
+      })
+      .catch(err => auth.retryCall(err, () => Model.fetchItems()));
   }
 };
 
