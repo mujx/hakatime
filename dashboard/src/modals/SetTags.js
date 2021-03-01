@@ -4,6 +4,7 @@ import Tagify from "@yaireo/tagify";
 import "@yaireo/tagify/dist/tagify.css";
 
 import * as api from "../api";
+import utils from "../utils";
 
 const MODAL_ID = "set-tags-modal";
 
