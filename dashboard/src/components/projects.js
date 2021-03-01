@@ -6,7 +6,6 @@ import Litepicker from "litepicker";
 
 // Models
 import TimeRange from "../models/TimeRange.js";
-import OverviewState from "../models/State.js";
 import LocalState from "../models/ProjectState.js";
 
 // Modals

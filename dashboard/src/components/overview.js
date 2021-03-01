@@ -14,7 +14,6 @@ import utils from "../utils.js";
 import cards from "../card_container.js";
 import config from "../config.js";
 import * as auth from "../auth.js";
-import * as api from "../api";
 import "@tarekraafat/autocomplete.js/dist/css/autoComplete.01.css";
 import Autocomplete from "@tarekraafat/autocomplete.js";
 

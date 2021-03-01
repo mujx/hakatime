@@ -1,5 +1,3 @@
-import _ from "lodash";
-
 import TimeRange from "./TimeRange";
 import utils from "../utils.js";
 import * as auth from "../auth";
