@@ -14,7 +14,6 @@ import utils from "../utils.js";
 import cards from "../card_container.js";
 import config from "../config.js";
 import * as auth from "../auth.js";
-import "@tarekraafat/autocomplete.js/dist/css/autoComplete.01.css";
 import Autocomplete from "@tarekraafat/autocomplete.js";
 
 // Easy access of all charts in the page.
@@ -490,6 +489,8 @@ const OverviewComponent = {
         src: State.tags
       },
       placeholder: "Filter by tags",
+      searchEngine: "loose",
+      maxResults: 10,
       onSelection: feedback => {
         const tagSelected = feedback.selection.value;
 

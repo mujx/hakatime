@@ -6,6 +6,7 @@ import "typeface-nunito";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "startbootstrap-sb-admin-2/css/sb-admin-2.min.css";
+import "@tarekraafat/autocomplete.js/dist/css/autoComplete.01.css";
 
 import { main } from "../src/index.js";
 import config from "../src/config.js";

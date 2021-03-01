@@ -647,18 +647,7 @@ const ProjectComponent = {
 export default {
   oninit: function () {
     if (!LocalState.obj) {
-      api
-        .getUserProjects({
-          start: TimeRange.d1.toISOString(),
-          end: TimeRange.d2.toISOString()
-        })
-        .then(function ({ projects }) {
-          LocalState.initProjectList(projects);
-        })
-        .catch(function (e) {
-          // TODO: Show the error
-          console.log(e.response);
-        });
+      LocalState.initialize();
     }
   },
   view: () => {

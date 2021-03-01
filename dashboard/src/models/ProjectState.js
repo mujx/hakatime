@@ -50,6 +50,19 @@ const Model = {
       .catch(err =>
         auth.retryCall(err, () => Model.fetchProjectStats(event, d1, d2))
       );
+  },
+  initialize: () => {
+    api
+      .getUserProjects({
+        start: TimeRange.start().toISOString(),
+        end: TimeRange.end().toISOString()
+      })
+      .then(function ({ projects }) {
+        Model.initProjectList(projects);
+      })
+      .catch(function (err) {
+        auth.retryCall(err, () => Model.initialize());
+      });
   }
 };
 
