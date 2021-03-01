@@ -249,7 +249,7 @@ function mkTopStatRow() {
     {
       name: "Total coding time",
       value: totalHrs ? `${totalHrs}` : "0",
-      icon: "globe",
+      icon: "clock",
       textType: "primary"
     },
     {

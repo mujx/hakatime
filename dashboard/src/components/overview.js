@@ -155,7 +155,7 @@ function mkTopStatRow() {
     {
       name: "Total coding time",
       value: totalHrs ? `${totalHrs}` : "0",
-      icon: "globe",
+      icon: "clock",
       textType: "primary"
     },
     {
@@ -311,7 +311,7 @@ function mkTimeline() {
   };
 
   return cards.mkCardContainer(
-    "Timeline",
+    "Recent timeline",
     m(timelineChart()),
     m(MenuComponent)
   );
