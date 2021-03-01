@@ -2,8 +2,8 @@
 
 [![CircleCI](https://circleci.com/gh/mujx/hakatime.svg?style=svg)](https://circleci.com/gh/mujx/hakatime)
 [![Docker build](https://img.shields.io/docker/cloud/build/mujx/hakatime)](https://hub.docker.com/r/mujx/hakatime/builds)
+[![Latest version](https://img.shields.io/github/v/release/mujx/hakatime)](https://github.com/mujx/hakatime/releases)
 [![BuiltWithNix](https://img.shields.io/badge/Built_With-Nix-5277C3.svg?logo=nixos&labelColor=73C3D5)](https://nixos.org/)
-[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 
 Hakatime is a server implementation of [Wakatime](https://wakatime.com/). You can use it as a self-hosted alternative.
 
@@ -58,7 +58,7 @@ version: "3"
 services:
   server:
     container_name: hakatime
-    image: mujx/hakatime:1.0.1
+    image: mujx/hakatime:1.1.0
     environment:
       # DB settings.
       HAKA_DB_HOST: haka_db
@@ -102,7 +102,7 @@ To start all the services run:
 $ docker-compose -f ./docker-compose-deploy.yml up
 ```
 
-and navigate to [http://localhost:8080](http://localhost:8080) to access the UI.
+and navigate to [http://localhost:8080](http://localhost:8080) to access the dashboard.
 
 ## Building
 
@@ -111,77 +111,33 @@ and navigate to [http://localhost:8080](http://localhost:8080) to access the UI.
 Requirements:
 
 - [GHC](https://www.haskell.org/ghc/) (tested with 8.8 & 8.10)
-- [libpq](https://www.postgresql.org/docs/11/libpq.html) (for PostgreSQL bindings)
-- [cabal-install](https://www.haskell.org/cabal/) (If building with cabal)
-
-Using [nix](https://nixos.org/nix/) requires the least amount of manual intervention (installing packages etc)
-
-#### nix
-
-```bash
-nix-build release.nix
-
-./result/bin/hakatime run
-```
-
-#### cabal
+- [libpq](https://www.postgresql.org/docs/11/libpq.html) (PostgreSQL bindings)
+- [cabal-install](https://www.haskell.org/cabal/) (Build system for Haskell)
 
 ```bash
 cabal build
-
 cabal run exe:hakatime -- run
 ```
 
 ### Dashboard
 
+The output files will be located at `dashboard/dist`.
+
 Requirements:
 
-- Node.js
-- npm / yarn
+- Node.js & npm
 
 ```bash
 cd dashboard
 
-npm install # yarn install
-
-npm run prod # Optimized build for production usage.
-
-npm run dev # Development server with hot reloading.
+npm install
+npm run prod
 ```
-
-## Running
-
-### Database
-
-The server needs a database to store its data, so we will have to create a PostgreSQL instance.
-Hakatime will take care of initializing an empty database and performing the necessary migrations.
-
-### Server
-
-Start the server and point it to the database.
-
-```bash
-# We assume that the docker-compose setup is used.
-# Change these values according to your actual setup.
-export HAKA_DB_USER=test
-export HAKA_DB_PASS=test
-export HAKA_DB_NAME=test
-export HAKA_DB_HOST=localhost
-export HAKA_DB_PORT=5432
-
-hakatime run
-```
-
-### Dashboard
-
-1. Point your browser to [http://localhost:8080](http://localhost:8080)
-2. Navigate to the registration page and create a new user.
-3. Create an API token from the UI and set up your Wakatime client with it.
 
 ## CLI options
 
 ```
-hakatime :: v1.0.1
+hakatime :: v1.1.0
 
 Usage: hakatime COMMAND
   Wakatime server implementation

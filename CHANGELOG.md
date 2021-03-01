@@ -7,17 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## Features
+## [1.1.0] - 2021-03-01
 
-- API endpoint & UI controls to attach tags to projects. (e.g "work", "web", "ui")
-- Ability to filter statistics by tag and view their aggregated statistics.
+### Features
 
-## Improvements
+- API endpoint & UI controls to attach tags to projects. (e.g `work`, `web`, `ui`)
+- Ability to filter projects by tag and view their aggregated statistics.
+
+### Improvements
 
 - Reduced the amount of api calls made by the UI.
-- The docker image will apply the database migration on boot.
+- Error popups on the UI when queries fail.
+- The docker image will apply the database migrations on boot.
 
-## Bug fixes
+### Bug fixes
 
 - Removed a small UI freeze by not redrawing immediately upon dropdown selection.
 
