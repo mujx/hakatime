@@ -61,8 +61,7 @@ const Model = {
         start: utils.removeHours(new Date(), 12).toISOString(),
         end: new Date().toISOString(),
         timeLimit: TimeRange.timeLimit
-      }),
-      api.getUserTags()
+      })
     ])
       .then(function (values) {
         const obj = values[0];
@@ -74,7 +73,6 @@ const Model = {
         );
 
         Model.timeline = values[1];
-        Model.tags = values[2].tags;
       })
       .catch(err => auth.retryCall(err, () => Model.initialize()));
   },

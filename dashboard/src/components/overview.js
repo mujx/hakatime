@@ -13,6 +13,7 @@ import { mkSingleStatCard } from "../single_stat_card.js";
 import utils from "../utils.js";
 import cards from "../card_container.js";
 import config from "../config.js";
+import * as api from "../api.js";
 import * as auth from "../auth.js";
 import Autocomplete from "@tarekraafat/autocomplete.js";
 
@@ -486,9 +487,19 @@ const OverviewComponent = {
   oncreate: () => {
     new Autocomplete({
       data: {
-        src: State.tags
+        src: async function () {
+          try {
+            const res = await api.getUserTags();
+            return res.tags;
+          } catch (e) {
+            // TODO: Show to the user.
+            console.log("Failed to fetch tags");
+          }
+
+          return [];
+        }
       },
-      placeholder: "Filter by tags",
+      placeholder: "Filter by tag",
       searchEngine: "loose",
       maxResults: 10,
       onSelection: feedback => {
@@ -514,7 +525,7 @@ const OverviewComponent = {
       m("h1.h3.mr-auto.mb-0.text-gray-800", "Overview"),
       m("div.autoComplete_wrapper", [
         m(
-          "input[autocomplete=off][type=text][placeholder=Filter by tags][tabindex=1]",
+          "input[autocomplete=off][type=text][placeholder=Filter by tag][tabindex=1]",
           {
             id: "autoComplete"
           }
