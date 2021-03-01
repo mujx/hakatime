@@ -10,7 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Features
 
 - API endpoint & UI controls to attach tags to projects. (e.g "work", "web", "ui")
-- Ability to filter statistics by tag.
+- Ability to filter statistics by tag and view their aggregated statistics.
+
+## Improvements
+
+- Reduced the amount of api calls made by the UI.
+- The docker image will apply the database migration on boot.
 
 ## Bug fixes
 

@@ -45,6 +45,7 @@ COPY --from=dashboard-builder /usr/src/app/dist /app/bin/dashboard
 COPY --from=server-builder    /app/bin/hakatime /app/bin/hakatime
 COPY docker/init.sql          /app/init.sql
 COPY docker/start.sh          /app/start.sh
+COPY migrations/              /app/migrations
 
 RUN apk add --no-cache \
         bash \

@@ -23,6 +23,8 @@ else
   echo "Database ${HAKA_DB_NAME} initialized"
 fi
 
+/app/bin/hakatime run-migrations -d /app/migrations
+
 echo "Starting hakatime server ..."
 
 /app/bin/hakatime run
