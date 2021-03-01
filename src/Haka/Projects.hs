@@ -81,11 +81,19 @@ instance FromJSON TagsPayload
 
 instance ToJSON TagsPayload
 
+newtype ProjectListPayload = ProjectListPayload
+  { projects :: V.Vector Text
+  }
+  deriving (Show, Generic)
+
+instance ToJSON ProjectListPayload
+
 type API =
   ProjectStats
     :<|> SetProjectTags
     :<|> GetProjectTags
     :<|> GetUserTags
+    :<|> ProjectList
 
 type SetProjectTags =
   "api"
@@ -126,11 +134,38 @@ type ProjectStats =
     :> Header "Authorization" ApiToken
     :> Get '[JSON] ProjectStatistics
 
+type ProjectList =
+  "api"
+    :> "v1"
+    :> "projects"
+    :> QueryParam "start" UTCTime
+    :> QueryParam "end" UTCTime
+    :> Header "Authorization" ApiToken
+    :> Get '[JSON] ProjectListPayload
+
 server =
   projectStatsHandler
     :<|> setTagsHandler
     :<|> getTagsHandler
     :<|> getUserTagsHandler
+    :<|> getProjectList
+
+getProjectList :: Maybe UTCTime -> Maybe UTCTime -> Maybe ApiToken -> AppM ProjectListPayload
+getProjectList _ _ Nothing = throw Err.missingAuthError
+getProjectList t0' t1' (Just token) = do
+  currTs <- liftIO getCurrentTime
+  _pool <- asks pool
+
+  let (t0, t1) = case (t0', t1') of
+        (Nothing, Nothing) -> (removeAMonth currTs, currTs)
+        (Nothing, Just b) -> (removeAMonth b, b)
+        (Just a, Nothing) -> (a, addAMonth a)
+        (Just a, Just b) -> (max a (removeAYear b), b)
+
+  dbResult <- try $ liftIO $ Db.getUserProjects _pool token t0 t1
+  allProjects <- either Err.logError pure dbResult
+
+  return $ ProjectListPayload {projects = allProjects}
 
 getUserTagsHandler :: Maybe ApiToken -> AppM TagsPayload
 getUserTagsHandler Nothing = throw Err.missingAuthError
@@ -202,23 +237,6 @@ projectStatsHandler project t0Param t1Param timeLimit (Just token) = do
   rows <- either Err.logError pure res
 
   return $ toStatsPayload t0 t1 rows
-  where
-    removeAWeek, removeAYear, addAWeek :: UTCTime -> UTCTime
-    removeAWeek t =
-      UTCTime
-        { utctDay = addDays (-7) (utctDay t),
-          utctDayTime = 0
-        }
-    removeAYear t =
-      UTCTime
-        { utctDay = addDays (-365) (utctDay t),
-          utctDayTime = 0
-        }
-    addAWeek t =
-      UTCTime
-        { utctDay = addDays 7 (utctDay t),
-          utctDayTime = 0
-        }
 
 -- | Generate a statistics payload object from the statistics rows.
 toStatsPayload :: UTCTime -> UTCTime -> [ProjectStatRow] -> ProjectStatistics
@@ -305,3 +323,10 @@ aggregateBy f rows = Just (prDay $ Unsafe.head rows, go rows Map.empty)
             (prTotalSeconds x, prPct x, prDailyPct x)
             m'
         )
+
+removeAWeek, removeAMonth, removeAYear, addAWeek, addAMonth :: UTCTime -> UTCTime
+removeAWeek t = UTCTime {utctDay = addDays (-7) (utctDay t), utctDayTime = 0}
+removeAMonth t = UTCTime {utctDay = addDays (-30) (utctDay t), utctDayTime = 0}
+removeAYear t = UTCTime {utctDay = addDays (-365) (utctDay t), utctDayTime = 0}
+addAWeek t = UTCTime {utctDay = addDays 7 (utctDay t), utctDayTime = 0}
+addAMonth t = UTCTime {utctDay = addDays 30 (utctDay t), utctDayTime = 0}

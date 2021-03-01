@@ -18,6 +18,7 @@ module Haka.Database
     createAuthTokens,
     refreshAuthTokens,
     getUserTags,
+    getUserProjects,
   )
 where
 
@@ -114,6 +115,9 @@ class (Monad m, MonadThrow m) => Db m where
   -- | Get all the tags associated with a user.
   getAllTags :: HqPool.Pool -> StoredUser -> m (V.Vector Text)
 
+  -- | Get all the projects of a user.
+  getAllProjects :: HqPool.Pool -> StoredUser -> UTCTime -> UTCTime -> m (V.Vector Text)
+
   -- | Validate that a project has the given owner.
   checkProjectOwner :: HqPool.Pool -> StoredUser -> Project -> m Bool
 
@@ -200,6 +204,9 @@ instance Db IO where
     either (throw . SessionException) pure res
   getAllTags pool user = do
     res <- HqPool.use pool (Sessions.getAllTags user)
+    either (throw . SessionException) pure res
+  getAllProjects pool user t0 t1 = do
+    res <- HqPool.use pool (Sessions.getAllProjects user t0 t1)
     either (throw . SessionException) pure res
   checkProjectOwner pool user projectName = do
     res <- HqPool.use pool (Sessions.checkProjectOwner user projectName)
@@ -367,3 +374,10 @@ getUserTags pool token = do
   case retrievedUser of
     Nothing -> throw UnknownApiToken
     Just user -> getAllTags pool (StoredUser user)
+
+getUserProjects :: Db m => HqPool.Pool -> ApiToken -> UTCTime -> UTCTime -> m (V.Vector Text)
+getUserProjects pool token t0 t1 = do
+  retrievedUser <- getUser pool token
+  case retrievedUser of
+    Nothing -> throw UnknownApiToken
+    Just user -> getAllProjects pool (StoredUser user) t0 t1

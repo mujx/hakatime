@@ -68,7 +68,7 @@ pairFormat withColor verb Item {..} =
     <> mconcat ks
     <> pair "msg" (toStrict $ toLazyText $ unLogStr _itemMessage)
   where
-    ks = map (\x -> x <> " ") $ getKeys verb _itemPayload
+    ks = map (<> " ") $ getKeys verb _itemPayload
     nowStr = formatAsIso8601 _itemTime
     renderSeverity' severity =
       colorBySeverity withColor severity (renderSeverity severity)

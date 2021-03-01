@@ -32,6 +32,7 @@ module Haka.Db.Statements
     deleteExistingTags,
     getTags,
     getAllTags,
+    getAllProjects,
   )
 where
 
@@ -585,4 +586,32 @@ getAllTags = Statement query params result True
           INNER JOIN tags ON project_tags.tag_id = tags.id
       WHERE
           project_owner = $1;
+      |]
+
+getAllProjects :: Statement (Text, UTCTime, UTCTime) (V.Vector Text)
+getAllProjects = Statement query params result True
+  where
+    fst' (x, _, _) = x
+    snd' (_, x, _) = x
+    thd (_, _, x) = x
+    result :: D.Result (V.Vector Text)
+    result = D.rowVector (D.column (D.nonNullable D.text))
+    params :: E.Params (Text, UTCTime, UTCTime)
+    params =
+      (fst' >$< E.param (E.nonNullable E.text))
+        <> (snd' >$< E.param (E.nonNullable E.timestamptz))
+        <> (thd >$< E.param (E.nonNullable E.timestamptz))
+    query :: ByteString
+    query =
+      [r|
+        SELECT DISTINCT
+            name
+        FROM
+            projects
+            INNER JOIN heartbeats ON heartbeats.project = projects.name
+                AND heartbeats.sender = projects.owner
+        WHERE
+            heartbeats.sender = $1
+            AND heartbeats.time_sent >= $2
+            AND heartbeats.time_sent <= $3;
       |]
