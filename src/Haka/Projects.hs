@@ -1,6 +1,5 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Haka.Projects
@@ -198,7 +197,7 @@ setTagsHandler project (Just token) tagsPayload = do
   dbResult <- try $ liftIO $ Db.validateUserAndProject _pool token (Project project)
   user@(StoredUser username) <- either Err.logError pure dbResult
 
-  $(logTM)
+  logFM
     InfoS
     ( "setting tags "
         <> showLS (tags tagsPayload)
@@ -211,7 +210,7 @@ setTagsHandler project (Just token) tagsPayload = do
   dbResult' <- try $ liftIO $ Db.setTags _pool user (Project project) (tags tagsPayload)
   tagsNum <- either Err.logError pure dbResult'
 
-  $(logTM) InfoS ("inserted " <> showLS tagsNum <> " tags on " <> ls username <> "/" <> ls project)
+  logFM InfoS ("inserted " <> showLS tagsNum <> " tags on " <> ls username <> "/" <> ls project)
 
   return NoContent
 

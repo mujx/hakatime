@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Haka.Heartbeats
@@ -115,7 +114,7 @@ heartbeatHandler ::
   AppM HeartbeatApiResponse
 heartbeatHandler _ Nothing _ = throw Err.missingAuthError
 heartbeatHandler machineId (Just token) heartbeat = do
-  $(logTM) InfoS "received a heartbeat"
+  logFM InfoS "received a heartbeat"
   p <- asks pool
   res <- storeHeartbeats p token machineId [heartbeat]
   mkResponse res
@@ -129,7 +128,7 @@ multiHeartbeatHandler ::
   AppM HeartbeatApiResponse
 multiHeartbeatHandler _ Nothing _ = throw Err.missingAuthError
 multiHeartbeatHandler machineId (Just token) heartbeats = do
-  $(logTM) InfoS ("received " <> showLS (length heartbeats) <> " heartbeats")
+  logFM InfoS ("received " <> showLS (length heartbeats) <> " heartbeats")
   p <- asks pool
   res <- storeHeartbeats p token machineId heartbeats
   mkResponse res

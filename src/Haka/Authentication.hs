@@ -1,6 +1,5 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Haka.Authentication
@@ -147,7 +146,7 @@ loginHandler creds = do
   now <- liftIO getCurrentTime
   ctx <- ask
 
-  $(logTM) InfoS ("login for user " <> showLS (username creds))
+  logFM InfoS ("login for user " <> showLS (username creds))
 
   res <-
     try $
@@ -171,7 +170,7 @@ registerHandler EnabledRegistration creds =
     now <- liftIO getCurrentTime
     ctx <- ask
 
-    $(logTM) InfoS ("registering user " <> showLS (username creds))
+    logFM InfoS ("registering user " <> showLS (username creds))
 
     res <-
       try $
@@ -194,7 +193,7 @@ refreshTokenHandler (Just cookies) = do
   now <- liftIO getCurrentTime
   ctx <- ask
 
-  $(logTM) DebugS "refresh token request"
+  logFM DebugS "refresh token request"
 
   res <-
     try $

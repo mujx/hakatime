@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Haka.Import
   ( API,
     server,
@@ -172,7 +170,7 @@ logExceptions logenv e = do
 
 process :: QueueItem -> AppM ()
 process item = do
-  $(logTM) InfoS ("processing import request for user " <> showLS (requester item))
+  logFM InfoS ("processing import request for user " <> showLS (requester item))
 
   let payload = reqPayload item
       header = R.header "Authorization" ("Basic " <> encodeUtf8 (apiToken payload))
@@ -209,7 +207,7 @@ process item = do
 
         let heartbeatList = (R.responseBody heartbeatsRes :: HeartbeatList)
 
-        $(logTM) InfoS ("importing " <> showLS (length $ listData heartbeatList) <> " heartbeats for day " <> showLS day)
+        logFM InfoS ("importing " <> showLS (length $ listData heartbeatList) <> " heartbeats for day " <> showLS day)
 
         let heartbeats =
               convertForDb
@@ -226,7 +224,7 @@ process item = do
     )
     allDays
 
-  $(logTM) InfoS "import completed"
+  logFM InfoS "import completed"
 
 convertForDb :: Text -> [MachineNamePayload] -> [UserAgentPayload] -> [ImportHeartbeatPayload] -> [HeartbeatPayload]
 convertForDb user machineNames userAgents = map convertSchema
@@ -345,7 +343,7 @@ checkRequestStatusHandler (Just token) payload = do
 
   user <- either Err.logError pure res
 
-  $(logTM) InfoS ("checking pending import request for user " <> showLS user)
+  logFM InfoS ("checking pending import request for user " <> showLS user)
 
   let item =
         A.toJSON $
@@ -360,7 +358,7 @@ checkRequestStatusHandler (Just token) payload = do
 
   let status = maybe JobFinished (\s -> if s == "failed" then JobFailed else JobPending) statusMaybe
 
-  $(logTM) InfoS ("import request for user " <> showLS user <> ": " <> showLS status)
+  logFM InfoS ("import request for user " <> showLS user <> ": " <> showLS status)
 
   return $ ImportRequestResponse {jobStatus = status}
 
@@ -373,7 +371,7 @@ importRequestHandler (Just token) payload = do
 
   user <- either Err.logError pure userResult
 
-  $(logTM) InfoS ("received an import request from user " <> showLS user)
+  logFM InfoS ("received an import request from user " <> showLS user)
 
   let item =
         A.toJSON $

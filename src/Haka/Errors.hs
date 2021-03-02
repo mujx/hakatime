@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Haka.Errors
   ( missingAuthError,
     missingRefreshTokenCookie,
@@ -155,20 +153,20 @@ toJSONError MissingRefreshTokenCookie = missingRefreshTokenCookie
 
 logError :: (KatipContext m, MonadThrow m) => DatabaseException -> m b
 logError e@MissingRefreshTokenCookie = do
-  $(logTM) WarningS (logStr ("Missing refresh_token cookie from auth call" :: String))
+  logFM WarningS (logStr ("Missing refresh_token cookie from auth call" :: String))
   throw $ toJSONError e
 logError e@(UsernameExists u) = do
-  $(logTM) WarningS (logStr ("Registration attempt for existing username: " <> u))
+  logFM WarningS (logStr ("Registration attempt for existing username: " <> u))
   throw $ toJSONError e
 logError e@UnknownApiToken = do
-  $(logTM) WarningS (logStr ("Failed to identify a user with the given token" :: String))
+  logFM WarningS (logStr ("Failed to identify a user with the given token" :: String))
   throw $ toJSONError e
 logError e@ExpiredRefreshToken = do
-  $(logTM) WarningS (logStr ("The given refresh token expired" :: String))
+  logFM WarningS (logStr ("The given refresh token expired" :: String))
   throw $ toJSONError e
 logError e@(InvalidRelation (StoredUser u) (Project p)) = do
-  $(logTM) WarningS (logStr (printf "User %s doesn't have a project named %s" u p :: String))
+  logFM WarningS (logStr (printf "User %s doesn't have a project named %s" u p :: String))
   throw $ toJSONError e
 logError e = do
-  $(logTM) ErrorS (logStr (show e :: String))
+  logFM ErrorS (logStr (show e :: String))
   throw $ toJSONError e
