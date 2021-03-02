@@ -2,6 +2,11 @@ import _ from "lodash";
 import { Notyf } from "notyf";
 
 export default {
+  // Check if the given chart item has enough value to be displayed.
+  // Attempting to reduce noise by remove low values.
+  hasEnoughPercentage: function (val) {
+    return val >= 1;
+  },
   truncate: function (input, num) {
     return input.length > num ? `${input.substring(0, num)}...` : input;
   },

@@ -139,12 +139,6 @@ function mkTimelineSeries(rawData) {
   });
 }
 
-// Check if the given chart item has enough value to be displayed.
-// Attempting to reduce noise by remove low values.
-function hasEnoughPercentage(val) {
-  return val >= 1;
-}
-
 /*
  * Row with single stats only. Each stat has a name, value, and an icon.
  */
@@ -205,7 +199,7 @@ function pieChart() {
             name: v.name
           };
         })
-        .filter(o => hasEnoughPercentage(o.data));
+        .filter(o => utils.hasEnoughPercentage(o.data));
 
       const data = dataValues.map(v => v.data);
       const names = dataValues.map(v => v.name);

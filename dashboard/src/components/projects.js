@@ -209,12 +209,14 @@ function pieChart() {
     oncreate: vnode => {
       if (LocalState.obj == null) return;
 
-      const dataValues = LocalState.obj.languages.map(v => {
-        return {
-          data: parseFloat((v.totalPct * 100).toFixed(2)),
-          name: v.name
-        };
-      });
+      const dataValues = LocalState.obj.languages
+        .map(v => {
+          return {
+            data: parseFloat((v.totalPct * 100).toFixed(2)),
+            name: v.name
+          };
+        })
+        .filter(o => utils.hasEnoughPercentage(o.data));
 
       const data = dataValues.map(v => v.data);
       const names = dataValues.map(v => v.name);
