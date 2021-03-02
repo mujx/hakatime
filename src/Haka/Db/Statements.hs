@@ -59,6 +59,15 @@ import Hasql.Statement
 import PostgreSQL.Binary.Data (UUID)
 import Text.RawString.QQ (r)
 
+vectorEncoder :: E.Value b -> E.Params (V.Vector b)
+vectorEncoder =
+  E.param
+    . E.nonNullable
+    . E.array
+    . E.dimension foldl'
+    . E.element
+    . E.nonNullable
+
 updateTokenUsage :: Statement Text ()
 updateTokenUsage = Statement query params D.noResult True
   where
@@ -504,14 +513,7 @@ insertTags = Statement query params result True
     result :: D.Result (V.Vector UUID)
     result = D.rowVector (D.column (D.nonNullable D.uuid))
     params :: E.Params (V.Vector Text)
-    params =
-      E.param
-        . E.nonNullable
-        . E.array
-        . E.dimension foldl'
-        . E.element
-        . E.nonNullable
-        $ E.text
+    params = vectorEncoder E.text
 
 deleteExistingTags :: Statement (Text, Text) ()
 deleteExistingTags = Statement query params D.noResult True
@@ -531,14 +533,7 @@ addTagsToProject = Statement query params decoder True
       ON CONFLICT DO NOTHING;;
     |]
     params :: E.Params (V.Vector (Text, Text, UUID))
-    params = contramap V.unzip3 $ contrazip3 (vector E.text) (vector E.text) (vector E.uuid)
-    vector =
-      E.param
-        . E.nonNullable
-        . E.array
-        . E.dimension foldl'
-        . E.element
-        . E.nonNullable
+    params = contramap V.unzip3 $ contrazip3 (vectorEncoder E.text) (vectorEncoder E.text) (vectorEncoder E.uuid)
     decoder = D.rowsAffected
 
 checkProjectOwner :: Statement (Text, Text) (Maybe Text)
