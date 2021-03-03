@@ -1,7 +1,6 @@
 import m from "mithril";
 import * as api from "../api";
 import { isLoggedIn, updateToken } from "../storage";
-import Commons from "./common.js";
 import utils from "../utils.js";
 
 const User = {
@@ -29,82 +28,100 @@ export default {
     }
 
     return m(
-      "form.form-signin",
-      {
-        onsubmit: function (e) {
-          e.preventDefault();
-
-          if (User.password.length < 8) {
-            ErrMsg.error = "The password is too short (minimum 8 characters)";
-            return;
-          }
-
-          if (User.password !== User.confirmPassword) {
-            ErrMsg.error = "The passwords do not match";
-            return;
-          }
-
-          api
-            .register(User.username, User.password)
-            .then(function (creds) {
-              updateToken(creds);
-
-              ErrMsg.error = "";
-
-              m.route.set("/app");
-            })
-            .catch(function (e) {
-              console.log(e.response);
-              ErrMsg.error = `Registration failed: ${utils.mkErrorMessage(e)}`;
-            });
-        }
-      },
-      [
+      "div.d-flex.justify-content-center",
+      m(
+        "div.register-wrap",
         m(
-          "div.text-center.mb-4",
-          m("h1.h3.mb-3.font-weight-normal", "Register")
-        ),
-        m("div.form-label-group", [
-          m("input.form-control[type=text][placeholder=Username]", {
-            id: "inputUsername",
-            required: "required",
-            oninput: function (e) {
-              User.username = e.target.value;
+          "form.form-signin",
+          {
+            onsubmit: function (e) {
+              e.preventDefault();
+
+              if (User.password.length < 8) {
+                ErrMsg.error =
+                  "The password is too short (minimum 8 characters)";
+                return;
+              }
+
+              if (User.password !== User.confirmPassword) {
+                ErrMsg.error = "The passwords do not match";
+                return;
+              }
+
+              api
+                .register(User.username, User.password)
+                .then(function (creds) {
+                  updateToken(creds);
+
+                  ErrMsg.error = "";
+
+                  m.route.set("/app");
+                })
+                .catch(function (e) {
+                  console.log(e.response);
+                  ErrMsg.error = `Registration failed: ${utils.mkErrorMessage(
+                    e
+                  )}`;
+                });
             }
-          }),
-          m("label", { for: "inputUsername" }, "Username")
-        ]),
-        m("div.form-label-group", [
-          m("input.form-control[type=password][placeholder=Password]", {
-            id: "inputPassword",
-            required: "required",
-            oninput: function (e) {
-              User.password = e.target.value;
-            }
-          }),
-          m("label", { for: "inputPassword" }, "Password")
-        ]),
-        m("div.form-label-group", [
-          m("input.form-control[type=password][placeholder=Confirm password]", {
-            id: "confirmPassword",
-            required: "required",
-            oninput: function (e) {
-              User.confirmPassword = e.target.value;
-            }
-          }),
-          m("label", { for: "confirmPassword" }, "Confirm password")
-        ]),
-        m(
-          "button.btn.btn-lg.btn-primary.btn-block.btn-signin[type=submit]",
-          "Register"
-        ),
-        m("p.mt-3.mb-2.text-center.text-danger", ErrMsg.error),
-        m("div.mt-4.text-center.text-muted", [
-          "Already have an account?",
-          m("a.ml-2", { href: "#!/login" }, "Login here")
-        ]),
-        Commons.githubLink()
-      ]
+          },
+          [
+            m(
+              "div.text-center.mb-4",
+              m("h1.h4.mb-3.font-weight-normal", "Register")
+            ),
+            m("div.form-label-group", [
+              m("input.form-control[type=text][placeholder=Username]", {
+                id: "inputUsername",
+                required: "required",
+                oninput: function (e) {
+                  User.username = e.target.value;
+                }
+              }),
+              m("label", { for: "inputUsername" }, "Username")
+            ]),
+            m("div.form-label-group", [
+              m("input.form-control[type=password][placeholder=Password]", {
+                id: "inputPassword",
+                required: "required",
+                oninput: function (e) {
+                  User.password = e.target.value;
+                }
+              }),
+              m("label", { for: "inputPassword" }, "Password")
+            ]),
+            m("div.form-label-group", [
+              m(
+                "input.form-control[type=password][placeholder=Confirm password]",
+                {
+                  id: "confirmPassword",
+                  required: "required",
+                  oninput: function (e) {
+                    User.confirmPassword = e.target.value;
+                  }
+                }
+              ),
+              m("label", { for: "confirmPassword" }, "Confirm password")
+            ]),
+            m(
+              "button.btn.btn-lg.btn-primary.btn-block.btn-signin[type=submit]",
+              "Register"
+            ),
+            m("p.mt-3.mb-2.text-center.text-danger", ErrMsg.error),
+            m("div.mt-4.text-center.text-muted", [
+              "Already have an account?",
+              m("a.ml-2", { href: "#!/login" }, "Login here")
+            ]),
+            m("div.mt-3.d-flex.justify-content-center", [
+              m(
+                "a",
+                { href: "https://github.com/mujx/hakatime", target: "_blank" },
+                "Hakatime"
+              )
+            ])
+          ]
+        )
+      )
     );
   }
 };

@@ -173,3 +173,18 @@ a.dropdown-item:hover {
 .autoComplete_wrapper {
   width: 250px !important;
 }
+
+/* Login form */
+
+.register-wrap {
+  margin-top: 100px;
+  width: 500px;
+  border-radius: 10px;
+  box-shadow: 0 3px 20px 0px rgba(0, 0, 0, 0.1);
+}
+.login-wrap {
+  margin-top: 100px;
+  width: 500px;
+  border-radius: 10px;
+  box-shadow: 0 3px 20px 0px rgba(0, 0, 0, 0.1);
+}
