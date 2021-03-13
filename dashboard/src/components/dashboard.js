@@ -44,6 +44,11 @@ export default {
         name: "Projects",
         icon: "book",
         link: "/app/projects"
+      },
+      {
+        name: "Leaderboards",
+        icon: "award",
+        link: "/app/leaderboards"
       }
     ].map(c => {
       const activeClass = m.route.get() === c.link ? "active" : "";

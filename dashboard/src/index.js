@@ -6,6 +6,7 @@ import * as storage from "./storage";
 import Dashboard from "./components/dashboard.js";
 import Overview from "./components/overview.js";
 import Projects from "./components/projects.js";
+import Leaderboards from "./components/leaderboards.js";
 import Login from "./components/login.js";
 import Register from "./components/register.js";
 
@@ -43,6 +44,11 @@ export function main() {
     "/app/projects": {
       render: function () {
         return m(Dashboard, m(Projects));
+      }
+    },
+    "/app/leaderboards": {
+      render: function () {
+        return m(Dashboard, m(Leaderboards));
       }
     }
   });

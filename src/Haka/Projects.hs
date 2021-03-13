@@ -22,7 +22,7 @@ import qualified Haka.Database as Db
 import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), Project (..), ProjectStatRow (..), StoredUser (..))
-import Haka.Utils (defaultLimit)
+import Haka.Utils (addAMonth, addAWeek, defaultLimit, removeAMonth, removeAWeek, removeAYear)
 import Katip
 import PostgreSQL.Binary.Data (Scientific)
 import qualified Relude.Unsafe as Unsafe
@@ -326,10 +326,3 @@ aggregateBy f rows = Just (prDay $ Unsafe.head rows, go rows Map.empty)
             (prTotalSeconds x, prPct x, prDailyPct x)
             m'
         )
-
-removeAWeek, removeAMonth, removeAYear, addAWeek, addAMonth :: UTCTime -> UTCTime
-removeAWeek t = UTCTime {utctDay = addDays (-7) (utctDay t), utctDayTime = 0}
-removeAMonth t = UTCTime {utctDay = addDays (-30) (utctDay t), utctDayTime = 0}
-removeAYear t = UTCTime {utctDay = addDays (-365) (utctDay t), utctDayTime = 0}
-addAWeek t = UTCTime {utctDay = addDays 7 (utctDay t), utctDayTime = 0}
-addAMonth t = UTCTime {utctDay = addDays 30 (utctDay t), utctDayTime = 0}

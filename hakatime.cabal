@@ -67,6 +67,7 @@ library
                      , Haka.Heartbeats
                      , Haka.Projects
                      , Haka.Stats
+                     , Haka.Leaderboards
                      , Haka.Users
                      , Haka.Utils
                      , Haka.PasswordUtils

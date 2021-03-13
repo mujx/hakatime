@@ -26,6 +26,7 @@ module Haka.Db.Sessions
     getTags,
     getAllTags,
     getAllProjects,
+    getLeaderboards,
   )
 where
 
@@ -38,6 +39,7 @@ import Haka.Types
   ( ApiToken (..),
     BadgeRow (..),
     HeartbeatPayload (..),
+    LeaderboardRow,
     Project (..),
     ProjectStatRow (..),
     RegisteredUser (..),
@@ -208,3 +210,6 @@ checkProjectOwner (StoredUser user) (Project projectName) = do
   case res of
     Just _ -> pure True
     Nothing -> pure False
+
+getLeaderboards :: UTCTime -> UTCTime -> Session [LeaderboardRow]
+getLeaderboards t0 t1 = statement (t0, t1) Statements.getLeaderboards

@@ -20,6 +20,7 @@ module Haka.Types
     TimelineRow (..),
     ProjectStatRow (..),
     TokenData (..),
+    LeaderboardRow (..),
   )
 where
 
@@ -257,3 +258,11 @@ instance ToJSON EntityType where
   toJSON FileType = A.String "file"
   toJSON AppType = A.String "app"
   toJSON DomainType = A.String "domain"
+
+data LeaderboardRow = LeaderboardRow
+  { leadProject :: Text,
+    leadLanguage :: Text,
+    leadSender :: Text,
+    leadTotalSeconds :: Int64
+  }
+  deriving (Eq, Show, Generic)

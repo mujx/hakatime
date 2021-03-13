@@ -33,6 +33,7 @@ import Haka.Types
   ( ApiToken (..),
     BadgeRow (..),
     HeartbeatPayload (..),
+    LeaderboardRow (..),
     Project (..),
     ProjectStatRow (..),
     StatRow (..),
@@ -120,6 +121,9 @@ class (Monad m, MonadThrow m) => Db m where
 
   -- | Validate that a project has the given owner.
   checkProjectOwner :: HqPool.Pool -> StoredUser -> Project -> m Bool
+
+  -- | Extract leaderboard information
+  getLeaderboards :: HqPool.Pool -> UTCTime -> UTCTime -> m [LeaderboardRow]
 
 instance Db IO where
   getUser pool token = do
@@ -210,6 +214,9 @@ instance Db IO where
     either (throw . SessionException) pure res
   checkProjectOwner pool user projectName = do
     res <- HqPool.use pool (Sessions.checkProjectOwner user projectName)
+    either (throw . SessionException) pure res
+  getLeaderboards pool t0 t1 = do
+    res <- HqPool.use pool (Sessions.getLeaderboards t0 t1)
     either (throw . SessionException) pure res
 
 mkTokenData :: Text -> IO TokenData

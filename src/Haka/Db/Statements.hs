@@ -33,6 +33,7 @@ module Haka.Db.Statements
     getTags,
     getAllTags,
     getAllProjects,
+    getLeaderboards,
   )
 where
 
@@ -46,6 +47,7 @@ import Haka.Types
   ( BadgeRow (..),
     EntityType (..),
     HeartbeatPayload (..),
+    LeaderboardRow (..),
     ProjectStatRow (..),
     RegisteredUser (..),
     StatRow (..),
@@ -612,3 +614,22 @@ getAllProjects = Statement query params result True
         GROUP BY projects.name
         ORDER BY COUNT(*) DESC;
       |]
+
+getLeaderboards :: Statement (UTCTime, UTCTime) [LeaderboardRow]
+getLeaderboards = Statement query params result True
+  where
+    result :: D.Result [LeaderboardRow]
+    result = D.rowList leaderRow
+    query :: ByteString
+    query = $(embedFile "sql/get_leaderboards.sql")
+    leaderRow :: D.Row LeaderboardRow
+    leaderRow =
+      LeaderboardRow
+        <$> (D.column . D.nonNullable) D.text
+        <*> (D.column . D.nonNullable) D.text
+        <*> (D.column . D.nonNullable) D.text
+        <*> (D.column . D.nonNullable) D.int8
+    params :: E.Params (UTCTime, UTCTime)
+    params =
+      (fst >$< E.param (E.nonNullable E.timestamptz))
+        <> (snd >$< E.param (E.nonNullable E.timestamptz))

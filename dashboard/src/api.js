@@ -201,6 +201,18 @@ function getUserProjects(params) {
   });
 }
 
+function getLeaderboards(params) {
+  return m.request({
+    method: "GET",
+    url: baseUrl() + "/api/v1/leaderboards",
+    background: true,
+    headers: {
+      authorization: storage.getHeaderToken()
+    },
+    params: params
+  });
+}
+
 export {
   createApiToken,
   checkJobStatus,
@@ -218,5 +230,6 @@ export {
   setTags,
   getProjectTags,
   getUserTags,
-  getUserProjects
+  getUserProjects,
+  getLeaderboards
 };

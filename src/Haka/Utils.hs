@@ -13,6 +13,11 @@ module Haka.Utils
     rollingGroupBy,
     countDuration,
     fmtDate,
+    removeAWeek,
+    removeAMonth,
+    removeAYear,
+    addAWeek,
+    addAMonth,
   )
 where
 
@@ -158,3 +163,10 @@ genDateRange t0 t1 =
       }
     | d <- [0 .. diffDays (utctDay t1) (utctDay t0) + 1]
   ]
+
+removeAWeek, removeAMonth, removeAYear, addAWeek, addAMonth :: UTCTime -> UTCTime
+removeAWeek t = UTCTime {utctDay = addDays (-7) (utctDay t), utctDayTime = 0}
+removeAMonth t = UTCTime {utctDay = addDays (-30) (utctDay t), utctDayTime = 0}
+removeAYear t = UTCTime {utctDay = addDays (-365) (utctDay t), utctDayTime = 0}
+addAWeek t = UTCTime {utctDay = addDays 7 (utctDay t), utctDayTime = 0}
+addAMonth t = UTCTime {utctDay = addDays 30 (utctDay t), utctDayTime = 0}

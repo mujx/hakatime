@@ -10,6 +10,7 @@ import qualified Haka.Authentication as Auth
 import qualified Haka.Badges as Badges
 import qualified Haka.Heartbeats as Heartbeats
 import qualified Haka.Import as Import
+import qualified Haka.Leaderboards as Leaderboards
 import qualified Haka.Projects as Projects
 import qualified Haka.Stats as Stats
 import qualified Haka.Users as Users
@@ -29,6 +30,7 @@ type HakaAPI =
     :<|> Badges.API
     :<|> Users.API
     :<|> Import.API
+    :<|> Leaderboards.API
     :<|> Static
 
 api :: Proxy HakaAPI
@@ -44,4 +46,5 @@ server settings =
     :<|> Badges.server
     :<|> Users.server
     :<|> Import.server
+    :<|> Leaderboards.server
     :<|> serveDirectoryFileServer (hakaDashboardPath settings)
