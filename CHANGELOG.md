@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Feature
+## [1.2.0] - 2021-03-14
 
-- Added leaderboards for all the user of the instance.
+### Features
+
+- Added leaderboards for the users of the instance.
+
+### Improvements
+
+- Small visual improvements on the login & register pages.
+- Removed very low percentages from pie charts to reduce noise.
 
 ## [1.1.0] - 2021-03-01
 
