@@ -104,7 +104,7 @@ getLeaderboardsHandler t0' t1' (Just token) = do
 
     mkLangList langs =
       Map.fromList $
-        filter (\x -> length (snd x) > 0) $
+        filter (not . null . snd) $
           map
             ( \xs ->
                 ( leadLanguage $ Unsafe.head xs,

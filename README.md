@@ -14,6 +14,7 @@ It comes together with a dashboard which provides a graphical representation of 
 - Import Wakatime activity using an API token and a range of dates.
 - Group projects together with tags (e.g `#work`, `#personal`) and view their aggregated statistics.
 - User registration & login through the UI.
+- Leaderboards for all the users of the instance.
 - Badge generation for a project that displays that total amount of hours spent for a configurable
   time period. [![my-app](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=14)](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=7)
 - Global and per project charts
