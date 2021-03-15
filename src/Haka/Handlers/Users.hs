@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Haka.Users
+module Haka.Handlers.Users
   ( API,
     server,
   )

@@ -54,21 +54,21 @@ library
                      , Haka.App
                      , Haka.Middleware
                      , Haka.Errors
-                     , Haka.Import
+                     , Haka.Handlers.Import
                      , Haka.Types
                      , Haka.Logger
 
   other-modules:       Haka.AesonHelpers
-                     , Haka.Authentication
-                     , Haka.Badges
+                     , Haka.Handlers.Authentication
+                     , Haka.Handlers.Badges
                      , Haka.Database
                      , Haka.Db.Sessions
                      , Haka.Db.Statements
-                     , Haka.Heartbeats
-                     , Haka.Projects
-                     , Haka.Stats
-                     , Haka.Leaderboards
-                     , Haka.Users
+                     , Haka.Handlers.Heartbeats
+                     , Haka.Handlers.Projects
+                     , Haka.Handlers.Stats
+                     , Haka.Handlers.Leaderboards
+                     , Haka.Handlers.Users
                      , Haka.Utils
                      , Haka.PasswordUtils
                      , Paths_hakatime

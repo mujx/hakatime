@@ -1,4 +1,4 @@
-module Haka.Leaderboards
+module Haka.Handlers.Leaderboards
   ( API,
     server,
   )

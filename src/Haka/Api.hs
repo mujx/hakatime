@@ -6,14 +6,14 @@ module Haka.Api
 where
 
 import Haka.App (AppM, ServerSettings (..))
-import qualified Haka.Authentication as Auth
-import qualified Haka.Badges as Badges
-import qualified Haka.Heartbeats as Heartbeats
-import qualified Haka.Import as Import
-import qualified Haka.Leaderboards as Leaderboards
-import qualified Haka.Projects as Projects
-import qualified Haka.Stats as Stats
-import qualified Haka.Users as Users
+import qualified Haka.Handlers.Authentication as Auth
+import qualified Haka.Handlers.Badges as Badges
+import qualified Haka.Handlers.Heartbeats as Heartbeats
+import qualified Haka.Handlers.Import as Import
+import qualified Haka.Handlers.Leaderboards as Leaderboards
+import qualified Haka.Handlers.Projects as Projects
+import qualified Haka.Handlers.Stats as Stats
+import qualified Haka.Handlers.Users as Users
 import Servant
 
 type Static = Raw

@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Haka.Heartbeats
+module Haka.Handlers.Heartbeats
   ( User (..),
     API,
     server,

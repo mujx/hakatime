@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Haka.Projects
+module Haka.Handlers.Projects
   ( API,
     server,
   )

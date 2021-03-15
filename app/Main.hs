@@ -16,7 +16,7 @@ import Haka.App
     runAppT,
   )
 import qualified Haka.Cli as Cli
-import qualified Haka.Import as Import
+import qualified Haka.Handlers.Import as Import
 import qualified Haka.Logger as Log
 import qualified Haka.Middleware as Middleware
 import qualified Hasql.Connection as HasqlConn

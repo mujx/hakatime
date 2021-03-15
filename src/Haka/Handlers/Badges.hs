@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Haka.Badges
+module Haka.Handlers.Badges
   ( API,
     server,
   )

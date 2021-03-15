@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Haka.Authentication
+module Haka.Handlers.Authentication
   ( API,
     server,
   )

@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Haka.Stats
+module Haka.Handlers.Stats
   ( API,
     server,
   )

@@ -1,4 +1,4 @@
-module Haka.Import
+module Haka.Handlers.Import
   ( API,
     server,
     handleImportRequest,
