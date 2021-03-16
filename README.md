@@ -12,6 +12,7 @@ It comes together with a dashboard which provides a graphical representation of 
 ## Features
 
 - Import Wakatime activity using an API token and a range of dates.
+- See time spent on Github commits.
 - Group projects together with tags (e.g `#work`, `#personal`) and view their aggregated statistics.
 - User registration & login through the UI.
 - Leaderboards for all the users of the instance.

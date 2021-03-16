@@ -6,6 +6,7 @@ module Haka.Errors
     HeartbeatApiResponse (..),
     logError,
     logStrErr,
+    logHttpError,
     toJSONError,
     DatabaseException (..),
     invalidTokenError,
@@ -20,13 +21,15 @@ module Haka.Errors
 where
 
 import Control.Exception.Safe (MonadThrow, throw)
-import Data.Aeson (FromJSON (..), ToJSON (..), encode, genericParseJSON, genericToJSON)
+import Data.Aeson (FromJSON (..), ToJSON (..), encode, genericParseJSON, genericToJSON, omitNothingFields)
 import qualified Data.ByteString.Char8 as C
 import Data.CaseInsensitive (CI, mk)
 import Haka.AesonHelpers (noPrefixOptions, untagged)
 import Haka.Types (BulkHeartbeatData, HearbeatData, Project (..), StoredUser (..))
 import qualified Hasql.Pool as HqPool
 import Katip
+import Network.HTTP.Client (HttpException (..), host)
+import qualified Network.HTTP.Req as R
 import Servant
 import Text.Printf (printf)
 
@@ -42,17 +45,17 @@ instance ToJSON HeartbeatApiResponse where
 instance FromJSON HeartbeatApiResponse where
   parseJSON = genericParseJSON untagged
 
-newtype ApiErrorData = ApiErrorData {apiError :: Text}
+data ApiErrorData = ApiErrorData {apiError :: Text, apiMessage :: Maybe Text}
   deriving (Show, Generic)
 
 instance ToJSON ApiErrorData where
-  toJSON = genericToJSON noPrefixOptions
+  toJSON = genericToJSON noPrefixOptions {omitNothingFields = True}
 
 instance FromJSON ApiErrorData where
   parseJSON = genericParseJSON noPrefixOptions
 
-mkApiError :: Text -> HeartbeatApiResponse
-mkApiError msg = ApiError $ ApiErrorData {apiError = msg}
+mkApiError :: Text -> Maybe Text -> HeartbeatApiResponse
+mkApiError msg extraMsg = ApiError $ ApiErrorData {apiError = msg, apiMessage = extraMsg}
 
 contentTypeHeader :: [(CI ByteString, ByteString)]
 contentTypeHeader = [(mk (C.pack "Content-Type"), C.pack "application/json;charset=utf-8")]
@@ -60,84 +63,95 @@ contentTypeHeader = [(mk (C.pack "Content-Type"), C.pack "application/json;chars
 missingAuthError :: ServerError
 missingAuthError =
   err400
-    { errBody = encode $ mkApiError "Missing the 'Authorization' header field",
+    { errBody = encode $ mkApiError "Missing the 'Authorization' header field" Nothing,
       errHeaders = contentTypeHeader
     }
 
 missingQueryParam :: Text -> ServerError
 missingQueryParam param =
   err400
-    { errBody = encode $ mkApiError ("Missing query parameter " <> param),
+    { errBody = encode $ mkApiError ("Missing query parameter " <> param) Nothing,
       errHeaders = contentTypeHeader
     }
 
 missingRefreshTokenCookie :: ServerError
 missingRefreshTokenCookie =
   err400
-    { errBody = encode $ mkApiError "Missing the 'refresh_token' cookie",
+    { errBody = encode $ mkApiError "Missing the 'refresh_token' cookie" Nothing,
       errHeaders = contentTypeHeader
     }
 
 invalidTokenError :: ServerError
 invalidTokenError =
   err403
-    { errBody = encode $ mkApiError "The given api token doesn't belong to a user",
+    { errBody = encode $ mkApiError "The given api token doesn't belong to a user" Nothing,
       errHeaders = contentTypeHeader
     }
 
 invalidRelation :: StoredUser -> Project -> ServerError
 invalidRelation (StoredUser user) (Project project) =
   err404
-    { errBody = encode $ mkApiError (toText (printf "The user %s doesn't have access to project %s" user project :: String)),
+    { errBody =
+        encode $
+          mkApiError
+            (toText (printf "The user %s doesn't have access to project %s" user project :: String))
+            Nothing,
       errHeaders = contentTypeHeader
     }
 
 expiredRefreshToken :: ServerError
 expiredRefreshToken =
   err403
-    { errBody = encode $ mkApiError "The given api token has expired",
+    { errBody = encode $ mkApiError "The given api token has expired" Nothing,
       errHeaders = contentTypeHeader
     }
 
 disabledRegistration :: ServerError
 disabledRegistration =
   err403
-    { errBody = encode $ mkApiError "Registration is disabled",
+    { errBody = encode $ mkApiError "Registration is disabled" Nothing,
       errHeaders = contentTypeHeader
     }
 
 usernameExists :: Text -> ServerError
 usernameExists u =
   err409
-    { errBody = encode $ mkApiError $ "The username " <> u <> " already exists",
+    { errBody = encode $ mkApiError ("The username " <> u <> " already exists") Nothing,
       errHeaders = contentTypeHeader
     }
 
 registerError :: ServerError
 registerError =
   err409
-    { errBody = encode $ mkApiError "The registration failed due to an internal error",
+    { errBody = encode $ mkApiError "The registration failed due to an internal error" Nothing,
       errHeaders = contentTypeHeader
     }
 
 invalidCredentials :: ServerError
 invalidCredentials =
   err403
-    { errBody = encode $ mkApiError "Invalid credentials",
+    { errBody = encode $ mkApiError "Invalid credentials" Nothing,
       errHeaders = contentTypeHeader
     }
 
 missingGithubToken :: ServerError
 missingGithubToken =
   err500
-    { errBody = encode $ mkApiError "The environment variable GITHUB_TOKEN is not set",
+    { errBody = encode $ mkApiError "The environment variable GITHUB_TOKEN is not set" Nothing,
       errHeaders = contentTypeHeader
     }
 
 genericError :: Text -> ServerError
 genericError _ =
   err500
-    { errBody = encode $ mkApiError "An internal error occured",
+    { errBody = encode $ mkApiError "An internal error occured" Nothing,
+      errHeaders = contentTypeHeader
+    }
+
+genericHttpError :: Text -> Maybe Text -> ServerError
+genericHttpError e msg =
+  err500
+    { errBody = encode $ mkApiError e msg,
       errHeaders = contentTypeHeader
     }
 
@@ -172,6 +186,17 @@ logStrErr :: (KatipContext m, MonadThrow m) => Text -> m b
 logStrErr e = do
   logFM WarningS (ls e)
   throw $ genericError e
+
+logHttpError :: (KatipContext m, MonadThrow m) => R.HttpException -> m b
+logHttpError (R.VanillaHttpException exc@(HttpExceptionRequest r _)) = do
+  logFM WarningS (show exc)
+  throw $ genericHttpError ("HTTP call to " <> decodeUtf8 (host r) <> " failed") Nothing
+logHttpError (R.VanillaHttpException (InvalidUrlException s e)) = do
+  logFM WarningS ("Invalid url " <> ls s <> " : " <> show e)
+  throw $ genericHttpError "InvalidUrlException" (Just ("Invalid url " <> show s <> " : " <> show e))
+logHttpError (R.JsonHttpException e) = do
+  logFM WarningS (ls e)
+  throw $ genericHttpError "JsonHttpException" (Just $ show e)
 
 logError :: (KatipContext m, MonadThrow m) => DatabaseException -> m b
 logError e@MissingRefreshTokenCookie = do

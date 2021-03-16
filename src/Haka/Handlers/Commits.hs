@@ -21,10 +21,10 @@ import Servant
 import System.Environment.MrEnv (envAsString)
 
 defaultNumOfCommits :: Int64
-defaultNumOfCommits = 20
+defaultNumOfCommits = 40
 
 githubEnvVariable :: String
-githubEnvVariable = "GITHUB_TOKEN_M"
+githubEnvVariable = "GITHUB_TOKEN"
 
 emptyToken :: String
 emptyToken = ""
@@ -130,7 +130,7 @@ getCommitsFor ::
   Text ->
   Text ->
   Int64 ->
-  m (Either Text [CommitPayload])
+  m [CommitPayload]
 getCommitsFor githubToken repoOwner repoName limit = do
   let header =
         R.header "Authorization" ("Basic " <> encodeUtf8 githubToken)
@@ -145,7 +145,7 @@ getCommitsFor githubToken repoOwner repoName limit = do
       R.jsonResponse
       (params <> header)
 
-  pure $ Right (R.responseBody res :: [CommitPayload])
+  pure (R.responseBody res :: [CommitPayload])
 
 -- Replace the entries with the calculated time in the final commit list.
 updateCommits :: Map.Map Text CommitPayload -> [CommitPayload] -> [CommitPayload]
@@ -153,6 +153,33 @@ updateCommits _ [] = []
 updateCommits map' (x : xs) = case Map.lookup (pSha x) map' of
   Just value -> value : updateCommits map' xs
   Nothing -> x : updateCommits map' xs
+
+mkTimePairs :: [CommitPayload] -> Text -> Text -> V.Vector (Text, Text, UTCTime, UTCTime)
+mkTimePairs [] _ _ = V.empty
+mkTimePairs [_] _ _ = V.empty
+mkTimePairs allCommits username projectName =
+  let commitGaps = zip (Unsafe.tail allCommits) (Unsafe.init allCommits)
+   in V.fromList $
+        map
+          ( \(a, b) ->
+              ( username,
+                projectName,
+                authorDate $ dataAuthor $ pCommit a,
+                authorDate $ dataAuthor $ pCommit b
+              )
+          )
+          commitGaps
+
+mkCommitsWithTime :: [CommitPayload] -> [Int64] -> Map Text CommitPayload
+mkCommitsWithTime [] _ = Map.empty
+mkCommitsWithTime [_] _ = Map.empty
+mkCommitsWithTime allCommits timeSpent =
+  let commitGaps = zip (Unsafe.tail allCommits) (Unsafe.init allCommits)
+   in Map.fromList $
+        zipWith
+          (curry (\((_, b), c) -> (pSha b, b {pTotal_seconds = Just c})))
+          commitGaps
+          timeSpent
 
 commitReportHandler ::
   Text ->
@@ -175,8 +202,8 @@ commitReportHandler proj (Just repoName) (Just repoOwner) (Just user) limit (Jus
     then throw Err.missingGithubToken
     else do
       -- We append one extra commit because the time for the last commit cannot not be calculated.
-      res <- getCommitsFor githubToken repoOwner repoName (numCommits + 1)
-      repoCommits <- either Err.logStrErr pure res
+      res <- try $ getCommitsFor githubToken repoOwner repoName (numCommits + 1)
+      repoCommits <- either Err.logHttpError pure res
 
       let usersCommits = filter (\x -> authorLogin (pAuthor x) == user) repoCommits
 
@@ -185,28 +212,12 @@ commitReportHandler proj (Just repoName) (Just repoOwner) (Just user) limit (Jus
       userRes <- try $ liftIO $ Db.getUserByToken _pool token
       username <- either Err.logError pure userRes
 
-      let commitGaps = zip (Unsafe.tail usersCommits) (Unsafe.init usersCommits)
-      let timePairs =
-            V.fromList $
-              map
-                ( \(a, b) ->
-                    ( username,
-                      proj,
-                      authorDate $ dataAuthor $ pCommit a,
-                      authorDate $ dataAuthor $ pCommit b
-                    )
-                )
-                commitGaps
+      let timePairs = mkTimePairs usersCommits username proj
 
       timeRes <- try $ liftIO $ Db.getTotalTimeBetween _pool timePairs
       timeSpent <- either Err.logError pure timeRes
 
-      let commitsWithTime =
-            Map.fromList $
-              zipWith
-                (curry (\((_, b), c) -> (pSha b, b {pTotal_seconds = Just c})))
-                commitGaps
-                timeSpent
+      let commitsWithTime = mkCommitsWithTime usersCommits timeSpent
 
       -- We remove the last commit which doesn't include the time spent.
       let result = take (fromIntegral numCommits) $ updateCommits commitsWithTime repoCommits
