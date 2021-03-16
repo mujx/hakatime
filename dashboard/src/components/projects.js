@@ -10,6 +10,7 @@ import LocalState from "../models/ProjectState.js";
 
 // Modals
 import SetTagsModal from "../modals/SetTags.js";
+import CommitListModal from "../modals/CommitList.js";
 
 // Utils
 import { mkSingleStatCard } from "../single_stat_card.js";
@@ -580,6 +581,22 @@ const ProjectComponent = {
                 "Pick a date range"
               )
             ])
+        )
+      ]),
+      m("div.mr-1", [
+        m(
+          "button.btn.btn-primary[title='See time spent per commit']",
+          {
+            onclick: e => {
+              e.redraw = false;
+              console.log("Open commit log modal");
+              CommitListModal.openModal({
+                projectName: LocalState.currentProject
+              });
+            },
+            role: "button"
+          },
+          m("i.fas.fa-code-branch.fa-md.text-white-50")
         )
       ]),
       m("div.mr-1", [

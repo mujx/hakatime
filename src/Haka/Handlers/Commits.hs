@@ -47,8 +47,8 @@ type GetCommitReport =
     :> "commits"
     :> Capture "project" Text
     :> "report"
-    :> QueryParam "repo_name" Text
-    :> QueryParam "repo_owner" Text
+    :> QueryParam "repoName" Text
+    :> QueryParam "repoOwner" Text
     :> QueryParam "user" Text
     :> QueryParam "limit" Int64
     :> Header "Authorization" ApiToken
@@ -190,8 +190,8 @@ commitReportHandler ::
   Maybe ApiToken ->
   AppM CommitReport
 commitReportHandler _ _ _ _ _ Nothing = throw Err.missingAuthError
-commitReportHandler _ Nothing _ _ _ _ = throw $ Err.missingQueryParam "repo_name"
-commitReportHandler _ _ Nothing _ _ _ = throw $ Err.missingQueryParam "repo_owner"
+commitReportHandler _ Nothing _ _ _ _ = throw $ Err.missingQueryParam "repoName"
+commitReportHandler _ _ Nothing _ _ _ = throw $ Err.missingQueryParam "repoOwner"
 commitReportHandler _ _ _ Nothing _ _ = throw $ Err.missingQueryParam "user"
 commitReportHandler proj (Just repoName) (Just repoOwner) (Just user) limit (Just token) = do
   let numCommits = fromMaybe defaultNumOfCommits limit

@@ -213,6 +213,18 @@ function getLeaderboards(params) {
   });
 }
 
+function getCommitLog(project, params) {
+  return m.request({
+    method: "GET",
+    url: baseUrl() + "/api/v1/commits/" + project + "/report",
+    background: true,
+    headers: {
+      authorization: storage.getHeaderToken()
+    },
+    params: params
+  });
+}
+
 export {
   createApiToken,
   checkJobStatus,
@@ -231,5 +243,6 @@ export {
   getProjectTags,
   getUserTags,
   getUserProjects,
-  getLeaderboards
+  getLeaderboards,
+  getCommitLog
 };
