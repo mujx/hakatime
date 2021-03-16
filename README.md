@@ -82,6 +82,7 @@ services:
       HAKA_LOG_LEVEL: "info" # Control the verbosity of the logger.
       HAKA_ENV: "dev" # Use a json logger for production, otherwise key=value pairs.
       HAKA_HTTP_LOG: "true" # If you want to log http requests.
+      GITHUB_TOKEN: "<token>" # If you want to retrieve time spent per commit. No extra scope is required.
     ports:
       - "127.0.0.1:8080:8080"
   haka_db:
@@ -163,6 +164,8 @@ Available commands:
 ### Projects
 
 ![Projects Page](img/projects.png "Projects Page")
+
+![Projects Page - Commits](img/commits.png "Projects Page - Commits")
 
 ## Contributing
 
