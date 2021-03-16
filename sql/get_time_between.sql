@@ -7,7 +7,7 @@ WITH input_table AS (
             min_date,
             max_date))
 SELECT
-    sum(total_seconds)
+    CAST(SUM(total_seconds) AS bigint)
 FROM (
     SELECT
         time_sent,

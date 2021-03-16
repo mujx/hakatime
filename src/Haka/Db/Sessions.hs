@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# OPTIONS_GHC -fno-warn-missing-export-lists #-}
 
 module Haka.Db.Sessions where
 

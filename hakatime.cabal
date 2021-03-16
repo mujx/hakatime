@@ -115,7 +115,6 @@ library
                      , postgresql-simple
                      , postgresql-simple-migration
                      , vector
-                     , pretty-simple
 
   ghc-options:         -Wall
                        -Wcompat
