@@ -8,6 +8,7 @@ where
 import Haka.App (AppM, ServerSettings (..))
 import qualified Haka.Handlers.Authentication as Auth
 import qualified Haka.Handlers.Badges as Badges
+import qualified Haka.Handlers.Commits as Commits
 import qualified Haka.Handlers.Heartbeats as Heartbeats
 import qualified Haka.Handlers.Import as Import
 import qualified Haka.Handlers.Leaderboards as Leaderboards
@@ -31,6 +32,7 @@ type HakaAPI =
     :<|> Users.API
     :<|> Import.API
     :<|> Leaderboards.API
+    :<|> Commits.API
     :<|> Static
 
 api :: Proxy HakaAPI
@@ -47,4 +49,5 @@ server settings =
     :<|> Users.server
     :<|> Import.server
     :<|> Leaderboards.server
+    :<|> Commits.server
     :<|> serveDirectoryFileServer (hakaDashboardPath settings)

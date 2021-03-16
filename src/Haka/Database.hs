@@ -125,6 +125,9 @@ class (Monad m, MonadThrow m) => Db m where
   -- | Extract leaderboard information
   getLeaderboards :: HqPool.Pool -> UTCTime -> UTCTime -> m [LeaderboardRow]
 
+  -- | Get total time between the given time ranges.
+  getTotalTimeBetween :: HqPool.Pool -> V.Vector (Text, Text, UTCTime, UTCTime) -> m [Int64]
+
 instance Db IO where
   getUser pool token = do
     res <- HqPool.use pool (Sessions.getUser token)
@@ -218,6 +221,10 @@ instance Db IO where
   getLeaderboards pool t0 t1 = do
     res <- HqPool.use pool (Sessions.getLeaderboards t0 t1)
     either (throw . SessionException) pure res
+  getTotalTimeBetween pool ranges = do
+    -- We return in reverse order because we insert with descending but we sort in ascending.
+    res <- HqPool.use pool (Sessions.getTotalTimeBetween ranges)
+    either (throw . SessionException) (pure . reverse) res
 
 mkTokenData :: Text -> IO TokenData
 mkTokenData user = do

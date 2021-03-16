@@ -1,34 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Haka.Db.Sessions
-  ( getUser,
-    getUserByRefreshToken,
-    createBadgeLink,
-    getTotalActivityTime,
-    deleteFailedJobs,
-    getJobStatus,
-    updateTokenUsage,
-    deleteToken,
-    createAPIToken,
-    listApiTokens,
-    saveHeartbeats,
-    getTotalStats,
-    getTimeline,
-    getProjectStats,
-    insertToken,
-    insertUser,
-    validateUser,
-    deleteTokens,
-    getBadgeLinkInfo,
-    createAccessTokens,
-    setTags,
-    checkProjectOwner,
-    getTags,
-    getAllTags,
-    getAllProjects,
-    getLeaderboards,
-  )
-where
+module Haka.Db.Sessions where
 
 import qualified Crypto.Error as CErr
 import Data.Aeson as A
@@ -213,3 +185,6 @@ checkProjectOwner (StoredUser user) (Project projectName) = do
 
 getLeaderboards :: UTCTime -> UTCTime -> Session [LeaderboardRow]
 getLeaderboards t0 t1 = statement (t0, t1) Statements.getLeaderboards
+
+getTotalTimeBetween :: V.Vector (Text, Text, UTCTime, UTCTime) -> Session [Int64]
+getTotalTimeBetween times = statement times Statements.getTotalTimeBetween

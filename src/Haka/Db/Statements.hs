@@ -1,41 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Haka.Db.Statements
-  ( insertHeartBeat,
-    createAPIToken,
-    deleteFailedJobs,
-    getJobStatus,
-    createBadgeLink,
-    getBadgeLinkInfo,
-    getTotalActivityTime,
-    isUserAvailable,
-    updateTokenUsage,
-    listApiTokens,
-    insertProject,
-    getTimeline,
-    getUserByToken,
-    getUserByRefreshToken,
-    deleteRefreshToken,
-    deleteAuthToken,
-    getUserActivity,
-    getUserActivityByTag,
-    getProjectStats,
-    insertUser,
-    getUserByName,
-    insertToken,
-    createAccessTokens,
-    deleteExpiredTokens,
-    insertTags,
-    addTagsToProject,
-    checkProjectOwner,
-    deleteExistingTags,
-    getTags,
-    getAllTags,
-    getAllProjects,
-    getLeaderboards,
-  )
-where
+module Haka.Db.Statements where
 
 import Contravariant.Extras.Contrazip (contrazip3, contrazip4, contrazip5)
 import Data.Aeson as A
@@ -633,3 +599,19 @@ getLeaderboards = Statement query params result True
     params =
       (fst >$< E.param (E.nonNullable E.timestamptz))
         <> (snd >$< E.param (E.nonNullable E.timestamptz))
+
+getTotalTimeBetween :: Statement (V.Vector (Text, Text, UTCTime, UTCTime)) [Int64]
+getTotalTimeBetween = Statement query params result True
+  where
+    result :: D.Result [Int64]
+    result = D.rowList $ (D.column . D.nonNullable) D.int8
+    query :: ByteString
+    query = $(embedFile "sql/get_time_between.sql")
+    params :: E.Params (V.Vector (Text, Text, UTCTime, UTCTime))
+    params =
+      contramap V.unzip4 $
+        contrazip4
+          (vectorEncoder E.text)
+          (vectorEncoder E.text)
+          (vectorEncoder E.timestamptz)
+          (vectorEncoder E.timestamptz)

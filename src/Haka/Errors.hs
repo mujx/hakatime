@@ -1,8 +1,11 @@
 module Haka.Errors
   ( missingAuthError,
+    missingGithubToken,
+    missingQueryParam,
     missingRefreshTokenCookie,
     HeartbeatApiResponse (..),
     logError,
+    logStrErr,
     toJSONError,
     DatabaseException (..),
     invalidTokenError,
@@ -58,6 +61,13 @@ missingAuthError :: ServerError
 missingAuthError =
   err400
     { errBody = encode $ mkApiError "Missing the 'Authorization' header field",
+      errHeaders = contentTypeHeader
+    }
+
+missingQueryParam :: Text -> ServerError
+missingQueryParam param =
+  err400
+    { errBody = encode $ mkApiError ("Missing query parameter " <> param),
       errHeaders = contentTypeHeader
     }
 
@@ -117,6 +127,13 @@ invalidCredentials =
       errHeaders = contentTypeHeader
     }
 
+missingGithubToken :: ServerError
+missingGithubToken =
+  err500
+    { errBody = encode $ mkApiError "The environment variable GITHUB_TOKEN is not set",
+      errHeaders = contentTypeHeader
+    }
+
 genericError :: Text -> ServerError
 genericError _ =
   err500
@@ -150,6 +167,11 @@ toJSONError (OperationException e) = genericError e
 toJSONError (UsernameExists u) = usernameExists u
 toJSONError (RegistrationFailed _) = registerError
 toJSONError MissingRefreshTokenCookie = missingRefreshTokenCookie
+
+logStrErr :: (KatipContext m, MonadThrow m) => Text -> m b
+logStrErr e = do
+  logFM WarningS (ls e)
+  throw $ genericError e
 
 logError :: (KatipContext m, MonadThrow m) => DatabaseException -> m b
 logError e@MissingRefreshTokenCookie = do
