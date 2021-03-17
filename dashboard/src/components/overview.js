@@ -1,5 +1,6 @@
 // Third-party
 import m from "mithril";
+import $ from "jquery";
 import Litepicker from "litepicker";
 import _ from "lodash";
 import ApexCharts from "apexcharts/dist/apexcharts.common";
@@ -15,6 +16,7 @@ import cards from "../card_container.js";
 import config from "../config.js";
 import * as api from "../api.js";
 import * as auth from "../auth.js";
+import Common from "./common";
 import Autocomplete from "@tarekraafat/autocomplete.js";
 
 // Easy access of all charts in the page.
@@ -479,6 +481,7 @@ let dateRangePicker;
 
 const OverviewComponent = {
   oncreate: () => {
+    $('[data-toggle="tooltip"]').tooltip();
     new Autocomplete({
       data: {
         src: async function () {
@@ -525,34 +528,10 @@ const OverviewComponent = {
         )
       ]),
       m("div.dropdown.mr-2", [
-        m(
-          "button.btn.btn-primary.dropdown-toggle.shadow-sm[data-toggle='dropdown'][aria-haspopup='true'][aria-expanded='false']",
-          {
-            type: "button",
-            id: "dropdownMenuButton"
-          },
-          [
-            m("i.fas.fa-clock.fa-md.text-white-50.mr-2"),
-            m("small", `Cut-off limit (${TimeRange.timeLimit} mins)`)
-          ]
-        ),
-        m(
-          'div.dropdown-menu[aria-labelledby="dropdownMenuButton"]',
-          [5, 10, 15, 20, 30].map(r => {
-            return m(
-              "a.btn.dropdown-item",
-              {
-                onclick: e => {
-                  e.redraw = false;
-                  if (TimeRange.setTimeLimit(r)) {
-                    State.fetchItems();
-                  }
-                }
-              },
-              `${r} mins`
-            );
-          })
-        )
+        Common.timeoutButton(TimeRange.timeLimit),
+        Common.timeoutDropdown(function (selection) {
+          if (TimeRange.setTimeLimit(selection)) State.fetchItems();
+        })
       ]),
       m("div.dropdown", [
         m(

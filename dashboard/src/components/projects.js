@@ -1,5 +1,6 @@
 import m from "mithril";
 import _ from "lodash";
+import $ from "jquery";
 import path from "path";
 import ApexCharts from "apexcharts/dist/apexcharts.common";
 import Litepicker from "litepicker";
@@ -18,6 +19,7 @@ import cards from "../card_container.js";
 import utils from "../utils.js";
 import config from "../config.js";
 import * as api from "../api";
+import Common from "./common";
 
 function mkFileChart() {
   return cards.mkCardContainer("Most active files", m(fileChart()));
@@ -462,6 +464,9 @@ const ProjectComponent = {
       dateRangePicker = null;
     }
   },
+  oncreate: () => {
+    $('[data-toggle="tooltip"]').tooltip();
+  },
   view: () => {
     document.title = "Hakatime | Projects";
 
@@ -493,32 +498,10 @@ const ProjectComponent = {
         )
       ]),
       m("div.dropdown.mr-2", [
-        m(
-          "button.btn.btn-primary.dropdown-toggle.shadow-sm[data-toggle='dropdown'][aria-haspopup='true'][aria-expanded='false']",
-          {
-            type: "button",
-            id: "dropdownMenuButton"
-          },
-          [
-            m("i.fas.fa-clock.fa-md.text-white-50.mr-2"),
-            m("small", `Cut-off limit (${TimeRange.timeLimit} mins)`)
-          ]
-        ),
-        m(
-          'div.dropdown-menu[aria-labelledby="dropdownMenuButton"]',
-          [5, 10, 15, 20, 30].map(r => {
-            return m(
-              "a.btn.dropdown-item",
-              {
-                onclick: e => {
-                  e.redraw = false;
-                  if (TimeRange.setTimeLimit(r)) LocalState.fetchProjectStats();
-                }
-              },
-              `${r} mins`
-            );
-          })
-        )
+        Common.timeoutButton(TimeRange.timeLimit),
+        Common.timeoutDropdown(function (selection) {
+          if (TimeRange.setTimeLimit(selection)) LocalState.fetchProjectStats();
+        })
       ]),
       m("div.dropdown.mr-2", [
         m(
@@ -585,7 +568,7 @@ const ProjectComponent = {
       ]),
       m("div.mr-1", [
         m(
-          "button.btn.btn-primary[title='See time spent per commit']",
+          "button.btn.btn-primary[data-toggle='tooltip'][title='See time spent per commit']",
           {
             onclick: e => {
               e.redraw = false;
@@ -601,7 +584,7 @@ const ProjectComponent = {
       ]),
       m("div.mr-1", [
         m(
-          "button.btn.btn-primary[title='Add tags to this project']",
+          "button.btn.btn-primary[data-toggle='tooltip'][title='Add tags to this project']",
           {
             onclick: e => {
               e.redraw = false;
@@ -625,7 +608,7 @@ const ProjectComponent = {
       ]),
       m("div.mr-1", [
         m(
-          "button.btn.btn-primary[title='Copy shields.io badge to clipboard']",
+          "button.btn.btn-primary[data-toggle='tooltip'][title='Copy shields.io badge to clipboard']",
           {
             onclick: e => {
               e.redraw = false;
