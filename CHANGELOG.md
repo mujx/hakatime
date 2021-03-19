@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2021-03-19
+
 ### Features
 
-- Added API endpoint to see time spent on Github commits.
+- Added API endpoint & UI modal to see time spent per GitHub commit.
+
+### Improvements
+
+- Converted all tooltips to use the Bootstrap theme.
+- Added explanation about the cut-off limit (renamed to timeout).
 
 ## [1.2.0] - 2021-03-14
 
