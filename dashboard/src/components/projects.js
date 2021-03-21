@@ -64,7 +64,7 @@ function hourDistribution() {
 
       const data = _.zipObject([...Array(24).keys()], Array(24).fill(0));
       _.forEach(LocalState.obj.hour, function (v) {
-        data[utils.addTimeOffset(v.name)] = (v.totalSeconds / 3600).toFixed(1);
+        data[utils.addTimeOffset(v.name)] = v.totalSeconds;
       });
 
       const options = {
@@ -79,7 +79,7 @@ function hourDistribution() {
         tooltip: {
           y: {
             formatter: function (val) {
-              return val + " hours";
+              return utils.secondsToHms(val);
             }
           }
         },
@@ -101,6 +101,11 @@ function hourDistribution() {
         yaxis: {
           title: {
             text: "Hours"
+          },
+          labels: {
+            formatter: function (val) {
+              return (val / 3600).toFixed(1);
+            }
           }
         },
         xaxis: {
@@ -134,7 +139,7 @@ function dayRadarChart() {
 
       const data = _.zipObject([...Array(7).keys()], Array(7).fill(0));
       _.forEach(LocalState.obj.weekDay, function (v) {
-        data[v.name] = (v.totalSeconds / 3600).toFixed(1);
+        data[v.name] = v.totalSeconds;
       });
 
       const options = {
@@ -149,7 +154,7 @@ function dayRadarChart() {
         tooltip: {
           y: {
             formatter: function (val) {
-              return val + " hours";
+              return utils.secondsToHms(val);
             }
           }
         },
@@ -215,11 +220,11 @@ function pieChart() {
       const dataValues = LocalState.obj.languages
         .map(v => {
           return {
-            data: parseFloat((v.totalPct * 100).toFixed(2)),
+            data: v.totalSeconds,
             name: v.name
           };
         })
-        .filter(o => utils.hasEnoughPercentage(o.data));
+        .filter(o => o.data >= 60);
 
       const data = dataValues.map(v => v.data);
       const names = dataValues.map(v => v.name);
@@ -234,6 +239,13 @@ function pieChart() {
         chart: {
           type: "pie",
           animations: config.animations
+        },
+        yaxis: {
+          labels: {
+            formatter: function (val) {
+              return utils.secondsToHms(val);
+            }
+          }
         },
         labels: names
       };
@@ -303,7 +315,7 @@ function fileChart() {
         ),
         10
       );
-      const data = myData.map(v => (v.totalSeconds / 3600).toFixed(1));
+      const data = myData.map(v => v.totalSeconds);
       const categories = myData.map(v => v.name);
 
       const options = {
@@ -318,7 +330,7 @@ function fileChart() {
         tooltip: {
           y: {
             formatter: function (val) {
-              return val + " hours";
+              return utils.secondsToHms(val);
             }
           }
         },
@@ -374,6 +386,11 @@ function fileChart() {
           title: {
             text: "Hours"
           },
+          labels: {
+            formatter: function (val) {
+              return (val / 3600).toFixed(1);
+            }
+          },
           categories: categories
         }
       };
@@ -402,7 +419,7 @@ function barChart() {
     oncreate: vnode => {
       if (!LocalState.obj || LocalState.obj.totalSeconds === 0) return;
 
-      const values = LocalState.obj.dailyTotal.map(v => (v / 3600).toFixed(1));
+      const values = LocalState.obj.dailyTotal;
 
       const data = _.zip(LocalState.dates, values).map(data => {
         return { x: data[0], y: data[1] };
@@ -429,12 +446,17 @@ function barChart() {
         yaxis: {
           title: {
             text: "Hours"
+          },
+          labels: {
+            formatter: function (val) {
+              return (val / 3600).toFixed(1);
+            }
           }
         },
         tooltip: {
           y: {
             formatter: function (val) {
-              return val + " hours";
+              return utils.secondsToHms(val);
             }
           }
         },

@@ -29,7 +29,7 @@
     "@fortawesome/fontawesome-free": "5.15.1",
     "@tarekraafat/autocomplete.js": "^8.3.2",
     "@yaireo/tagify": "^3.23.0",
-    "apexcharts": "3.24.0",
+    "apexcharts": "3.26.0",
     "bootstrap": "4.6.0",
     "jquery": "3.5.1",
     "litepicker": "1.5.7",

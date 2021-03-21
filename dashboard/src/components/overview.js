@@ -104,6 +104,18 @@ const Charts = {
         yaxis: {
           title: {
             text: "Hours"
+          },
+          labels: {
+            formatter: function (val) {
+              return (val / 3600).toFixed(1);
+            }
+          }
+        },
+        tooltip: {
+          y: {
+            formatter: function (val) {
+              return utils.secondsToHms(val);
+            }
           }
         },
         dataLabels: {
@@ -197,11 +209,11 @@ function pieChart() {
       const dataValues = State.obj.projects
         .map(v => {
           return {
-            data: parseFloat((v.totalPct * 100).toFixed(2)),
+            data: v.totalSeconds,
             name: v.name
           };
         })
-        .filter(o => utils.hasEnoughPercentage(o.data));
+        .filter(o => o.data >= 60);
 
       const data = dataValues.map(v => v.data);
       const names = dataValues.map(v => v.name);
@@ -217,6 +229,13 @@ function pieChart() {
           fontFamily: "Nunito",
           type: "pie",
           animations: config.animations
+        },
+        yaxis: {
+          labels: {
+            formatter: function (val) {
+              return utils.secondsToHms(val);
+            }
+          }
         },
         labels: names
       };
@@ -243,7 +262,7 @@ function columnChart() {
     oncreate: vnode => {
       if (State.obj == null) return;
 
-      const values = State.obj.dailyTotal.map(v => (v / 3600).toFixed(1));
+      const values = State.obj.dailyTotal;
       const series = _.zip(State.dates, values).map(data => {
         return { x: data[0], y: data[1] };
       });
@@ -361,7 +380,7 @@ function heatmapDataForProjects(state, num = 7) {
     .map(v => {
       return {
         name: v.name,
-        data: v.totalDaily.map(i => (i / 3600).toFixed(1))
+        data: v.totalDaily
       };
     })
     .filter(v => {
@@ -390,7 +409,7 @@ function heatmapDataForLangs(state, num = 7) {
     .map(v => {
       return {
         name: v.name,
-        data: v.totalDaily.map(i => (i / 3600).toFixed(1))
+        data: v.totalDaily
       };
     })
     .filter(v => {
@@ -439,6 +458,13 @@ function heatmapChart(mkDataFn) {
         },
         xaxis: {
           type: "datetime"
+        },
+        tooltip: {
+          y: {
+            formatter: function (val) {
+              return utils.secondsToHms(val);
+            }
+          }
         },
         yaxis: {
           labels: {
