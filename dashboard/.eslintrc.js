@@ -18,6 +18,6 @@ module.exports = {
     complexity: 0,
     "consistent-return": 1,
     camelcase: 1,
-    complexity: ["error", { max: 5 }]
+    complexity: ["error", { max: 8 }]
   }
 };
