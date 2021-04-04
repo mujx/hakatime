@@ -81,17 +81,27 @@ newtype AuthorPayload = AuthorPayload
   }
   deriving (Show, Generic)
 
+data CommitParent = CommitParent
+  { cmUrl :: Text,
+    cmSha :: Text
+  }
+  deriving (Show, Generic)
+
 data CommitPayload = CommitPayload
   { pUrl :: Text,
     pSha :: Text,
     pHtml_url :: Text,
     pCommit :: CommitData,
     pAuthor :: AuthorPayload,
+    pParents :: [CommitParent],
     pTotal_seconds :: Maybe Int64
   }
   deriving (Show, Generic)
 
 instance FromJSON CommitPayload where
+  parseJSON = genericParseJSON noPrefixOptions
+
+instance FromJSON CommitParent where
   parseJSON = genericParseJSON noPrefixOptions
 
 instance FromJSON CommitData where
@@ -119,6 +129,9 @@ instance ToJSON CommitterData where
   toJSON = genericToJSON noPrefixOptions
 
 instance ToJSON AuthorPayload where
+  toJSON = genericToJSON noPrefixOptions
+
+instance ToJSON CommitParent where
   toJSON = genericToJSON noPrefixOptions
 
 githubApi :: Text
@@ -181,6 +194,9 @@ mkCommitsWithTime allCommits timeSpent =
           commitGaps
           timeSpent
 
+isMergeCommit :: CommitPayload -> Bool
+isMergeCommit c = length (pParents c) > 1
+
 commitReportHandler ::
   Text ->
   Maybe Text ->
@@ -205,7 +221,9 @@ commitReportHandler proj (Just repoName) (Just repoOwner) (Just user) limit (Jus
       res <- try $ getCommitsFor githubToken repoOwner repoName (numCommits + 1)
       repoCommits <- either Err.logHttpError pure res
 
-      let usersCommits = filter (\x -> authorLogin (pAuthor x) == user) repoCommits
+      let usersCommits =
+            filter (not . isMergeCommit) $
+              filter (\x -> authorLogin (pAuthor x) == user) repoCommits
 
       _pool <- asks pool
 
