@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2021-04-04
+
+### Improvements
+
+- Don't display coding time for merge commits.
+- Show hours & minutes on all charts.
+- Update some dashboard dependencies.
+
 ## [1.3.0] - 2021-03-19
 
 ### Features

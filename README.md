@@ -61,7 +61,7 @@ version: "3"
 services:
   server:
     container_name: hakatime
-    image: mujx/hakatime:1.3.0
+    image: mujx/hakatime:1.3.1
     environment:
       # DB settings.
       HAKA_DB_HOST: haka_db
@@ -141,7 +141,7 @@ npm run prod
 ## CLI options
 
 ```
-hakatime :: v1.3.0
+hakatime :: v1.3.1
 
 Usage: hakatime COMMAND
   Wakatime server implementation
