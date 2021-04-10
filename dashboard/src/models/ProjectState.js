@@ -34,17 +34,23 @@ const Model = {
     const today = new Date();
     start.setDate(start.getDate() - TimeRange.numOfDays);
 
-    api
-      .getProject(Model.currentProject, {
+    Promise.all([
+      api.getUserProjects({
+        start: d1 || start.toISOString(),
+        end: d2 || today.toISOString()
+      }),
+      api.getProject(Model.currentProject, {
         start: d1 || start.toISOString(),
         end: d2 || today.toISOString(),
         timeLimit: TimeRange.timeLimit
       })
-      .then(function (obj) {
-        Model.obj = obj;
+    ])
+      .then(function (values) {
+        Model.projects = values[0].projects;
+        Model.obj = values[1];
         Model.dates = utils.getDaysBetween(
-          new Date(obj.startDate),
-          new Date(obj.endDate)
+          new Date(Model.obj.startDate),
+          new Date(Model.obj.endDate)
         );
       })
       .catch(err =>
