@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.2] - 2021-04-11
+
+### Bug fixes
+
+- Update project list according to the selected date range.
+
 ## [1.3.1] - 2021-04-04
 
 ### Improvements

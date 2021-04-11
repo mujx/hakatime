@@ -1,6 +1,6 @@
 cabal-version:       3.0
 name:                hakatime
-version:             1.3.1
+version:             1.3.2
 synopsis:            Wakatime API server implementation / Dashboard UI
 description:         Wakatime compatible server with an analytics dashboard.
 license:             Unlicense
