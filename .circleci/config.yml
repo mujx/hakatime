@@ -6,8 +6,8 @@ jobs:
       IMAGE_ARM_TAG: latest-arm
       DOCKERHUB_USERNAME: mujx
     resource_class: arm.medium
-    docker:
-      - image: circleci/buildpack-deps:stretch
+    machine:
+      image: ubuntu-2004:202101-01
     steps:
       - checkout
       - setup_remote_docker
