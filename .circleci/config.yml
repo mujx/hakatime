@@ -10,7 +10,6 @@ jobs:
       image: ubuntu-2004:202101-01
     steps:
       - checkout
-      - setup_remote_docker
       - run:
           name: Build image
           command: docker build -f Dockerfile.arm -t $IMAGE_NAME:$IMAGE_ARM_TAG .
