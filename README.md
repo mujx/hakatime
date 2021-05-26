@@ -55,7 +55,8 @@ You can use the following docker-compose setup for testing locally or an actual
 deployment. Change `HAKA_BADGE_URL` to match the actual external endpoint of your
 instance.
 
-Deploying on ARM is also possible using the dedicated Dockerfile ([`Dockerfile.arm`](/Dockerfile.arm)) to build the image.
+Deploying on ARM is also possible using the `mujx/hakatime:latest-arm` image or the dedicated
+Dockerfile ([`Dockerfile.arm`](/Dockerfile.arm)) to build the image.
 
 ```yaml
 version: "3"
