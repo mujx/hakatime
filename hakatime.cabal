@@ -115,6 +115,7 @@ library
                      , postgresql-simple
                      , postgresql-simple-migration
                      , vector
+                     , modern-uri
 
   ghc-options:         -Wall
                        -Wcompat

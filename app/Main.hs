@@ -12,6 +12,7 @@ import Haka.App
     AppM,
     LogState (..),
     RegistrationStatus (..),
+    RemoteWriteConfig (..),
     ServerSettings (..),
     runAppT,
   )
@@ -91,18 +92,23 @@ initApp settings unApp = do
     else do
       run (hakaPort settings) (unApp appCtx)
 
+emptyStr :: String
+emptyStr = ""
+
 getServerSettings :: IO ServerSettings
 getServerSettings = do
   p <- envAsInt "HAKA_PORT" 8080
   badgeUrl <- getEnvDefault "HAKA_BADGE_URL" "http://localhost:8080"
   dashboardPath <- envAsString "HAKA_DASHBOARD_PATH" "./dashboard/dist"
-  apiPrefix <- envAsString "HAKA_API_PREFIX" ""
+  apiPrefix <- envAsString "HAKA_API_PREFIX" emptyStr
   shieldsIOUrl <- envAsString "HAKA_SHIELDS_IO_URL" "https://img.shields.io"
   enableRegistration <- envAsBool "HAKA_ENABLE_REGISTRATION" True
   sessionExpiry <- envAsInt "HAKA_SESSION_EXPIRY" 24
   logLevel <- envAsString "HAKA_LOG_LEVEL" "info"
   rEnv <- envAsString "HAKA_ENV" "prod"
   enableHttpLog <- envAsBool "HAKA_HTTP_LOG" True
+  remoteWriteUrl <- envAsString "HAKA_REMOTE_WRITE_URL" emptyStr
+  remoteWriteToken <- envAsString "HAKA_REMOTE_WRITE_TOKEN" emptyStr
   when (sessionExpiry <= 0) (error "Session expiry should be a positive integer")
   return $
     ServerSettings
@@ -117,6 +123,15 @@ getServerSettings = do
           "prod" -> Log.Prod
           "production" -> Log.Prod
           _ -> Log.Dev,
+        hakaRemoteWriteConfig =
+          if remoteWriteUrl /= emptyStr && remoteWriteToken /= emptyStr
+            then
+              Just $
+                RemoteWriteConfig
+                  { heartbeatUrl = toText remoteWriteUrl,
+                    token = toText remoteWriteToken
+                  }
+            else Nothing,
         hakaEnableRegistration =
           if enableRegistration
             then EnabledRegistration

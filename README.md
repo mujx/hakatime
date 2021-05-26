@@ -14,6 +14,7 @@ It comes together with a dashboard which provides a graphical representation of 
 
 - Import Wakatime activity using an API token and a range of dates.
 - See time spent on Github commits.
+- Forward incoming heartbeats to another Wakatime compatible server (e.g `wakatime.com`)
 - Group projects together with tags (e.g `#work`, `#personal`) and view their aggregated statistics.
 - User registration & login through the UI.
 - Leaderboards for all the users of the instance.
@@ -84,6 +85,10 @@ services:
       HAKA_ENV: "dev" # Use a json logger for production, otherwise key=value pairs.
       HAKA_HTTP_LOG: "true" # If you want to log http requests.
       GITHUB_TOKEN: "<token>" # If you want to retrieve time spent per commit. No extra scope is required.
+      # Add the following variables if you want to forward any received heartbeats to another
+      # Wakatime compatible server.
+      HAKA_REMOTE_WRITE_URL: "https://wakatime.com/api/v1/users/current/heartbeats.bulk"
+      HAKA_REMOTE_WRITE_TOKEN: "<token>"
     ports:
       - "127.0.0.1:8080:8080"
   haka_db:

@@ -2,7 +2,7 @@
 , case-insensitive, containers, contravariant-extras, cookie
 , cryptonite, fakedata, file-embed, hasql, hasql-pool, hasql-queue
 , hasql-transaction, http-client, http-client-tls, http-media
-, http-types, katip, lib, mr-env, optparse-applicative
+, http-types, katip, lib, modern-uri, mr-env, optparse-applicative
 , postgresql-binary, postgresql-simple, postgresql-simple-migration
 , random, raw-strings-qq, relude, req, safe-exceptions, servant
 , servant-client, servant-server, system-filepath, text, time, unix
@@ -19,7 +19,7 @@ mkDerivation {
     aeson base base64-bytestring bytestring case-insensitive containers
     contravariant-extras cookie cryptonite file-embed hasql hasql-pool
     hasql-queue hasql-transaction http-client http-client-tls
-    http-media http-types katip mr-env optparse-applicative
+    http-media http-types katip modern-uri mr-env optparse-applicative
     postgresql-binary postgresql-simple postgresql-simple-migration
     raw-strings-qq relude req safe-exceptions servant servant-server
     system-filepath text time unix uuid uuid-types vector wai wai-extra

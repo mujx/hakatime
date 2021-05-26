@@ -8,21 +8,24 @@ module Haka.Handlers.Heartbeats
   )
 where
 
-import Control.Exception.Safe (throw, try)
+import Control.Exception.Safe (MonadThrow, catchAny, throw, try)
 import Data.Aeson (ToJSON)
+import Data.ByteString.Base64 (encode)
 import Data.Text (toUpper)
 import Data.Time.Calendar (Day)
 import Filesystem.Path (splitExtension)
 import Filesystem.Path.CurrentOS (fromText)
-import Haka.App (AppCtx (..), AppM)
+import Haka.App (AppCtx (..), AppM, RemoteWriteConfig (..), ServerSettings (..))
 import qualified Haka.Database as Db
 import Haka.Errors (HeartbeatApiResponse (..))
 import qualified Haka.Errors as Err
 import Haka.Types
 import Hasql.Pool (Pool)
 import Katip
+import qualified Network.HTTP.Req as R
 import qualified Relude.Unsafe as Unsafe
 import Servant
+import Text.URI (mkURI)
 
 data User = User
   { name :: Text,
@@ -113,10 +116,16 @@ heartbeatHandler ::
   HeartbeatPayload ->
   AppM HeartbeatApiResponse
 heartbeatHandler _ Nothing _ = throw Err.missingAuthError
-heartbeatHandler machineId (Just token) heartbeat = do
+heartbeatHandler machineId (Just tkn) heartbeat = do
   logFM InfoS "received a heartbeat"
   p <- asks pool
-  res <- storeHeartbeats p token machineId [heartbeat]
+
+  settings <- asks srvSettings
+
+  _ <- catchAny (remoteWriteHeartbeats (hakaRemoteWriteConfig settings) machineId [heartbeat]) print
+
+  res <- storeHeartbeats p tkn machineId [heartbeat]
+
   mkResponse res
 
 multiHeartbeatHandler ::
@@ -127,10 +136,15 @@ multiHeartbeatHandler ::
   [HeartbeatPayload] ->
   AppM HeartbeatApiResponse
 multiHeartbeatHandler _ Nothing _ = throw Err.missingAuthError
-multiHeartbeatHandler machineId (Just token) heartbeats = do
+multiHeartbeatHandler machineId (Just tkn) heartbeats = do
   logFM InfoS ("received " <> showLS (length heartbeats) <> " heartbeats")
   p <- asks pool
-  res <- storeHeartbeats p token machineId heartbeats
+  settings <- asks srvSettings
+
+  _ <- catchAny (remoteWriteHeartbeats (hakaRemoteWriteConfig settings) machineId heartbeats) print
+
+  res <- storeHeartbeats p tkn machineId heartbeats
+
   mkResponse res
 
 -- | Construct an API Heartbeat response depending on the size of the response.
@@ -174,9 +188,34 @@ storeHeartbeats ::
   Maybe Text ->
   [HeartbeatPayload] ->
   AppM (Either Db.DatabaseException [Int64])
-storeHeartbeats p token machineId heartbeats = do
+storeHeartbeats p tkn machineId heartbeats = do
   let updatedHeartbeats = map ((\beat -> beat {machine = machineId}) . addMissingLang) heartbeats
 
-  try $ liftIO $ Db.processHeartbeatRequest p token updatedHeartbeats
+  try $ liftIO $ Db.processHeartbeatRequest p tkn updatedHeartbeats
 
 -- TODO: Discard timestamps from the future
+
+remoteWriteHeartbeats ::
+  (R.MonadHttp m, MonadThrow m, KatipContext m) =>
+  Maybe RemoteWriteConfig ->
+  Maybe Text ->
+  [HeartbeatPayload] ->
+  m ()
+remoteWriteHeartbeats Nothing _ _ = pure ()
+remoteWriteHeartbeats (Just conf) machineHeader heartbeats = do
+  let machHeader = maybe mempty (R.header "X-Machine-Name" . encodeUtf8) machineHeader
+
+  remoteUrl <- mkURI $ heartbeatUrl conf
+
+  let header =
+        R.header "Authorization" ("Basic " <> encode (encodeUtf8 (token conf))) <> machHeader
+
+  logFM DebugS ("Sending data to " <> ls (heartbeatUrl conf))
+
+  case R.useHttpsURI remoteUrl of
+    Nothing -> logFM ErrorS "Malformed remote write URL was given"
+    Just (url, _) -> do
+      _ <- R.req R.POST url (R.ReqBodyJson heartbeats) R.ignoreResponse header
+      pure ()
+
+  pure ()

@@ -6,6 +6,7 @@
 module Haka.App
   ( AppCtx (..),
     LogState (..),
+    RemoteWriteConfig (..),
     AppM,
     runAppT,
     mkAppT,
@@ -124,6 +125,13 @@ data RegistrationStatus
   = EnabledRegistration
   | DisabledRegistration
 
+data RemoteWriteConfig = RemoteWriteConfig
+  { -- Wakatime compatible endpoint that can receive heartbeats.
+    heartbeatUrl :: Text,
+    -- Authentication token to use with the request.
+    token :: Text
+  }
+
 -- | Server configuration settings.
 data ServerSettings = ServerSettings
   { -- | Where the service will listen to.
@@ -146,5 +154,7 @@ data ServerSettings = ServerSettings
     -- | Verbosity level.
     hakaLogLevel :: String,
     -- | Whether to log the HTTP requests.
-    hakaHasHttpLogger :: Bool
+    hakaHasHttpLogger :: Bool,
+    -- | Configuration regarding remote write to a Wakatime compatible server.
+    hakaRemoteWriteConfig :: Maybe RemoteWriteConfig
   }
