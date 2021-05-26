@@ -1,5 +1,24 @@
 version: 2.1
 jobs:
+  build_arm_image:
+    environment:
+      IMAGE_NAME: mujx/hakatime
+      IMAGE_ARM_TAG: latest-arm
+      DOCKERHUB_USERNAME: mujx
+    resource_class: arm.medium
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build image
+          command: docker build -f Dockerfile.arm -t $IMAGE_NAME:$IMAGE_ARM_TAG .
+      - run:
+          name: Publish image to DockerHub
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push $IMAGE_NAME:$IMAGE_ARM_TAG
   build_server:
     docker:
       - image: nixos/nix:2.3
@@ -41,3 +60,4 @@ workflows:
     jobs:
       - build_server
       - build_dashboard
+      - build_arm_image
