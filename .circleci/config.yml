@@ -80,10 +80,8 @@ workflows:
       - build_tagged_arm_image:
           filters:
             tags:
-              only:
-                - "/^v.*/"
+              only: /^v.*/
       - build_arm_image:
           filters:
             branches:
-              only:
-                - "master"
+              only: master
