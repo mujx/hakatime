@@ -1,9 +1,6 @@
 version: 2.1
 jobs:
   build_tagged_arm_image:
-    filters:
-      tags:
-        only: "/^v.*/"
     environment:
       IMAGE_NAME: mujx/hakatime
       IMAGE_ARM_TAG: << pipeline.git.tag >>-arm
@@ -80,4 +77,13 @@ workflows:
     jobs:
       - build_server
       - build_dashboard
-      - build_arm_image
+      - build_tagged_arm_image
+          filters:
+            tags:
+              only:
+                - "/^v.*/"
+      - build_arm_image:
+          filters:
+            branches:
+              only:
+                - "master"
