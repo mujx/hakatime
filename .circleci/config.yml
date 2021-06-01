@@ -1,5 +1,26 @@
 version: 2.1
 jobs:
+  build_tagged_arm_image:
+    filters:
+      tags:
+        only: "/^v.*/"
+    environment:
+      IMAGE_NAME: mujx/hakatime
+      IMAGE_ARM_TAG: << pipeline.git.tag >>-arm
+      DOCKERHUB_USERNAME: mujx
+    resource_class: arm.medium
+    machine:
+      image: ubuntu-2004:202101-01
+    steps:
+      - checkout
+      - run:
+          name: Build image
+          command: docker build -f Dockerfile.arm -t $IMAGE_NAME:$IMAGE_ARM_TAG .
+      - run:
+          name: Publish image to DockerHub
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push $IMAGE_NAME:$IMAGE_ARM_TAG
   build_arm_image:
     environment:
       IMAGE_NAME: mujx/hakatime
