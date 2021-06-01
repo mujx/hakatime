@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2021-06-11
+
 ### Features
 
 - Add ability to forward incoming heartbeats to another Wakatime compatible server.
+
+### Improvements
+
+- Docker images for ARM64 are built automatically by CircleCI.
 
 ## [1.3.2] - 2021-04-11
 
