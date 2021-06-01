@@ -77,7 +77,7 @@ workflows:
     jobs:
       - build_server
       - build_dashboard
-      - build_tagged_arm_image
+      - build_tagged_arm_image:
           filters:
             tags:
               only:
