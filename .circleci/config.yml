@@ -79,6 +79,8 @@ workflows:
       - build_dashboard
       - build_tagged_arm_image:
           filters:
+            branches:
+              ignore: master
             tags:
               only: /^v.*/
       - build_arm_image:
