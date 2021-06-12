@@ -209,13 +209,15 @@ remoteWriteHeartbeats (Just conf) machineHeader heartbeats = do
 
   case (R.useHttpsURI remoteUrl, R.useHttpURI remoteUrl) of
     (Nothing, Nothing) -> logFM ErrorS ("Malformed remote write URL was given: " <> show remoteUrl)
-    (Just (httpsUrl, _), _) -> R.req R.POST httpsUrl (R.ReqBodyJson heartbeats) R.ignoreResponse mkHttpsHeader >> pure ()
-    (_, Just (httpUrl, _)) -> R.req R.POST httpUrl (R.ReqBodyJson heartbeats) R.ignoreResponse mkHttpHeader >> pure ()
+    (Just (httpsUrl, _), _) -> mkReq httpsUrl >> pure ()
+    (_, Just (httpUrl, _)) -> mkReq httpUrl >> pure ()
   where
     encodedToken = encode (encodeUtf8 (token conf))
-    mkHttpHeader =
-      R.header "Authorization" ("Basic " <> encodedToken)
-        <> maybe mempty (R.header "X-Machine-Name" . encodeUtf8) machineHeader
-    mkHttpsHeader =
+
+    mkReq :: (R.MonadHttp m) => R.Url scheme -> m R.IgnoreResponse
+    mkReq url = R.req R.POST url (R.ReqBodyJson heartbeats) R.ignoreResponse mkHeader
+
+    mkHeader :: R.Option scheme
+    mkHeader =
       R.header "Authorization" ("Basic " <> encodedToken)
         <> maybe mempty (R.header "X-Machine-Name" . encodeUtf8) machineHeader
