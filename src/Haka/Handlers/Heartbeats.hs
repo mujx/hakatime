@@ -203,19 +203,19 @@ remoteWriteHeartbeats ::
   m ()
 remoteWriteHeartbeats Nothing _ _ = pure ()
 remoteWriteHeartbeats (Just conf) machineHeader heartbeats = do
-  let machHeader = maybe mempty (R.header "X-Machine-Name" . encodeUtf8) machineHeader
-
   remoteUrl <- mkURI $ heartbeatUrl conf
-
-  let header =
-        R.header "Authorization" ("Basic " <> encode (encodeUtf8 (token conf))) <> machHeader
 
   logFM DebugS ("Sending data to " <> ls (heartbeatUrl conf))
 
-  case R.useHttpsURI remoteUrl of
-    Nothing -> logFM ErrorS "Malformed remote write URL was given"
-    Just (url, _) -> do
-      _ <- R.req R.POST url (R.ReqBodyJson heartbeats) R.ignoreResponse header
-      pure ()
-
-  pure ()
+  case (R.useHttpsURI remoteUrl, R.useHttpURI remoteUrl) of
+    (Nothing, Nothing) -> logFM ErrorS ("Malformed remote write URL was given: " <> show remoteUrl)
+    (Just (httpsUrl, _), _) -> R.req R.POST httpsUrl (R.ReqBodyJson heartbeats) R.ignoreResponse mkHttpsHeader >> pure ()
+    (_, Just (httpUrl, _)) -> R.req R.POST httpUrl (R.ReqBodyJson heartbeats) R.ignoreResponse mkHttpHeader >> pure ()
+  where
+    encodedToken = encode (encodeUtf8 (token conf))
+    mkHttpHeader =
+      R.header "Authorization" ("Basic " <> encodedToken)
+        <> maybe mempty (R.header "X-Machine-Name" . encodeUtf8) machineHeader
+    mkHttpsHeader =
+      R.header "Authorization" ("Basic " <> encodedToken)
+        <> maybe mempty (R.header "X-Machine-Name" . encodeUtf8) machineHeader
