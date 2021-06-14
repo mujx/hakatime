@@ -25,7 +25,7 @@ import Katip
 import qualified Network.HTTP.Req as R
 import qualified Relude.Unsafe as Unsafe
 import Servant
-import Text.URI (mkURI)
+import Text.URI (URI, authPort, mkURI, uriAuthority)
 
 data User = User
   { name :: Text,
@@ -209,15 +209,23 @@ remoteWriteHeartbeats (Just conf) machineHeader heartbeats = do
 
   case (R.useHttpsURI remoteUrl, R.useHttpURI remoteUrl) of
     (Nothing, Nothing) -> logFM ErrorS ("Malformed remote write URL was given: " <> show remoteUrl)
-    (Just (httpsUrl, _), _) -> mkReq httpsUrl >> pure ()
-    (_, Just (httpUrl, _)) -> mkReq httpUrl >> pure ()
+    (Just (httpsUrl, _), _) -> mkReq remoteUrl httpsUrl >> pure ()
+    (_, Just (httpUrl, _)) -> mkReq remoteUrl httpUrl >> pure ()
   where
     encodedToken = encode (encodeUtf8 (token conf))
 
-    mkReq :: (R.MonadHttp m) => R.Url scheme -> m R.IgnoreResponse
-    mkReq url = R.req R.POST url (R.ReqBodyJson heartbeats) R.ignoreResponse mkHeader
+    mkPort :: Text.URI.URI -> R.Option scheme
+    mkPort originalUri = case Text.URI.uriAuthority originalUri of
+      Left _ -> mempty
+      Right u -> case Text.URI.authPort u of
+        Just p -> R.port (fromIntegral p)
+        Nothing -> mempty
 
-    mkHeader :: R.Option scheme
-    mkHeader =
+    mkReq :: (R.MonadHttp m) => Text.URI.URI -> R.Url scheme -> m R.IgnoreResponse
+    mkReq originalUri url = R.req R.POST url (R.ReqBodyJson heartbeats) R.ignoreResponse (mkHeader originalUri)
+
+    mkHeader :: Text.URI.URI -> R.Option scheme
+    mkHeader originalUri =
       R.header "Authorization" ("Basic " <> encodedToken)
         <> maybe mempty (R.header "X-Machine-Name" . encodeUtf8) machineHeader
+        <> mkPort originalUri
