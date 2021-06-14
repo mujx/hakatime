@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2021-06-14
+
+### Bug fixes
+
+- Allow remote write http endpoints and custom port (#36)
+- Install the `ca-certificates` package in the arm Dockerfile (#36)
+
 ## [1.4.0] - 2021-06-11
 
 ### Features
