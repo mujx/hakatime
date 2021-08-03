@@ -1,5 +1,6 @@
 import m from "mithril";
 import $ from "jquery";
+import _ from "lodash";
 
 import * as api from "../api";
 import utils from "../utils";
@@ -34,7 +35,7 @@ function renderModal(tokens) {
     document.body.appendChild(modal);
   }
 
-  availableTokens = tokens;
+  availableTokens = _.orderBy(tokens, ["tknId"]);
 
   m.render(modal, m(Modal));
 
@@ -122,6 +123,7 @@ const Modal = {
                   "thead",
                   m("tr", [
                     m("th", { scope: "col" }, "ID"),
+                    m("th", { scope: "col" }, "Name"),
                     m("th", { scope: "col" }, "Last usage"),
                     m("th", { scope: "col" }, "")
                   ])
@@ -129,8 +131,62 @@ const Modal = {
                 m(
                   "tbody",
                   availableTokens.map(t => {
+                    const defaultName = "-";
+
                     return m("tr", [
                       m("td", { scope: "row" }, t.tknId.substring(0, 6)),
+                      m(
+                        "td",
+                        {
+                          scope: "row",
+                          onclick: function (e) {
+                            const el = e.target;
+                            const input = document.createElement("input");
+                            input.maxLength = 42;
+                            input.value = el.innerHTML;
+
+                            input.onkeydown = function (event) {
+                              if (event.key == "Enter") {
+                                this.blur();
+                              }
+                            };
+
+                            input.onblur = function () {
+                              el.innerHTML = input.value
+                                ? input.value
+                                : defaultName;
+                              input.replaceWith(el);
+
+                              // Update the token name.
+                              if (input.value && input.value !== t.tknId) {
+                                api
+                                  .updateToken({
+                                    tokenId: t.tknId,
+                                    tokenName: input.value
+                                  })
+                                  .then(api.getTokens)
+                                  .then(function (tokens) {
+                                    renderModal(tokens);
+                                  })
+                                  .catch(function (e) {
+                                    console.log("Failed to update the token");
+                                    if (e && e.response) {
+                                      console.log(e.response);
+                                      return;
+                                    }
+                                    utils.showError(
+                                      "Failed to update the token"
+                                    );
+                                  });
+                              }
+                            };
+
+                            el.replaceWith(input);
+                            input.focus();
+                          }
+                        },
+                        t.tknName ? t.tknName : defaultName
+                      ),
                       m(
                         "td",
                         t.lastUsage ? utils.formatDate(t.lastUsage) : "Not used"

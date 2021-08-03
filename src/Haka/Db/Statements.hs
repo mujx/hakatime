@@ -51,6 +51,19 @@ updateTokenUsage = Statement query params D.noResult True
     params :: E.Params Text
     params = E.param (E.nonNullable E.text)
 
+updateTokenMetadata :: Statement (Text, Text, Text) ()
+updateTokenMetadata = Statement query params D.noResult True
+  where
+    query :: ByteString
+    query = [r| UPDATE auth_tokens SET token_name = $3 WHERE token = $1 AND owner = $2; |]
+
+    params :: E.Params (Text, Text, Text)
+    params =
+      contrazip3
+        (E.param (E.nonNullable E.text))
+        (E.param (E.nonNullable E.text))
+        (E.param (E.nonNullable E.text))
+
 listApiTokens :: Statement Text [StoredApiToken]
 listApiTokens = Statement query params result True
   where
@@ -58,7 +71,10 @@ listApiTokens = Statement query params result True
     query =
       [r| 
       select
-        token, last_usage::timestamp
+        token,
+        last_usage::timestamp,
+        token_name,
+        token_description
       from
         auth_tokens
       where
@@ -74,6 +90,8 @@ listApiTokens = Statement query params result True
       StoredApiToken
         <$> (D.column . D.nonNullable) D.text
         <*> (D.column . D.nullable) D.timestamptz
+        <*> (D.column . D.nullable) D.text
+        <*> (D.column . D.nullable) D.text
 
     result :: D.Result [StoredApiToken]
     result = D.rowList storedApiToken

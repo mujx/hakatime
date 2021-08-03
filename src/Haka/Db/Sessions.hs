@@ -21,6 +21,7 @@ import Haka.Types
     StoredUser (..),
     TimelineRow (..),
     TokenData (..),
+    TokenMetadata (..),
   )
 import qualified Haka.Utils as Utils
 import Hasql.Session (Session, statement)
@@ -30,6 +31,9 @@ import PostgreSQL.Binary.Data (UUID)
 
 updateTokenUsage :: Text -> Session ()
 updateTokenUsage tkn = statement tkn Statements.updateTokenUsage
+
+updateTokenMetadata :: Text -> TokenMetadata -> Session ()
+updateTokenMetadata user metadata = statement (tokenId metadata, user, tokenName metadata) Statements.updateTokenMetadata
 
 listApiTokens :: Text -> Session [StoredApiToken]
 listApiTokens usr = statement usr Statements.listApiTokens

@@ -21,6 +21,7 @@ module Haka.Types
     ProjectStatRow (..),
     TokenData (..),
     LeaderboardRow (..),
+    TokenMetadata (..),
   )
 where
 
@@ -43,7 +44,11 @@ data StoredApiToken = StoredApiToken
   { -- Some characters to identify a token.
     tknId :: Text,
     -- When the token was used.
-    lastUsage :: Maybe UTCTime
+    lastUsage :: Maybe UTCTime,
+    -- An optional name given to the token.
+    tknName :: Maybe Text,
+    -- An optiona description given to the token.
+    tknDesc :: Maybe Text
   }
   deriving (Show, Generic)
 
@@ -266,3 +271,13 @@ data LeaderboardRow = LeaderboardRow
     leadTotalSeconds :: Int64
   }
   deriving (Eq, Show, Generic)
+
+data TokenMetadata = TokenMetadata
+  { tokenName :: Text,
+    tokenId :: Text
+  }
+  deriving (Show, Generic)
+
+instance ToJSON TokenMetadata
+
+instance FromJSON TokenMetadata

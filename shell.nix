@@ -11,6 +11,7 @@ pkgs.stdenv.mkDerivation {
     pkgs.hlint
     pkgs.pgcli
     pkgs.cabal2nix
+    pkgs.ormolu
   ];
 
   shellHook = ''

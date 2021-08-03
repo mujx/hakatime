@@ -97,6 +97,18 @@ function getTokens() {
   });
 }
 
+function updateToken(opts) {
+  return m.request({
+    method: "POST",
+    url: baseUrl() + "/auth/token",
+    background: true,
+    body: opts,
+    headers: {
+      authorization: storage.getHeaderToken()
+    }
+  });
+}
+
 function deleteToken(tokenId) {
   return m.request({
     method: "DELETE",
@@ -244,5 +256,6 @@ export {
   getUserTags,
   getUserProjects,
   getLeaderboards,
-  getCommitLog
+  getCommitLog,
+  updateToken
 };

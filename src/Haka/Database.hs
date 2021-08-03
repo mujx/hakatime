@@ -41,6 +41,7 @@ import Haka.Types
     StoredUser (..),
     TimelineRow (..),
     TokenData (..),
+    TokenMetadata (..),
   )
 import qualified Haka.Utils as Utils
 import qualified Hasql.Pool as HqPool
@@ -127,6 +128,9 @@ class (Monad m, MonadThrow m) => Db m where
 
   -- | Get total time between the given time ranges.
   getTotalTimeBetween :: HqPool.Pool -> V.Vector (Text, Text, UTCTime, UTCTime) -> m [Int64]
+
+  -- | Update token metadata set by the user.
+  updateTokenMetadata :: HqPool.Pool -> Text -> TokenMetadata -> m ()
 
 instance Db IO where
   getUser pool token = do
@@ -225,6 +229,9 @@ instance Db IO where
     -- We return in reverse order because we insert with descending but we sort in ascending.
     res <- HqPool.use pool (Sessions.getTotalTimeBetween ranges)
     either (throw . SessionException) (pure . reverse) res
+  updateTokenMetadata pool user metadata = do
+    res <- HqPool.use pool (Sessions.updateTokenMetadata user metadata)
+    either (throw . SessionException) pure res
 
 mkTokenData :: Text -> IO TokenData
 mkTokenData user = do

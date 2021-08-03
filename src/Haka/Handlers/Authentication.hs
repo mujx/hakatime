@@ -21,6 +21,7 @@ import Haka.Types
   ( ApiToken,
     StoredApiToken,
     TokenData (..),
+    TokenMetadata (..),
   )
 import Haka.Utils (getRefreshToken)
 import Katip
@@ -104,6 +105,13 @@ type DeleteToken =
     :> Header "Authorization" ApiToken
     :> DeleteNoContent
 
+type UpdateToken =
+  "auth"
+    :> "token"
+    :> Header "Authorization" ApiToken
+    :> ReqBody '[JSON] TokenMetadata
+    :> PostNoContent
+
 type API =
   Login
     :<|> RefreshToken
@@ -112,6 +120,7 @@ type API =
     :<|> DeleteToken
     :<|> Logout
     :<|> Register
+    :<|> UpdateToken
 
 getStoredApiTokensHandler :: Maybe ApiToken -> AppM [StoredApiToken]
 getStoredApiTokensHandler Nothing = throw Err.missingAuthError
@@ -235,13 +244,31 @@ createAPITokenHandler (Just tkn) =
 
 deleteTokenHandler :: Text -> Maybe ApiToken -> AppM NoContent
 deleteTokenHandler _ Nothing = throw Err.missingAuthError
-deleteTokenHandler tokenId (Just tkn) = do
+deleteTokenHandler tknId (Just tkn) = do
   dbPool <- asks pool
-  res <- try $ liftIO $ Db.deleteApiToken dbPool tkn tokenId
+  res <- try $ liftIO $ Db.deleteApiToken dbPool tkn tknId
 
   _ <- either Err.logError pure res
 
   return NoContent
+
+updateTokenHandler :: Maybe ApiToken -> TokenMetadata -> AppM NoContent
+updateTokenHandler Nothing _ = throw Err.missingAuthError
+updateTokenHandler (Just apiTkn) metadata = do
+  dbPool <- asks pool
+
+  userRes <- try $ liftIO $ Db.getUser dbPool apiTkn
+
+  user <- either Err.logError pure userRes
+
+  case user of
+    Nothing -> throw Err.invalidTokenError
+    Just user' -> do
+      res <- try $ liftIO $ Db.updateTokenMetadata dbPool user' metadata
+
+      _ <- either Err.logError pure res
+
+      return NoContent
 
 server settings =
   loginHandler
@@ -251,3 +278,4 @@ server settings =
     :<|> deleteTokenHandler
     :<|> logoutHandler
     :<|> registerHandler settings
+    :<|> updateTokenHandler
