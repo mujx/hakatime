@@ -7,7 +7,6 @@ jobs:
       DOCKERHUB_USERNAME: mujx
     machine:
       image: ubuntu-2004:202101-01
-      docker_layer_caching: true
     steps:
       - checkout
       - run:
@@ -26,7 +25,6 @@ jobs:
     resource_class: arm.medium
     machine:
       image: ubuntu-2004:202101-01
-      docker_layer_caching: true
     steps:
       - checkout
       - run:
@@ -44,7 +42,6 @@ jobs:
       DOCKERHUB_USERNAME: mujx
     machine:
       image: ubuntu-2004:202101-01
-      docker_layer_caching: true
     steps:
       - checkout
       - run:
@@ -63,7 +60,6 @@ jobs:
     resource_class: arm.medium
     machine:
       image: ubuntu-2004:202101-01
-      docker_layer_caching: true
     steps:
       - checkout
       - run:
