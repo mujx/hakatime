@@ -1,7 +1,6 @@
 # hakatime
 
 [![CircleCI](https://circleci.com/gh/mujx/hakatime.svg?style=svg)](https://circleci.com/gh/mujx/hakatime)
-[![Docker build](https://img.shields.io/docker/cloud/build/mujx/hakatime)](https://hub.docker.com/r/mujx/hakatime/builds)
 [![Latest version](https://img.shields.io/github/v/release/mujx/hakatime)](https://github.com/mujx/hakatime/releases)
 [![BuiltWithNix](https://img.shields.io/badge/Built_With-Nix-5277C3.svg?logo=nixos&labelColor=73C3D5)](https://nixos.org/)
 [![donate](https://img.shields.io/badge/donate-PayPal-green.svg)](https://paypal.me/sideriskonstantin)
