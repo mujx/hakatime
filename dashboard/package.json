@@ -1,6 +1,6 @@
 {
   "name": "dashboard",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Dashboard for Hakatime",
   "main": "index.js",
   "author": "Konstantinos Sideris <siderisk@auth.gr>",

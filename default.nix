@@ -11,7 +11,7 @@
 }:
 mkDerivation {
   pname = "hakatime";
-  version = "1.4.1";
+  version = "1.5.0";
   src = ./.;
   isLibrary = true;
   isExecutable = true;
