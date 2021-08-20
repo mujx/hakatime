@@ -2,7 +2,7 @@ version: "3"
 services:
   server:
     container_name: hakatime
-    image: mujx/hakatime:1.5.0
+    image: mujx/hakatime:v1.5.0
     environment:
       # DB settings.
       HAKA_DB_HOST: haka_db
