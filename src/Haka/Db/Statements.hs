@@ -573,7 +573,7 @@ checkTagOwner = Statement query params (D.rowMaybe ((D.column . D.nonNullable) D
       LIMIT 1;
     |]
 
-{-# ANN module "HLint: ignore Reduce duplication" #-}
+{- HLINT ignore "Reduce duplication" -}
 getTags :: Statement (Text, Text) (V.Vector Text)
 getTags = Statement query params result True
   where

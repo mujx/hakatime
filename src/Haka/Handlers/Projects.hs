@@ -230,7 +230,7 @@ setTagsHandler project (Just token) tagsPayload = do
 
   return NoContent
 
-{-# ANN module "HLint: ignore Reduce duplication" #-}
+{- HLINT ignore "Reduce duplication" -}
 projectStatsHandler ::
   Text ->
   Maybe UTCTime ->
