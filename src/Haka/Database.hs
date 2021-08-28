@@ -6,6 +6,7 @@ module Haka.Database
     Db (..),
     getUserByToken,
     validateUserAndProject,
+    validateUserAndTag,
     mkBadgeLink,
     getApiTokens,
     deleteApiToken,
@@ -39,6 +40,7 @@ import Haka.Types
     StatRow (..),
     StoredApiToken,
     StoredUser (..),
+    Tag (..),
     TimelineRow (..),
     TokenData (..),
     TokenMetadata (..),
@@ -71,6 +73,9 @@ class (Monad m, MonadThrow m) => Db m where
 
   -- | Retrieve a list of statistics within the given time range.
   getProjectStats :: HqPool.Pool -> Text -> Text -> (UTCTime, UTCTime) -> Int64 -> m [ProjectStatRow]
+
+  -- | Retrieve a list of aggregated statistics for a tag within the given time range.
+  getTagStats :: HqPool.Pool -> Text -> Text -> (UTCTime, UTCTime) -> Int64 -> m [ProjectStatRow]
 
   -- | Create a pair of an access token a refresh token for use on web interface.
   createWebToken :: HqPool.Pool -> Text -> Int64 -> m TokenData
@@ -123,6 +128,9 @@ class (Monad m, MonadThrow m) => Db m where
   -- | Validate that a project has the given owner.
   checkProjectOwner :: HqPool.Pool -> StoredUser -> Project -> m Bool
 
+  -- | Validate that a user has the given tag.
+  checkTagOwner :: HqPool.Pool -> StoredUser -> Tag -> m Bool
+
   -- | Extract leaderboard information
   getLeaderboards :: HqPool.Pool -> UTCTime -> UTCTime -> m [LeaderboardRow]
 
@@ -157,6 +165,9 @@ instance Db IO where
     either (throw . SessionException) pure res
   getProjectStats pool user proj trange cutOffLimit = do
     res <- HqPool.use pool (Sessions.getProjectStats user proj trange cutOffLimit)
+    either (throw . SessionException) pure res
+  getTagStats pool user tag trange cutOffLimit = do
+    res <- HqPool.use pool (Sessions.getTagStats user tag trange cutOffLimit)
     either (throw . SessionException) pure res
   deleteTokens pool token refreshToken = do
     res <- HqPool.use pool (Sessions.deleteTokens token refreshToken)
@@ -221,6 +232,9 @@ instance Db IO where
     either (throw . SessionException) pure res
   checkProjectOwner pool user projectName = do
     res <- HqPool.use pool (Sessions.checkProjectOwner user projectName)
+    either (throw . SessionException) pure res
+  checkTagOwner pool user tag = do
+    res <- HqPool.use pool (Sessions.checkTagOwner user tag)
     either (throw . SessionException) pure res
   getLeaderboards pool t0 t1 = do
     res <- HqPool.use pool (Sessions.getLeaderboards t0 t1)
@@ -357,11 +371,11 @@ getApiTokens pool token = do
     Just username -> listApiTokens pool username
 
 deleteApiToken :: Db m => HqPool.Pool -> ApiToken -> Text -> m ()
-deleteApiToken pool token tokenId = do
+deleteApiToken pool token tknId = do
   retrievedUser <- getUser pool token
   case retrievedUser of
     Nothing -> throw UnknownApiToken
-    Just _ -> deleteToken pool (ApiToken tokenId)
+    Just _ -> deleteToken pool (ApiToken tknId)
 
 mkBadgeLink :: Db m => HqPool.Pool -> Text -> ApiToken -> m UUID
 mkBadgeLink pool proj token = do
@@ -388,6 +402,18 @@ validateUserAndProject pool token projectName = do
       if isOk
         then pure $ StoredUser user
         else throw (InvalidRelation (StoredUser user) projectName)
+
+validateUserAndTag :: Db m => HqPool.Pool -> ApiToken -> Tag -> m StoredUser
+validateUserAndTag pool token tag = do
+  retrievedUser <- getUser pool token
+  case retrievedUser of
+    Nothing -> throw UnknownApiToken
+    Just user -> do
+      isOk <- checkTagOwner pool (StoredUser user) tag
+
+      if isOk
+        then pure $ StoredUser user
+        else throw (InvalidTagRelation (StoredUser user) tag)
 
 getUserTags :: Db m => HqPool.Pool -> ApiToken -> m (V.Vector Text)
 getUserTags pool token = do

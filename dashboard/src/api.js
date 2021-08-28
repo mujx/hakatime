@@ -75,6 +75,17 @@ function getProject(projectName, params) {
   });
 }
 
+function getTagStats(tag, params) {
+  return m.request({
+    url: baseUrl() + `/api/v1/users/current/tags/${tag}`,
+    responseType: "json",
+    headers: {
+      authorization: storage.getHeaderToken()
+    },
+    params: params
+  });
+}
+
 function createApiToken() {
   return m.request({
     method: "POST",
@@ -253,6 +264,7 @@ export {
   submitImportRequest,
   setTags,
   getProjectTags,
+  getTagStats,
   getUserTags,
   getUserProjects,
   getLeaderboards,

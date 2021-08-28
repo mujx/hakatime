@@ -57,6 +57,23 @@ const Model = {
         auth.retryCall(err, () => Model.fetchProjectStats(event, d1, d2))
       );
   },
+  fetchTagStats: tag => {
+    api
+      .getTagStats(tag, {
+        start: TimeRange.start().toISOString(),
+        end: TimeRange.end().toISOString(),
+        timeLimit: TimeRange.timeLimit
+      })
+      .then(function (obj) {
+        Model.obj = obj;
+        Model.currentProject = `#${tag}`;
+        Model.dates = utils.getDaysBetween(
+          new Date(obj.startDate),
+          new Date(obj.endDate)
+        );
+      })
+      .catch(err => auth.retryCall(err, () => Model.fetchStats(tag)));
+  },
   initialize: () => {
     api
       .getUserProjects({

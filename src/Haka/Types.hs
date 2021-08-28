@@ -9,6 +9,7 @@ module Haka.Types
     RegisteredUser (..),
     StoredUser (..),
     Project (..),
+    Tag (..),
     BadgeRow (..),
     BulkHeartbeatData (..),
     HeartbeatId (..),
@@ -70,6 +71,9 @@ newtype StoredUser = StoredUser Text
   deriving (Show)
 
 newtype Project = Project Text
+  deriving (Show)
+
+newtype Tag = Tag Text
   deriving (Show)
 
 data RegisteredUser = RegisteredUser

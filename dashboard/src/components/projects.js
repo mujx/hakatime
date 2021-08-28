@@ -20,6 +20,7 @@ import utils from "../utils.js";
 import config from "../config.js";
 import * as api from "../api";
 import Common from "./common";
+import Autocomplete from "@tarekraafat/autocomplete.js";
 
 function mkFileChart() {
   return cards.mkCardContainer("Most active files", m(fileChart()));
@@ -488,6 +489,31 @@ const ProjectComponent = {
   },
   oncreate: () => {
     $('[data-toggle="tooltip"]').tooltip();
+    new Autocomplete({
+      data: {
+        src: async function () {
+          try {
+            const res = await api.getUserTags();
+            return res.tags;
+          } catch (e) {
+            utils.showError("Failed to fetch tags");
+          }
+
+          return [];
+        }
+      },
+      placeholder: "Filter by tag",
+      searchEngine: "loose",
+      maxResults: 10,
+      onSelection: feedback => {
+        const tagSelected = feedback.selection.value;
+
+        document.querySelector("#autoComplete").blur();
+        document.querySelector("#autoComplete").value = `#${tagSelected}`;
+
+        LocalState.fetchTagStats(tagSelected);
+      }
+    });
   },
   view: () => {
     document.title = "Hakatime | Projects";
@@ -497,6 +523,14 @@ const ProjectComponent = {
         "h1.h3.mb-0.mr-auto.text-gray-800",
         LocalState.currentProject ? LocalState.currentProject : "Projects"
       ),
+      m("div.autoComplete_wrapper", [
+        m(
+          "input[autocomplete=off][type=text][placeholder=Filter by tag][tabindex=1]",
+          {
+            id: "autoComplete"
+          }
+        )
+      ]),
       m("div.dropdown.mr-2", [
         m(
           "button.btn.btn-primary.dropdown-toggle.shadow-sm[data-toggle='dropdown'][aria-haspopup='true'][aria-expanded='false']",

@@ -404,6 +404,33 @@ getProjectStats = Statement query params result True
     result :: D.Result [ProjectStatRow]
     result = D.rowList projStateRow
 
+getTagStats :: Statement (Text, Text, UTCTime, UTCTime, Int64) [ProjectStatRow]
+getTagStats = Statement query params result True
+  where
+    query :: ByteString
+    query = $(embedFile "sql/get_tag_stats.sql")
+    params :: E.Params (Text, Text, UTCTime, UTCTime, Int64)
+    params =
+      contrazip5
+        (E.param (E.nonNullable E.text))
+        (E.param (E.nonNullable E.text))
+        (E.param (E.nonNullable E.timestamptz))
+        (E.param (E.nonNullable E.timestamptz))
+        (E.param (E.nonNullable E.int8))
+    projStateRow :: D.Row ProjectStatRow
+    projStateRow =
+      ProjectStatRow
+        <$> (D.column . D.nonNullable) D.timestamptz
+        <*> (D.column . D.nonNullable) D.text
+        <*> (D.column . D.nonNullable) D.text
+        <*> (D.column . D.nonNullable) D.text
+        <*> (D.column . D.nonNullable) D.text
+        <*> (D.column . D.nonNullable) D.int8
+        <*> (D.column . D.nonNullable) D.numeric
+        <*> (D.column . D.nonNullable) D.numeric
+    result :: D.Result [ProjectStatRow]
+    result = D.rowList projStateRow
+
 statRowDecoder :: D.Row StatRow
 statRowDecoder =
   StatRow
@@ -531,6 +558,22 @@ checkProjectOwner = Statement query params (D.rowMaybe ((D.column . D.nonNullabl
     query :: ByteString
     query = [r| SELECT name FROM projects WHERE name = $1 AND owner = $2; |]
 
+checkTagOwner :: Statement (Text, Text) (Maybe Text)
+checkTagOwner = Statement query params (D.rowMaybe ((D.column . D.nonNullable) D.text)) True
+  where
+    params :: E.Params (Text, Text)
+    params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
+    query :: ByteString
+    query =
+      [r|
+      SELECT name
+      FROM tags
+      INNER JOIN project_tags ON tags.id = project_tags.tag_id
+      WHERE name = $1 AND project_owner = $2
+      LIMIT 1;
+    |]
+
+{-# ANN module "HLint: ignore Reduce duplication" #-}
 getTags :: Statement (Text, Text) (V.Vector Text)
 getTags = Statement query params result True
   where

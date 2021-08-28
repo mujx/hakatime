@@ -19,6 +19,7 @@ import Haka.Types
     StatRow (..),
     StoredApiToken,
     StoredUser (..),
+    Tag (..),
     TimelineRow (..),
     TokenData (..),
     TokenMetadata (..),
@@ -110,6 +111,10 @@ getProjectStats :: Text -> Text -> (UTCTime, UTCTime) -> Int64 -> Session [Proje
 getProjectStats user proj (startDate, endDate) cutOffLimit =
   statement (user, proj, startDate, endDate, cutOffLimit) Statements.getProjectStats
 
+getTagStats :: Text -> Text -> (UTCTime, UTCTime) -> Int64 -> Session [ProjectStatRow]
+getTagStats user tag (startDate, endDate) cutOffLimit =
+  statement (user, tag, startDate, endDate, cutOffLimit) Statements.getTagStats
+
 insertUser :: RegisteredUser -> Session Bool
 insertUser aUser = do
   r <- statement (username aUser) Statements.isUserAvailable
@@ -183,6 +188,14 @@ getAllProjects (StoredUser user) t0 t1 = statement (user, t0, t1) Statements.get
 checkProjectOwner :: StoredUser -> Project -> Session Bool
 checkProjectOwner (StoredUser user) (Project projectName) = do
   res <- statement (projectName, user) Statements.checkProjectOwner
+
+  case res of
+    Just _ -> pure True
+    Nothing -> pure False
+
+checkTagOwner :: StoredUser -> Tag -> Session Bool
+checkTagOwner (StoredUser user) (Tag tag) = do
+  res <- statement (tag, user) Statements.checkTagOwner
 
   case res of
     Just _ -> pure True

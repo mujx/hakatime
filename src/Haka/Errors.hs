@@ -25,7 +25,7 @@ import Data.Aeson (FromJSON (..), ToJSON (..), encode, genericParseJSON, generic
 import qualified Data.ByteString.Char8 as C
 import Data.CaseInsensitive (CI, mk)
 import Haka.AesonHelpers (noPrefixOptions, untagged)
-import Haka.Types (BulkHeartbeatData, HearbeatData, Project (..), StoredUser (..))
+import Haka.Types (BulkHeartbeatData, HearbeatData, Project (..), StoredUser (..), Tag (..))
 import qualified Hasql.Pool as HqPool
 import Katip
 import Network.HTTP.Client (HttpException (..), host)
@@ -99,6 +99,17 @@ invalidRelation (StoredUser user) (Project project) =
       errHeaders = contentTypeHeader
     }
 
+invalidTagRelation :: StoredUser -> Tag -> ServerError
+invalidTagRelation (StoredUser user) (Tag tag) =
+  err404
+    { errBody =
+        encode $
+          mkApiError
+            (toText (printf "The user %s doesn't have access to the tag named '%s'" user tag :: String))
+            Nothing,
+      errHeaders = contentTypeHeader
+    }
+
 expiredRefreshToken :: ServerError
 expiredRefreshToken =
   err403
@@ -161,6 +172,7 @@ data DatabaseException
   | UnknownApiToken
   | InvalidCredentials
   | InvalidRelation StoredUser Project
+  | InvalidTagRelation StoredUser Tag
   | MissingRefreshTokenCookie
   | ExpiredRefreshToken
   | UsernameExists Text
@@ -174,6 +186,7 @@ instance Exception DatabaseException
 toJSONError :: DatabaseException -> ServerError
 toJSONError UnknownApiToken = invalidTokenError
 toJSONError (InvalidRelation user project) = invalidRelation user project
+toJSONError (InvalidTagRelation user tag) = invalidTagRelation user tag
 toJSONError ExpiredRefreshToken = expiredRefreshToken
 toJSONError InvalidCredentials = invalidCredentials
 toJSONError (SessionException e) = genericError (show e :: Text)
@@ -213,6 +226,9 @@ logError e@ExpiredRefreshToken = do
   throw $ toJSONError e
 logError e@(InvalidRelation (StoredUser u) (Project p)) = do
   logFM WarningS (logStr (printf "User %s doesn't have a project named %s" u p :: String))
+  throw $ toJSONError e
+logError e@(InvalidTagRelation (StoredUser u) (Tag t)) = do
+  logFM WarningS (logStr (printf "User %s doesn't have a tag named '%s'" u t :: String))
   throw $ toJSONError e
 logError e = do
   logFM ErrorS (logStr (show e :: String))

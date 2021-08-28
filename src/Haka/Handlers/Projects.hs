@@ -21,7 +21,7 @@ import Haka.App (AppCtx (..), AppM)
 import qualified Haka.Database as Db
 import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
-import Haka.Types (ApiToken (..), Project (..), ProjectStatRow (..), StoredUser (..))
+import Haka.Types (ApiToken (..), Project (..), ProjectStatRow (..), StoredUser (..), Tag (..))
 import Haka.Utils (addAMonth, addAWeek, defaultLimit, removeAMonth, removeAWeek, removeAYear)
 import Katip
 import PostgreSQL.Binary.Data (Scientific)
@@ -90,6 +90,7 @@ instance ToJSON ProjectListPayload
 
 type API =
   ProjectStats
+    :<|> TagStats
     :<|> SetProjectTags
     :<|> GetProjectTags
     :<|> GetUserTags
@@ -134,6 +135,19 @@ type ProjectStats =
     :> Header "Authorization" ApiToken
     :> Get '[JSON] ProjectStatistics
 
+type TagStats =
+  "api"
+    :> "v1"
+    :> "users"
+    :> "current"
+    :> "tags"
+    :> Capture "tag" Text
+    :> QueryParam "start" UTCTime
+    :> QueryParam "end" UTCTime
+    :> QueryParam "timeLimit" Int64
+    :> Header "Authorization" ApiToken
+    :> Get '[JSON] ProjectStatistics
+
 type ProjectList =
   "api"
     :> "v1"
@@ -145,6 +159,7 @@ type ProjectList =
 
 server =
   projectStatsHandler
+    :<|> tagStatsHandler
     :<|> setTagsHandler
     :<|> getTagsHandler
     :<|> getUserTagsHandler
@@ -215,6 +230,7 @@ setTagsHandler project (Just token) tagsPayload = do
 
   return NoContent
 
+{-# ANN module "HLint: ignore Reduce duplication" #-}
 projectStatsHandler ::
   Text ->
   Maybe UTCTime ->
@@ -236,6 +252,40 @@ projectStatsHandler project t0Param t1Param timeLimit (Just token) = do
   (StoredUser username) <- either Err.logError pure dbResult
 
   res <- try $ liftIO $ Db.getProjectStats p username project (t0, t1) (fromMaybe defaultLimit timeLimit)
+
+  rows <- either Err.logError pure res
+
+  return $ toStatsPayload t0 t1 rows
+
+tagStatsHandler ::
+  Text ->
+  Maybe UTCTime ->
+  Maybe UTCTime ->
+  Maybe Int64 ->
+  Maybe ApiToken ->
+  AppM ProjectStatistics
+tagStatsHandler _ _ _ _ Nothing = throw missingAuthError
+tagStatsHandler tag t0Param t1Param timeLimit (Just token) = do
+  t1def <- liftIO getCurrentTime
+  p <- asks pool
+  let (t0, t1) = case (t0Param, t1Param) of
+        (Nothing, Nothing) -> (removeAWeek t1def, t1def)
+        (Nothing, Just b) -> (removeAWeek b, b)
+        (Just a, Nothing) -> (a, addAWeek a)
+        (Just a, Just b) -> (max a (removeAYear b), b)
+
+  dbResult <- try $ liftIO $ Db.validateUserAndTag p token (Tag tag)
+  (StoredUser username) <- either Err.logError pure dbResult
+
+  res <-
+    try $
+      liftIO $
+        Db.getTagStats
+          p
+          username
+          tag
+          (t0, t1)
+          (fromMaybe defaultLimit timeLimit)
 
   rows <- either Err.logError pure res
 
