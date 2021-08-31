@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2021-08-31
+
+### Features
+
+- Add ability to view aggregated project data with tags (instead of aliases) (#32)
+  To use, set a common tag on the projects you want to view as one and select the tag on the
+  Projects page.
+
 ## [1.5.0] - 2021-08-08
 
 ### Features

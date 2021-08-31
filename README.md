@@ -54,7 +54,7 @@ You can use the following docker-compose setup for testing locally or an actual
 deployment. Change `HAKA_BADGE_URL` to match the actual external endpoint of your
 instance.
 
-Deploying on ARM is also possible using the `mujx/hakatime:latest-arm` or `mujx/hakatime:v1.5.0-arm` image or the dedicated
+Deploying on ARM is also possible using the `mujx/hakatime:latest-arm` or `mujx/hakatime:v1.6.0-arm` image or the dedicated
 Dockerfile ([`Dockerfile.arm`](/Dockerfile.arm)) to build the image.
 
 ```yaml
@@ -62,7 +62,7 @@ version: "3"
 services:
   server:
     container_name: hakatime
-    image: mujx/hakatime:v1.5.0
+    image: mujx/hakatime:v1.6.0
     environment:
       # DB settings.
       HAKA_DB_HOST: haka_db
@@ -146,7 +146,7 @@ npm run prod
 ## CLI options
 
 ```
-hakatime :: v1.5.0
+hakatime :: v1.6.0
 
 Usage: hakatime COMMAND
   Wakatime server implementation
