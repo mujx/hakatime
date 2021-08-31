@@ -71,7 +71,7 @@ queueName :: Text
 queueName = "_import_requests_queue_channel"
 
 wakatimeApi :: Text
-wakatimeApi = "api.wakatime.com"
+wakatimeApi = "wakatime.com"
 
 data ImportHeartbeatPayload = ImportHeartbeatPayload
   { wMachine_name_id :: Maybe Text,
@@ -147,7 +147,7 @@ logExceptions logenv e = do
 
   case fromException e :: Maybe R.HttpException of
     Just (R.VanillaHttpException (HttpClient.HttpExceptionRequest _ c)) ->
-      logError ("http call to api.wakatime.com failed: " <> show c)
+      logError ("http call to " <> show wakatimeApi <> " failed: " <> show c)
     Just (R.VanillaHttpException (HttpClient.InvalidUrlException url reason)) ->
       logError ("http call was made with invalid URL " <> show url <> ": " <> show reason)
     Just (R.JsonHttpException s) ->
