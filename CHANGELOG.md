@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.1] - 2021-08-31
+
+### Bug fixes
+
+- Switched from `api.wakatime.com` to `wakatime.com` during data import. The former endpoint was
+  returning HTML instead of JSON and wasn't working over HTTPS. (#43)
+
 ## [1.6.0] - 2021-08-31
 
 ### Features
