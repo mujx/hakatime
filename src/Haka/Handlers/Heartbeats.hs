@@ -59,7 +59,7 @@ type SingleHeartbeat =
     :> Header "X-Machine-Name" Text
     :> Header "Authorization" ApiToken
     :> ReqBody '[JSON] HeartbeatPayload
-    :> Post '[JSON] HeartbeatApiResponse
+    :> PostAccepted '[JSON] HeartbeatApiResponse
 
 type MultipleHeartbeats =
   "api"
@@ -70,7 +70,7 @@ type MultipleHeartbeats =
     :> Header "X-Machine-Name" Text
     :> Header "Authorization" ApiToken
     :> ReqBody '[JSON] [HeartbeatPayload]
-    :> Post '[JSON] HeartbeatApiResponse
+    :> PostAccepted '[JSON] HeartbeatApiResponse
 
 type API = SingleHeartbeat :<|> MultipleHeartbeats
 
