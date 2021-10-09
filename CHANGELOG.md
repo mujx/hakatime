@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.2] - 2021-10-10
+
+### Bug fixes
+
+- Parse the `cursorpos` heartbeat field as either `Text` or `Int` (#46)
+- Reply with 202 status code when new heartbeats are inserted (#48)
+
 ## [1.6.1] - 2021-08-31
 
 ### Bug fixes
