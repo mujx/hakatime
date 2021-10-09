@@ -225,7 +225,8 @@ data HeartbeatPayload = HeartbeatPayload
     branch :: Maybe Text,
     -- | The category of the project.
     category :: Maybe Text,
-    cursorpos :: Maybe Text,
+    -- | The cursor position.
+    cursorpos :: Maybe (Either Text Int64),
     -- | Software dependencies extracted from the source code.
     dependencies :: Maybe [Text],
     -- | The file, app etc.
@@ -234,7 +235,8 @@ data HeartbeatPayload = HeartbeatPayload
     is_write :: Maybe Bool,
     -- | The language used by the entity.
     language :: Maybe Text,
-    lineno :: Maybe Text,
+    -- | The line number.
+    lineno :: Maybe Int64,
     -- | Total number of lines for the entity.
     file_lines :: Maybe Int64,
     -- | Name of the project.

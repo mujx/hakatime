@@ -337,6 +337,14 @@ getBadgeLinkInfo = Statement query params result True
     query :: ByteString
     query = [r| SELECT username, project FROM badges WHERE link_id = $1; |]
 
+eitherValue :: E.Value (Either Text Int64)
+eitherValue = E.enum getText
+  where
+    getText :: Either Text Int64 -> Text
+    getText val = case val of
+      Left t -> t
+      Right n -> show n
+
 insertHeartBeat :: Statement HeartbeatPayload Int64
 insertHeartBeat = Statement query params result True
   where
@@ -354,7 +362,7 @@ insertHeartBeat = Statement query params result True
         <> (user_agent >$< E.param (E.nonNullable E.text))
         <> (branch >$< E.param (E.nullable E.text))
         <> (category >$< E.param (E.nullable E.text))
-        <> (cursorpos >$< E.param (E.nullable E.text))
+        <> (cursorpos >$< E.param (E.nullable eitherValue))
         <> ( dependencies
                >$< E.param
                  ( E.nullable
@@ -365,7 +373,7 @@ insertHeartBeat = Statement query params result True
         <> (entity >$< E.param (E.nonNullable E.text))
         <> (is_write >$< E.param (E.nullable E.bool))
         <> (language >$< E.param (E.nullable E.text))
-        <> (lineno >$< E.param (E.nullable E.text))
+        <> (lineno >$< E.param (E.nullable E.int8))
         <> (file_lines >$< E.param (E.nullable E.int8))
         <> (project >$< E.param (E.nullable E.text))
         <> (ty >$< E.param (E.nonNullable entityValue))
