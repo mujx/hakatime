@@ -25,7 +25,7 @@ import Data.Aeson (FromJSON (..), ToJSON (..), encode, genericParseJSON, generic
 import qualified Data.ByteString.Char8 as C
 import Data.CaseInsensitive (CI, mk)
 import Haka.AesonHelpers (noPrefixOptions, untagged)
-import Haka.Types (BulkHeartbeatData, HearbeatData, Project (..), StoredUser (..), Tag (..))
+import Haka.Types (BulkHeartbeatData, Project (..), StoredUser (..), Tag (..))
 import qualified Hasql.Pool as HqPool
 import Katip
 import Network.HTTP.Client (HttpException (..), host)
@@ -34,8 +34,7 @@ import Servant
 import Text.Printf (printf)
 
 data HeartbeatApiResponse
-  = SingleHeartbeatApiResponse HearbeatData
-  | BulkHeartbeatApiResponse BulkHeartbeatData
+  = BulkHeartbeatApiResponse BulkHeartbeatData
   | ApiError ApiErrorData
   deriving (Show, Generic)
 

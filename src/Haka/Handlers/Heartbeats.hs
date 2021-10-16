@@ -23,7 +23,6 @@ import Haka.Types
 import Hasql.Pool (Pool)
 import Katip
 import qualified Network.HTTP.Req as R
-import qualified Relude.Unsafe as Unsafe
 import Servant
 import Text.URI (URI, authPort, mkURI, uriAuthority)
 
@@ -36,14 +35,6 @@ data User = User
   deriving (Eq, Show, Generic)
 
 instance ToJSON User
-
-newtype HeartbeatResponses = HeartbeatResponses
-  { responses :: [HeartbeatIdAndStatusCode]
-  }
-  deriving (Show, Generic)
-
-data HeartbeatIdAndStatusCode = Foo | Bar | Baz
-  deriving (Show, Generic, Enum)
 
 newtype UserResponse = UserResponse {resData :: [User]}
   deriving (Show, Generic)
@@ -89,10 +80,6 @@ server = heartbeatHandler :<|> multiHeartbeatHandler
 
 mkHeartbeatId :: Text -> HearbeatData
 mkHeartbeatId i = HearbeatData {heartbeatData = HeartbeatId {heartbeatId = i}}
-
-handleSingleDbResult :: [Int64] -> AppM HeartbeatApiResponse
-handleSingleDbResult ids =
-  pure $ SingleHeartbeatApiResponse $ mkHeartbeatId (show (Unsafe.head ids))
 
 handleManyDbResults :: [Int64] -> AppM HeartbeatApiResponse
 handleManyDbResults ids =
@@ -152,9 +139,7 @@ mkResponse :: Either Db.DatabaseException [Int64] -> AppM HeartbeatApiResponse
 mkResponse res = do
   values <- either Err.logError pure res
 
-  if length values > 1
-    then handleManyDbResults values
-    else handleSingleDbResult values
+  handleManyDbResults values
 
 addMissingLang :: HeartbeatPayload -> HeartbeatPayload
 addMissingLang hb@HeartbeatPayload {language = Nothing, ty = FileType} =
