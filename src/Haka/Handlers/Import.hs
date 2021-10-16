@@ -78,7 +78,7 @@ data ImportHeartbeatPayload = ImportHeartbeatPayload
     wUser_agent_id :: Text,
     wBranch :: Maybe Text,
     wCategory :: Maybe Text,
-    wCursorpos :: Maybe (Either Text Int64),
+    wCursorpos :: Maybe Int64,
     wDependencies :: Maybe [Text],
     wEntity :: Text,
     wIs_write :: Maybe Bool,

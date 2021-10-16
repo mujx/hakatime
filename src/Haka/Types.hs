@@ -226,7 +226,7 @@ data HeartbeatPayload = HeartbeatPayload
     -- | The category of the project.
     category :: Maybe Text,
     -- | The cursor position.
-    cursorpos :: Maybe (Either Text Int64),
+    cursorpos :: Maybe Int64,
     -- | Software dependencies extracted from the source code.
     dependencies :: Maybe [Text],
     -- | The file, app etc.
