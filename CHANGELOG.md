@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.3] - 2021-10-16
+
+This release should fix the issues encountered using the new wakatime-cli.
+
+### Bug fixes
+
+- Use `Int64` to represent the `cursorpos` field.
+- Respond with the correct response format when single heartbeats are sent. (#49)
+
 ## [1.6.2] - 2021-10-10
 
 ### Bug fixes
