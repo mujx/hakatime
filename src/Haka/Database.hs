@@ -137,6 +137,9 @@ class (Monad m, MonadThrow m) => Db m where
   -- | Get total time between the given time ranges.
   getTotalTimeBetween :: HqPool.Pool -> V.Vector (Text, Text, UTCTime, UTCTime) -> m [Int64]
 
+  -- | Get total coding time of the current day.
+  getTotalTimeToday :: HqPool.Pool -> Text -> m Int64
+
   -- | Update token metadata set by the user.
   updateTokenMetadata :: HqPool.Pool -> Text -> TokenMetadata -> m ()
 
@@ -243,6 +246,9 @@ instance Db IO where
     -- We return in reverse order because we insert with descending but we sort in ascending.
     res <- HqPool.use pool (Sessions.getTotalTimeBetween ranges)
     either (throw . SessionException) (pure . reverse) res
+  getTotalTimeToday pool user = do
+    res <- HqPool.use pool (Sessions.getTotalTimeToday user)
+    either (throw . SessionException) pure res
   updateTokenMetadata pool user metadata = do
     res <- HqPool.use pool (Sessions.updateTokenMetadata user metadata)
     either (throw . SessionException) pure res

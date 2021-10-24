@@ -19,13 +19,13 @@ import qualified Haka.Database as Db
 import Haka.Errors (missingAuthError)
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), StatRow (..), TimelineRow (..))
-import Haka.Utils (defaultLimit)
+import Haka.Utils (compoundDuration, defaultLimit)
 import Katip
 import PostgreSQL.Binary.Data (Scientific)
 import qualified Relude.Unsafe as Unsafe
 import Servant
 
-data DayTextValue = DayTextValue
+newtype DayTextValue = DayTextValue
   { tText :: Text
   }
   deriving (Show, Generic)
@@ -36,7 +36,7 @@ data DayGrandTotal = DayGrandTotal
   }
   deriving (Show, Generic)
 
-data StatusBarPayload = StatusBarPayload
+newtype StatusBarPayload = StatusBarPayload
   { tData :: DayGrandTotal
   }
   deriving (Show, Generic)
@@ -227,22 +227,35 @@ timelineStatsHandler t0Param t1Param timeLimit (Just token) = do
 
 todayTimeHandler :: Maybe ApiToken -> AppM StatusBarPayload
 todayTimeHandler Nothing = throw missingAuthError
-todayTimeHandler (Just token) = do
+todayTimeHandler (Just apiTkn) = do
   let ctx = sl "day" ("today" :: Text)
 
-  logF ctx "stats" DebugS "requesting statusbar activity for today"
+  logF ctx "statusbar" DebugS "requesting today's statusbar activity"
 
-  return $
-    StatusBarPayload
-      { tData =
-          DayGrandTotal
-            { tCategories = [],
-              tGrand_total =
-                DayTextValue
-                  { tText = "2 hours 19 minutes"
-                  }
-            }
-      }
+  dbPool <- asks pool
+
+  userRes <- try $ liftIO $ Db.getUser dbPool apiTkn
+
+  user <- either Err.logError pure userRes
+
+  case user of
+    Nothing -> throw Err.invalidTokenError
+    Just user' -> do
+      res <- try $ liftIO $ Db.getTotalTimeToday dbPool user'
+
+      totalTime <- either Err.logError pure res
+
+      return $
+        StatusBarPayload
+          { tData =
+              DayGrandTotal
+                { tCategories = [],
+                  tGrand_total =
+                    DayTextValue
+                      { tText = compoundDuration (Just totalTime)
+                      }
+                }
+          }
 
 statsHandler ::
   Maybe UTCTime ->

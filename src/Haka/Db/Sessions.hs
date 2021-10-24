@@ -206,3 +206,6 @@ getLeaderboards t0 t1 = statement (t0, t1) Statements.getLeaderboards
 
 getTotalTimeBetween :: V.Vector (Text, Text, UTCTime, UTCTime) -> Session [Int64]
 getTotalTimeBetween times = statement times Statements.getTotalTimeBetween
+
+getTotalTimeToday :: Text -> Session Int64
+getTotalTimeToday user = statement user Statements.getTotalTimeToday

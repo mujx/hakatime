@@ -680,3 +680,13 @@ getTotalTimeBetween = Statement query params result True
           (vectorEncoder E.text)
           (vectorEncoder E.timestamptz)
           (vectorEncoder E.timestamptz)
+
+getTotalTimeToday :: Statement Text Int64
+getTotalTimeToday = Statement query params result True
+  where
+    result :: D.Result Int64
+    result = D.singleRow (D.column (D.nonNullable D.int8))
+    params :: E.Params Text
+    params = E.param (E.nonNullable E.text)
+    query :: ByteString
+    query = $(embedFile "sql/get_time_today.sql")

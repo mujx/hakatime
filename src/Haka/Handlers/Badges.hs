@@ -14,12 +14,12 @@ import Haka.App (AppCtx (..), AppM, ServerSettings (..))
 import qualified Haka.Database as Db
 import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), BadgeRow (..))
+import Haka.Utils (compoundDuration)
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Media ((//))
 import qualified Relude.Unsafe as Unsafe
 import Servant
-import Text.Printf (printf)
 
 -- SVG MIME type.
 data SVG
@@ -109,22 +109,3 @@ badgeSvgHandler badgeId daysParam = do
   response <- liftIO $ httpLbs request manager
 
   return $ toStrict $ responseBody response
-
-reduceBy :: Integral a => a -> [a] -> [a]
-n `reduceBy` xs = n' : ys where (n', ys) = mapAccumR quotRem n xs
-
-durLabs :: [(Int64, Text)]
-durLabs = [(0, "wk"), (7, "day"), (24, "hrs"), (60, "min"), (60, "sec")]
-
-computeDurations :: Int64 -> [(Int64, Text)]
-computeDurations t =
-  let ds = t `reduceBy` map fst (Unsafe.tail durLabs)
-   in filter ((/= 0) . fst) $ zip ds (map snd durLabs)
-
-compoundDuration :: Maybe Int64 -> Text
-compoundDuration Nothing = "no data"
-compoundDuration (Just v) =
-  let durations = computeDurations v
-   in if not (null durations)
-        then unwords $ map (toText . \(n, s) -> printf "%d %s" n s :: String) $ Unsafe.init durations
-        else "no data"
