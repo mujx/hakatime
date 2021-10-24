@@ -25,6 +25,31 @@ import PostgreSQL.Binary.Data (Scientific)
 import qualified Relude.Unsafe as Unsafe
 import Servant
 
+data DayTextValue = DayTextValue
+  { tText :: Text
+  }
+  deriving (Show, Generic)
+
+data DayGrandTotal = DayGrandTotal
+  { tGrand_total :: DayTextValue,
+    tCategories :: [Text]
+  }
+  deriving (Show, Generic)
+
+data StatusBarPayload = StatusBarPayload
+  { tData :: DayGrandTotal
+  }
+  deriving (Show, Generic)
+
+instance ToJSON StatusBarPayload where
+  toJSON = genericToJSON noPrefixOptions
+
+instance ToJSON DayGrandTotal where
+  toJSON = genericToJSON noPrefixOptions
+
+instance ToJSON DayTextValue where
+  toJSON = genericToJSON noPrefixOptions
+
 data ResourceStats = ResourceStats
   { -- | The name of the resource.
     pName :: Text,
@@ -119,9 +144,19 @@ type TotalStats =
     :> Header "Authorization" ApiToken
     :> Get '[JSON] StatsPayload
 
-type API = TotalStats :<|> TimelineStats
+type TodayTime =
+  "api"
+    :> "v1"
+    :> "users"
+    :> "current"
+    :> "statusbar"
+    :> "today"
+    :> Header "Authorization" ApiToken
+    :> Get '[JSON] StatusBarPayload
 
-server = statsHandler :<|> timelineStatsHandler
+type API = TotalStats :<|> TimelineStats :<|> TodayTime
+
+server = statsHandler :<|> timelineStatsHandler :<|> todayTimeHandler
 
 defaultTimeRange :: Maybe UTCTime -> Maybe UTCTime -> IO (UTCTime, UTCTime)
 defaultTimeRange t0 t1 = do
@@ -189,6 +224,25 @@ timelineStatsHandler t0Param t1Param timeLimit (Just token) = do
             else case Map.lookup key m of
               Just v -> go (Map.insert key (v ++ [value]) m) xs
               Nothing -> go (Map.insert key [value] m) xs
+
+todayTimeHandler :: Maybe ApiToken -> AppM StatusBarPayload
+todayTimeHandler Nothing = throw missingAuthError
+todayTimeHandler (Just token) = do
+  let ctx = sl "day" ("today" :: Text)
+
+  logF ctx "stats" DebugS "requesting statusbar activity for today"
+
+  return $
+    StatusBarPayload
+      { tData =
+          DayGrandTotal
+            { tCategories = [],
+              tGrand_total =
+                DayTextValue
+                  { tText = "2 hours 19 minutes"
+                  }
+            }
+      }
 
 statsHandler ::
   Maybe UTCTime ->
