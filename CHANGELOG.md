@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2021-10-25
+
+### Features
+
+- Add endpoint to show the time spent on the current day on the VS Code statusbar. (#50)
+
 ## [1.6.3] - 2021-10-16
 
 This release should fix the issues encountered using the new wakatime-cli.
