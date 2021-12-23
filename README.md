@@ -18,7 +18,7 @@ It comes together with a dashboard which provides a graphical representation of 
 - User registration & login through the UI.
 - Leaderboards for all the users of the instance.
 - Badge generation for a project that displays that total amount of hours spent for a configurable
-  time period. [![my-app](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=14)](https://hakatime-demo.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=7)
+  time period. [![my-app](https://hakatime.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=14)](https://hakatime.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=7)
 - Global and per project charts
   - Breakdown by project or language.
   - Breakdown by day of week and hour of the day.
@@ -28,10 +28,11 @@ It comes together with a dashboard which provides a graphical representation of 
 
 ## Demo
 
-There is demo instance with fake data [here](https://hakatime-demo.mtx-dev.xyz).
+There is an instance [here](https://hakatime.mtx-dev.xyz) that you can use to send data or browse
+around.
 
-Use `demo` as username and `demodemo` as password to login. You can create an API token and try sending your
-data.
+Use `demo` as username and `demodemo` as password or create your own user to login. You can create
+an API token and try sending your data.
 
 ## Client setup
 
@@ -41,7 +42,7 @@ After you've generated a new API token from Hakatime's UI, update your `~/.wakat
 [settings]
 api_key=<generated_token>
 
-# e.g api_url=https://hakatime-demo.mtx-dev.xyz/api/v1/users/current/heartbeats.bulk for the demo instance.
+# e.g api_url=https://hakatime.mtx-dev.xyz/api/v1/users/current/heartbeats.bulk for the demo instance.
 api_url=<hakatime_instance_url>/api/v1/users/current/heartbeats.bulk
 ```
 
