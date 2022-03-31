@@ -241,7 +241,7 @@ data HeartbeatPayload = HeartbeatPayload
     file_lines :: Maybe Int64,
     -- | Name of the project.
     project :: Maybe Text,
-    -- | Type of the entity that triggered the heartbeat (file, app, domain)
+    -- | Type of the entity that triggered the heartbeat (file, app, domain, url)
     ty :: EntityType,
     -- | Unix timestamp for when the heartbeat was generated.
     time_sent :: Double
@@ -254,7 +254,7 @@ instance FromJSON HeartbeatPayload where
 instance ToJSON HeartbeatPayload where
   toJSON = genericToJSON convertReservedWords
 
-data EntityType = FileType | AppType | DomainType
+data EntityType = FileType | AppType | DomainType | UrlType
   deriving (Eq, Show, Generic)
 
 instance FromJSON EntityType where
@@ -262,13 +262,15 @@ instance FromJSON EntityType where
     "file" -> return FileType
     "app" -> return AppType
     "domain" -> return DomainType
-    _ -> fail "Value can only be one of ['file', 'app', 'domain']"
+    "url" -> return UrlType
+    _ -> fail "Value can only be one of ['file', 'app', 'domain', 'url']"
   parseJSON _ = fail "Expected a string value"
 
 instance ToJSON EntityType where
   toJSON FileType = A.String "file"
   toJSON AppType = A.String "app"
   toJSON DomainType = A.String "domain"
+  toJSON UrlType = A.String "url"
 
 data LeaderboardRow = LeaderboardRow
   { leadProject :: Text,
