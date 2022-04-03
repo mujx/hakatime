@@ -83,7 +83,7 @@ jobs:
           command: nix-shell --run "hlint src && hlint app"
   build_dashboard:
     docker:
-      - image: circleci/node:12.18
+      - image: node:14
     steps:
       - checkout
       - restore_cache:
