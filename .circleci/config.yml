@@ -11,7 +11,7 @@ jobs:
       - checkout
       - run:
           name: Build image
-          command: docker build -f Dockerfile.arm -t $IMAGE_NAME:$IMAGE_TAG .
+          command: docker build -f Dockerfile -t $IMAGE_NAME:$IMAGE_TAG .
       - run:
           name: Publish image to DockerHub
           command: |
@@ -46,7 +46,7 @@ jobs:
       - checkout
       - run:
           name: Build image
-          command: docker build -f Dockerfile.arm -t $IMAGE_NAME:$IMAGE_TAG .
+          command: docker build -f Dockerfile -t $IMAGE_NAME:$IMAGE_TAG .
       - run:
           name: Publish image to DockerHub
           command: |

@@ -1,7 +1,7 @@
 #
 # Build the frontend.
 #
-FROM node:12.18 as dashboard-builder
+FROM node:14 as dashboard-builder
 
 WORKDIR /usr/src/app
 
@@ -21,7 +21,7 @@ FROM ubuntu:21.04 as server-builder
 WORKDIR /build
 
 RUN apt-get update -y -qq && \
-    apt-get install --no-install-recommends -y curl ghc cabal-install libffi-dev libpq-dev libgmp-dev zlib1g-dev
+    apt-get install -y curl ghc cabal-install libffi-dev libpq-dev libgmp-dev zlib1g-dev
 
 COPY UNLICENSE      ./
 COPY app/           ./app
