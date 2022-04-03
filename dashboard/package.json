@@ -7,17 +7,17 @@
   "license": "UNLICENSE",
   "private": true,
   "devDependencies": {
-    "@babel/cli": "^7.13.0",
-    "@babel/core": "^7.0.0-0",
-    "@babel/plugin-transform-runtime": "^7.13.8",
-    "@babel/preset-env": "^7.13.8",
-    "eslint": "7.26.0",
+    "@babel/cli": "7.17.6",
+    "@babel/core": "7.17.8",
+    "@babel/plugin-transform-runtime": "7.17.0",
+    "@babel/preset-env": "7.16.11",
+    "eslint": "8.12.0",
     "parcel": "^1.12.4",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-custom-dist-structure": "1.1.14",
     "parcel-plugin-inliner": "1.0.14",
     "parcel-plugin-static-files-copy": "2.5.0",
-    "prettier": "2.3.0"
+    "prettier": "2.6.2"
   },
   "scripts": {
     "dev": "HAKA_VERSION=$(git rev-parse --short HEAD) parcel index.html --no-source-maps",
@@ -28,14 +28,14 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.15.3",
     "@tarekraafat/autocomplete.js": "^8.3.2",
-    "@yaireo/tagify": "^4.1.1",
-    "apexcharts": "3.26.2",
+    "@yaireo/tagify": "4.9.8",
+    "apexcharts": "3.35.0",
     "bootstrap": "4.6.0",
     "jquery": "^3.6.0",
     "litepicker": "1.5.7",
     "lodash": "^4.17.21",
     "mithril": "2.0.4",
-    "notyf": "^3.9.0",
+    "notyf": "^3.10.0",
     "popper.js": "1.16.1",
     "startbootstrap-sb-admin-2": "4.1.4",
     "typeface-nunito": "1.1.13"
