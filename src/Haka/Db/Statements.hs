@@ -379,6 +379,7 @@ insertHeartBeat = Statement query params result True
         entityText FileType = "file"
         entityText AppType = "app"
         entityText DomainType = "domain"
+        entityText UrlType = "url"
 
 getProjectStats :: Statement (Text, Text, UTCTime, UTCTime, Int64) [ProjectStatRow]
 getProjectStats = Statement query params result True
