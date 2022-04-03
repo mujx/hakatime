@@ -6,7 +6,7 @@ jobs:
       IMAGE_TAG: << pipeline.git.tag >>
       DOCKERHUB_USERNAME: mujx
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:current
     steps:
       - checkout
       - run:
@@ -24,7 +24,7 @@ jobs:
       DOCKERHUB_USERNAME: mujx
     resource_class: arm.medium
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:current
     steps:
       - checkout
       - run:
@@ -41,7 +41,7 @@ jobs:
       IMAGE_TAG: latest
       DOCKERHUB_USERNAME: mujx
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:current
     steps:
       - checkout
       - run:
@@ -59,7 +59,7 @@ jobs:
       DOCKERHUB_USERNAME: mujx
     resource_class: arm.medium
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:current
     steps:
       - checkout
       - run:
