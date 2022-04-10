@@ -6,12 +6,9 @@ FROM node:16 as dashboard-builder
 WORKDIR /usr/src/app
 
 COPY dashboard ./
-
-RUN yarn install --network-timeout 1000000000
-
 COPY .git ./
 
-RUN yarn run prod && rm -rf .git
+RUN yarn install && yarn run prod && rm -rf .git
 
 #
 # Build the server.
