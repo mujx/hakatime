@@ -1,7 +1,7 @@
 #
 # Build the frontend.
 #
-FROM node:16 as dashboard-builder
+FROM node:14 as dashboard-builder
 
 WORKDIR /usr/src/app
 
