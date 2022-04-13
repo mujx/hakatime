@@ -1,7 +1,7 @@
 #
 # Build the frontend.
 #
-FROM node:16-bullseye-slim as dashboard-builder
+FROM node:16-bullseye as dashboard-builder
 
 WORKDIR /usr/src/app
 
