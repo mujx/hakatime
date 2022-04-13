@@ -1,6 +1,6 @@
 {
   "name": "dashboard",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Dashboard for Hakatime",
   "author": "Konstantinos Sideris <siderisk@auth.gr>",
   "license": "UNLICENSE",
