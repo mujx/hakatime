@@ -18,7 +18,6 @@ import Haka.Utils (compoundDuration)
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Media ((//))
-import qualified Relude.Unsafe as Unsafe
 import Servant
 
 -- SVG MIME type.

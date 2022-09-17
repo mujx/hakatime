@@ -271,7 +271,17 @@ processHeartbeatRequest pool token heartbeats = do
     Nothing -> throw UnknownApiToken
     Just userName -> do
       updateTokenUsage pool token
-      saveHeartbeats pool (updateHeartbeats heartbeats userName)
+      saveHeartbeats pool (updateHeartbeats (cleanEmptyProjects heartbeats) userName)
+  where
+    -- Empty projects (e.g `Just ""` ) are replaced with `Just "Unknown project"`.
+    cleanEmptyProjects :: [HeartbeatPayload] -> [HeartbeatPayload]
+    cleanEmptyProjects =
+      map
+        ( \x ->
+            case project x of
+              Just k -> if k == "" then x {project = Just "Unknown project"} else x
+              _ -> x
+        )
 
 editorInfo :: [HeartbeatPayload] -> [Utils.EditorInfo]
 editorInfo = map (Utils.userAgentInfo . user_agent)
