@@ -1,7 +1,7 @@
 #
 # Build the frontend.
 #
-FROM node:16-bullseye as dashboard-builder
+FROM node:18-bullseye as dashboard-builder
 
 WORKDIR /usr/src/app
 
@@ -13,7 +13,7 @@ RUN yarn install && yarn run prod && rm -rf .git
 #
 # Build the server.
 #
-FROM ubuntu:21.04 as server-builder
+FROM ubuntu:22.04 as server-builder
 
 WORKDIR /build
 
@@ -38,7 +38,7 @@ RUN cabal configure --disable-optimization && \
     cabal build -j2 exe:hakatime && mkdir -p /app/bin && \
     cp /build/dist-newstyle/build/*-linux/ghc-*/hakatime-*/x/hakatime/opt/build/hakatime/hakatime /app/bin/hakatime
 
-FROM ubuntu:21.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 

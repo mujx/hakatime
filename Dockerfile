@@ -1,7 +1,7 @@
 #
 # Build the frontend.
 #
-FROM node:16 as dashboard-builder
+FROM node:18 as dashboard-builder
 
 WORKDIR /usr/src/app
 
@@ -13,7 +13,7 @@ RUN yarn install && yarn run prod && rm -rf .git
 #
 # Build the server.
 #
-FROM alpine:3.13 as server-builder
+FROM alpine:3.16 as server-builder
 
 WORKDIR /build
 

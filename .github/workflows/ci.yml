@@ -1,0 +1,75 @@
+name: hakatime
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  cancel-running-workflows:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: styfle/cancel-workflow-action@0.8.0
+        with:
+          access_token: ${{ github.token }}
+
+  build-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.x
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        run: |
+          echo "::set-output name=dir::$(npm config get cache)"
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        id: npm-cache
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('dashboard/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: cd dashbord && yarn install
+      - name: Build
+        run: cd dashboard && yarn run prod
+      - name: Lint
+        run: cd dashboard && yarn run lint
+      - name: Format
+        run: cd dashboard && yarn run fmt
+
+  build-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: haskell/actions/setup@v2
+        with:
+          ghc-version: '8.10'
+          cabal-version: '3.2.0.0'
+      - name: Build
+        run: cabal build
+      - uses: haskell/actions/hlint-setup@v2
+        with:
+          version: '3.1.6'
+      - uses: haskell/actions/hlint-run@v2
+        with:
+          path: src/
+          fail-on: warning
+
+  build-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Docker build
+        uses: docker/build-push-action@v3
+        with:
+          file: ./Dockerfile
+          push: false
+          context: ./
