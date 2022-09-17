@@ -37,7 +37,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install dependencies
-        run: cd dashbord && yarn install
+        run: cd dashboard && yarn install
       - name: Build
         run: cd dashboard && yarn run prod
       - name: Lint
@@ -53,11 +53,22 @@ jobs:
         with:
           ghc-version: '8.10'
           cabal-version: '3.2.0.0'
-      - name: Build
-        run: cabal build
       - uses: haskell/actions/hlint-setup@v2
         with:
           version: '3.1.6'
+      - name: Freeze Cabal plan
+        run: cabal freeze
+      - name: Cache Cabal build artifacts
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ steps.setup-haskell-build-env.outputs.cabal-store }}
+            dist-newstyle
+          key: ${{ runner.os }}-cabal-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: |
+            ${{ runner.os }}-cabal
+      - name: Build
+        run: cabal build
       - uses: haskell/actions/hlint-run@v2
         with:
           path: src/
@@ -71,5 +82,19 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           file: ./Dockerfile
+          push: false
+          context: ./
+
+  build-docker-arm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-buildx-action@v1
+      - name: Docker build
+        uses: docker/build-push-action@v3
+        with:
+          file: ./Dockerfile.arm
+          platforms: linux/arm/v7
           push: false
           context: ./
