@@ -13,7 +13,7 @@ RUN yarn install && yarn run prod && rm -rf .git
 #
 # Build the server.
 #
-FROM alpine:3.16 as server-builder
+FROM alpine:3.15 as server-builder
 
 WORKDIR /build
 
@@ -30,7 +30,7 @@ COPY sql/           ./sql
 COPY test/          ./test
 COPY tools/         ./tools
 
-RUN apk add --no-cache curl binutils-gold zlib-dev alpine-sdk gmp-dev libffi-dev xz tar perl ncurses-dev postgresql-dev ca-certificates && \
+RUN apk add --no-cache curl gcc g++ libc-dev musl-dev binutils-gold make zlib-dev alpine-sdk gmp-dev libffi-dev xz tar perl ncurses-dev postgresql-dev ca-certificates && \
     curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh && \
     source "/root/.ghcup/env" && \
     cabal build -j2 exe:hakatime && \

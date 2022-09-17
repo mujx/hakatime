@@ -1,22 +1,5 @@
 version: 2.1
 jobs:
-  build_tagged_image:
-    environment:
-      IMAGE_NAME: mujx/hakatime
-      IMAGE_TAG: << pipeline.git.tag >>
-      DOCKERHUB_USERNAME: mujx
-    machine:
-      image: ubuntu-2004:current
-    steps:
-      - checkout
-      - run:
-          name: Build image
-          command: docker build -f Dockerfile -t $IMAGE_NAME:$IMAGE_TAG .
-      - run:
-          name: Publish image to DockerHub
-          command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            docker push $IMAGE_NAME:$IMAGE_TAG
   build_tagged_arm_image:
     environment:
       IMAGE_NAME: mujx/hakatime
@@ -35,23 +18,6 @@ jobs:
           command: |
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             docker push $IMAGE_NAME:$IMAGE_ARM_TAG
-  build_image:
-    environment:
-      IMAGE_NAME: mujx/hakatime
-      IMAGE_TAG: latest
-      DOCKERHUB_USERNAME: mujx
-    machine:
-      image: ubuntu-2004:current
-    steps:
-      - checkout
-      - run:
-          name: Build image
-          command: docker build -f Dockerfile -t $IMAGE_NAME:$IMAGE_TAG .
-      - run:
-          name: Publish image to DockerHub
-          command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            docker push $IMAGE_NAME:$IMAGE_TAG
   build_arm_image:
     environment:
       IMAGE_NAME: mujx/hakatime
@@ -70,64 +36,18 @@ jobs:
           command: |
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             docker push $IMAGE_NAME:$IMAGE_ARM_TAG
-  build_server:
-    docker:
-      - image: nixos/nix:2.3
-    steps:
-      - checkout
-      - run:
-          name: "Build"
-          command: nix-build --pure release.nix
-      - run:
-          name: "HLint"
-          command: nix-shell --run "hlint src && hlint app"
-  build_dashboard:
-    docker:
-      - image: node:16
-    steps:
-      - checkout
-      - restore_cache:
-          key: dependency-cache-{{ checksum "./dashboard/package.json" }}
-      - run:
-          name: "Install dependencies"
-          command: cd dashboard && yarn install
-      - save_cache:
-          key: dependency-cache-{{ checksum "./dashboard/package.json" }}
-          paths:
-            - ./dashboard/node_modules
-      - run:
-          name: "Build"
-          command: cd dashboard && yarn run prod
-      - run:
-          name: "Lint"
-          command: cd dashboard && yarn run lint
-      - run:
-          name: "Format"
-          command: cd dashboard && yarn run fmt
 
 workflows:
   version: 2
   build_all:
     jobs:
-      - build_server
-      - build_dashboard
       - build_tagged_arm_image:
           filters:
             branches:
               ignore: master
             tags:
               only: /^v.*/
-      - build_tagged_image:
-          filters:
-            branches:
-              ignore: master
-            tags:
-              only: /^v.*/
       - build_arm_image:
-          filters:
-            branches:
-              only: master
-      - build_image:
           filters:
             branches:
               only: master
