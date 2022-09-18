@@ -39,7 +39,7 @@ jobs:
 
 workflows:
   version: 2
-  build_all:
+  docker:
     jobs:
       - build_tagged_arm_image:
           filters:

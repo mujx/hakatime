@@ -10,7 +10,7 @@ maintainer:          siderisk@auth.gr
 category:            Web, UI
 build-type:          Simple
 extra-doc-files:     README.md
-tested-with:         GHC == 8.8.3
+tested-with:         GHC == 9.2.4
 
 source-repository head
   type:     git
@@ -21,7 +21,7 @@ executable haka-data
   mixins:              base hiding (Prelude)
                      , relude (Relude as Prelude)
   main-is:             Main.hs
-  build-depends:       base                 >= 4.9 && < 4.15
+  build-depends:       base                 >= 4.9 && < 4.17
                      , aeson                >= 1.4
                      , base64-bytestring
                      , fakedata
@@ -76,7 +76,7 @@ library
 
   autogen-modules:     Paths_hakatime
 
-  build-depends:       base                 >= 4.9 && < 4.15
+  build-depends:       base                 >= 4.9 && < 4.17
                      , aeson                >= 1.4
                      , base64-bytestring
                      , bytestring
@@ -151,7 +151,7 @@ executable hakatime
                      , relude (Relude as Prelude)
   main-is:             Main.hs
 
-  build-depends:       base                 >= 4.9 && < 4.15
+  build-depends:       base                 >= 4.9 && < 4.17
                      , hasql                == 1.4.*
                      , hasql-pool           == 0.5.*
                      , hasql-queue          == 1.2.*
@@ -166,7 +166,7 @@ executable hakatime
                      , wai-cors
                      , wai-extra
                      , wai-logger           == 2.3.*
-                     , warp                 == 3.3.*
+                     , warp                 >= 3.3
                      , relude               >= 0.6.0.0
 
   ghc-options:         -Wall
