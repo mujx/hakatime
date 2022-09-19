@@ -2,16 +2,16 @@
 , case-insensitive, containers, contravariant-extras, cookie
 , cryptonite, fakedata, file-embed, hasql, hasql-pool, hasql-queue
 , hasql-transaction, http-client, http-client-tls, http-media
-, http-types, katip, lib, modern-uri, mr-env, optparse-applicative
+, http-types, katip, modern-uri, mr-env, optparse-applicative
 , postgresql-binary, postgresql-simple, postgresql-simple-migration
 , random, raw-strings-qq, relude, req, safe-exceptions, servant
-, servant-client, servant-server, system-filepath, text, time, unix
-, uuid, uuid-types, vector, wai, wai-cors, wai-extra, wai-logger
-, warp
+, servant-client, servant-server, stdenv, system-filepath, text
+, time, unix, uuid, uuid-types, vector, wai, wai-cors, wai-extra
+, wai-logger, warp
 }:
 mkDerivation {
   pname = "hakatime";
-  version = "1.7.1";
+  version = "1.7.2";
   src = ./.;
   isLibrary = true;
   isExecutable = true;
@@ -34,5 +34,5 @@ mkDerivation {
   doHaddock = false;
   doCheck = false;
   description = "Wakatime API server implementation / Dashboard UI";
-  license = lib.licenses.unlicense;
+  license = stdenv.lib.licenses.unlicense;
 }
