@@ -27,7 +27,7 @@ jobs:
           images: |
             docker.io/mujx/hakatime
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern=v{{version}}
 
   push-amd64:
     runs-on: ubuntu-latest
