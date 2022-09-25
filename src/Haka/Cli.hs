@@ -155,4 +155,4 @@ handleCommand (RunMigrations dir) _ = do
 
   case res of
     MigrationError e -> die e
-    MigrationSuccess -> putStrLn "Migrations applied succesfully"
+    MigrationSuccess -> putStrLn "Migrations applied successfully"

@@ -154,7 +154,7 @@ missingGithubToken =
 genericError :: Text -> ServerError
 genericError _ =
   err500
-    { errBody = encode $ mkApiError "An internal error occured" Nothing,
+    { errBody = encode $ mkApiError "An internal error occurred" Nothing,
       errHeaders = contentTypeHeader
     }
 
