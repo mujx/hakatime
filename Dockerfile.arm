@@ -43,7 +43,7 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y -qq && \
-    apt-get install --no-install-recommends -y netcat libffi-dev libgmp-dev libpq-dev zlib1g-dev postgresql ca-certificates curl && \
+    apt-get install --no-install-recommends -y netcat libffi-dev libgmp-dev libpq-dev zlib1g-dev postgresql postgresql-contrib ca-certificates curl && \
     apt-get remove -y perl && \
     apt-get autoremove -y && \
     apt-get autoclean && \
