@@ -44,6 +44,9 @@ api_key=<generated_token>
 
 # e.g api_url=https://hakatime.mtx-dev.xyz/api/v1/users/current/heartbeats.bulk for the demo instance.
 api_url=<hakatime_instance_url>/api/v1/users/current/heartbeats.bulk
+
+# e.g If you're using the docker-compose-deploy.yml to test things locally, use the following:
+# api_url=http://localhost:8080/api/v1/users/current/heartbeats.bulk
 ```
 
 The file's location might be different depending on your system and editor. Please consult the [client docs](https://wakatime.com/plugins)
