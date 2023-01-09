@@ -18,7 +18,7 @@ It comes together with a dashboard which provides a graphical representation of 
 - User registration & login through the UI.
 - Leaderboards for all the users of the instance.
 - Badge generation for a project that displays that total amount of hours spent for a configurable
-  time period. [![my-app](https://hakatime.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=14)](https://hakatime.mtx-dev.xyz/badge/svg/f8c0f834-3747-4d3f-965b-6fa08c6dea94?days=7)
+  time period. [![my-app](https://hakatime.mtx-dev.xyz/badge/svg/4e8273d1-84bc-46f9-890b-14fdfb83cdcc?days=14)](https://hakatime.mtx-dev.xyz/badge/svg/4e8273d1-84bc-46f9-890b-14fdfb83cdcc?days=7)
 - Global and per project charts
   - Breakdown by project or language.
   - Breakdown by day of week and hour of the day.
