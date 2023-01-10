@@ -21,7 +21,7 @@ import qualified Haka.Errors as Err
 import Haka.Types (ApiToken (..), StatRow (..), TimelineRow (..))
 import Haka.Utils (compoundDuration, defaultLimit)
 import Katip
-import PostgreSQL.Binary.Data (Scientific)
+import qualified Data.Scientific as S
 import qualified Relude.Unsafe as Unsafe
 import Servant
 
@@ -56,11 +56,11 @@ data ResourceStats = ResourceStats
     -- | Total number of seconds spent on the resource for the time range.
     pTotalSeconds :: Int64,
     -- | Percentage of the total time in the range spent on the resource.
-    pTotalPct :: Scientific,
+    pTotalPct :: S.Scientific,
     -- | Total seconds spend on the project for each day in the range.
     pTotalDaily :: [Int64],
     -- | Percentage of the day spent on the resource for each day in the range.
-    pPctDaily :: [Scientific]
+    pPctDaily :: [S.Scientific]
   }
   deriving (Show, Generic)
 
@@ -341,9 +341,9 @@ toStatsPayload t0 t1 xs =
     numOfDays :: Double
     numOfDays = fromIntegral $ length byDate
 
-type RangePct = Scientific
+type RangePct = S.Scientific
 
-type DailyPct = Scientific
+type DailyPct = S.Scientific
 
 type CalcStatistics = (Int64, RangePct, DailyPct)
 

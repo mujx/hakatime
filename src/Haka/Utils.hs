@@ -33,7 +33,7 @@ import Data.UUID.V4 (nextRandom)
 import Hasql.Pool (UsageError (..))
 import qualified Hasql.Session as S
 import qualified Relude.Unsafe as Unsafe
-import System.IO (hFlush, hGetEcho, hSetEcho, putChar)
+import System.IO (hGetEcho, hSetEcho, putChar)
 import Text.Printf (printf)
 import Web.Cookie
 
@@ -110,7 +110,7 @@ toBase64 = decodeUtf8 . encode . encodeUtf8
 passwordInput :: String -> IO Text
 passwordInput prompt = do
   putStr prompt
-  hFlush stdout
+  Prelude.hFlush stdout
   passwd <- withEcho False getLine
   putChar '\n'
   return $ toText passwd
@@ -122,26 +122,26 @@ passwordInput prompt = do
 
 -- | Convert a `UsageError` to a user friendly `Text` representation.
 toStrError :: UsageError -> Text
-toStrError (ConnectionError (Just e)) = decodeUtf8 e
-toStrError (ConnectionError Nothing) = "Failed to connect to the database"
+toStrError (ConnectionUsageError (Just e)) = decodeUtf8 e
+toStrError (ConnectionUsageError Nothing) = "Failed to connect to the database"
 toStrError
-  ( SessionError
+  ( SessionUsageError
       ( S.QueryError
           _
           _
-          (S.ResultError (S.ServerError _ msg (Just details) _))
+          (S.ResultError (S.ServerError _ msg (Just details) _ _))
         )
     ) = decodeUtf8 $ msg <> ": " <> details
 toStrError
-  ( SessionError
+  ( SessionUsageError
       ( S.QueryError
           _
           _
-          (S.ResultError (S.ServerError _ msg Nothing _))
+          (S.ResultError (S.ServerError _ msg Nothing _ _))
         )
     ) = decodeUtf8 msg
 toStrError
-  ( SessionError
+  ( SessionUsageError
       ( S.QueryError
           _
           _

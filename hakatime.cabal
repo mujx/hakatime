@@ -86,8 +86,8 @@ library
                      , cookie               == 0.4.5
                      , cryptonite           >= 0.26
                      , file-embed
-                     , hasql                == 1.4.*
-                     , hasql-pool           == 0.5.*
+                     , hasql                == 1.*
+                     , hasql-pool           == 0.8.*
                      , hasql-queue          == 1.2.*
                      , hasql-transaction    == 1.0.*
                      , http-media
@@ -99,12 +99,13 @@ library
                      , req
                      , unix
                      , optparse-applicative >= 0.15
-                     , postgresql-binary    == 0.12.*
+                     , postgresql-binary    == 0.13.*
                      , raw-strings-qq
                      , safe-exceptions
                      , servant              >= 0.17
                      , servant-server       >= 0.17
                      , system-filepath
+                     , scientific
                      , text
                      , time
                      , uuid
@@ -113,7 +114,7 @@ library
                      , http-types
                      , relude               >= 0.6.0.0
                      , postgresql-simple
-                     , postgresql-simple-migration
+                     , postgresql-migration
                      , vector
                      , modern-uri
 
@@ -152,8 +153,8 @@ executable hakatime
   main-is:             Main.hs
 
   build-depends:       base                 >= 4.9 && < 4.17
-                     , hasql                == 1.4.*
-                     , hasql-pool           == 0.5.*
+                     , hasql                == 1.*
+                     , hasql-pool           == 0.8.*
                      , hasql-queue          == 1.2.*
                      , katip                == 0.8.*
                      , hakatime
@@ -165,7 +166,7 @@ executable hakatime
                      , wai                  == 3.2.*
                      , wai-cors
                      , wai-extra
-                     , wai-logger           == 2.3.*
+                     , wai-logger           == 2.4.*
                      , warp                 >= 3.3
                      , relude               >= 0.6.0.0
 

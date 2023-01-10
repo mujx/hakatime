@@ -38,7 +38,7 @@ import Data.Text (strip)
 import Data.Time.Clock (UTCTime)
 import Haka.AesonHelpers (convertReservedWords, noPrefixOptions, untagged)
 import qualified Haka.Utils as Utils
-import PostgreSQL.Binary.Data (Scientific)
+import qualified Data.Scientific as S
 import Servant
 
 data StoredApiToken = StoredApiToken
@@ -111,9 +111,9 @@ data ProjectStatRow = ProjectStatRow
     -- | Total seconds occupied on that entity.
     prTotalSeconds :: Int64,
     -- | Percentage of total time (with the range in context) spent on the resource.
-    prPct :: Scientific,
+    prPct :: S.Scientific,
     -- | Percentage of daily time spent on the resource.
-    prDailyPct :: Scientific
+    prDailyPct :: S.Scientific
   }
   deriving (Eq, Show)
 
@@ -138,9 +138,9 @@ data StatRow = StatRow
     -- | Total seconds occupied on that entity.
     rTotalSeconds :: Int64,
     -- | Percentage of total time (with the range in context) spent on the resource.
-    rPct :: Scientific,
+    rPct :: S.Scientific,
     -- | Percentage of daily time spent on the resource.
-    rDailyPct :: Scientific
+    rDailyPct :: S.Scientific
   }
   deriving (Eq, Show)
 

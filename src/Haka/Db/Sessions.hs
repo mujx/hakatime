@@ -28,7 +28,7 @@ import qualified Haka.Utils as Utils
 import Hasql.Session (Session, statement)
 import qualified Hasql.Transaction as Transaction
 import Hasql.Transaction.Sessions (IsolationLevel (..), Mode (..), transaction)
-import PostgreSQL.Binary.Data (UUID)
+import qualified Data.UUID as U
 
 updateTokenUsage :: Text -> Session ()
 updateTokenUsage tkn = statement tkn Statements.updateTokenUsage
@@ -89,10 +89,10 @@ saveHeartbeats payloadData = do
 getTotalActivityTime :: Text -> Int64 -> Text -> Session (Maybe Int64)
 getTotalActivityTime user days proj = statement (user, days, proj) Statements.getTotalActivityTime
 
-createBadgeLink :: Text -> Text -> Session UUID
+createBadgeLink :: Text -> Text -> Session U.UUID
 createBadgeLink user proj = statement (user, proj) Statements.createBadgeLink
 
-getBadgeLinkInfo :: UUID -> Session BadgeRow
+getBadgeLinkInfo :: U.UUID -> Session BadgeRow
 getBadgeLinkInfo badgeId = statement badgeId Statements.getBadgeLinkInfo
 
 -- | TODO: Impose a max limit

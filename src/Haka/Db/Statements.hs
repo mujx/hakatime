@@ -25,7 +25,7 @@ import Haka.Types
 import qualified Hasql.Decoders as D
 import qualified Hasql.Encoders as E
 import Hasql.Statement
-import PostgreSQL.Binary.Data (UUID)
+import qualified Data.UUID as U
 import Text.RawString.QQ (r)
 
 vectorEncoder :: E.Value b -> E.Params (V.Vector b)
@@ -308,12 +308,12 @@ insertProject = Statement query params D.noResult True
         INSERT INTO projects (owner, name) VALUES ( $1, $2 ) ON CONFLICT DO NOTHING;
       |]
 
-createBadgeLink :: Statement (Text, Text) UUID
+createBadgeLink :: Statement (Text, Text) U.UUID
 createBadgeLink = Statement query params result True
   where
     params :: E.Params (Text, Text)
     params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
-    result :: D.Result UUID
+    result :: D.Result U.UUID
     result = D.singleRow (D.column (D.nonNullable D.uuid))
     query :: ByteString
     query =
@@ -323,10 +323,10 @@ createBadgeLink = Statement query params result True
         RETURNING link_id;
      |]
 
-getBadgeLinkInfo :: Statement UUID BadgeRow
+getBadgeLinkInfo :: Statement U.UUID BadgeRow
 getBadgeLinkInfo = Statement query params result True
   where
-    params :: E.Params UUID
+    params :: E.Params U.UUID
     params = E.param (E.nonNullable E.uuid)
     result :: D.Result BadgeRow
     result =
@@ -519,7 +519,7 @@ getJobStatus = Statement query params (D.rowMaybe ((D.column . D.nonNullable) D.
     query :: ByteString
     query = [r| SELECT state FROM payloads WHERE value::text = $1::text; |]
 
-insertTags :: Statement (V.Vector Text) (V.Vector UUID)
+insertTags :: Statement (V.Vector Text) (V.Vector U.UUID)
 insertTags = Statement query params result True
   where
     query :: ByteString
@@ -528,7 +528,7 @@ insertTags = Statement query params result True
       INSERT INTO tags (name) SELECT * FROM unnest ($1)
       ON CONFLICT (name) DO UPDATE SET name=EXCLUDED.name RETURNING id;
     |]
-    result :: D.Result (V.Vector UUID)
+    result :: D.Result (V.Vector U.UUID)
     result = D.rowVector (D.column (D.nonNullable D.uuid))
     params :: E.Params (V.Vector Text)
     params = vectorEncoder E.text
@@ -541,7 +541,7 @@ deleteExistingTags = Statement query params D.noResult True
     params :: E.Params (Text, Text)
     params = (fst >$< E.param (E.nonNullable E.text)) <> (snd >$< E.param (E.nonNullable E.text))
 
-addTagsToProject :: Statement (V.Vector (Text, Text, UUID)) Int64
+addTagsToProject :: Statement (V.Vector (Text, Text, U.UUID)) Int64
 addTagsToProject = Statement query params decoder True
   where
     query :: ByteString
@@ -550,7 +550,7 @@ addTagsToProject = Statement query params decoder True
       INSERT INTO project_tags (project_name, project_owner, tag_id) SELECT * FROM unnest ($1, $2, $3)
       ON CONFLICT DO NOTHING;;
     |]
-    params :: E.Params (V.Vector (Text, Text, UUID))
+    params :: E.Params (V.Vector (Text, Text, U.UUID))
     params = contramap V.unzip3 $ contrazip3 (vectorEncoder E.text) (vectorEncoder E.text) (vectorEncoder E.uuid)
     decoder = D.rowsAffected
 

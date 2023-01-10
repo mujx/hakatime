@@ -8,7 +8,7 @@ where
 
 import Data.Version (showVersion)
 import Database.PostgreSQL.Simple
-import Database.PostgreSQL.Simple.Migration
+import Database.PostgreSQL.Simple.Migration.V1Compat
 import qualified Haka.PasswordUtils as PasswordUtils
 import qualified Haka.Utils as Utils
 import qualified Hasql.Connection as HasqlConn
@@ -102,7 +102,7 @@ handleCommand Run action = action
 handleCommand (CreateToken ops) _ = do
   dbSettings <- getDbSettings
   passwd <- Utils.passwordInput "Password: "
-  pool <- HasqlPool.acquire (10, 1, dbSettings)
+  pool <- HasqlPool.acquire 10 Nothing dbSettings
   token <- PasswordUtils.createToken pool username passwd
   case token of
     Left err -> die $ toString err
@@ -115,7 +115,7 @@ handleCommand (CreateToken ops) _ = do
 handleCommand (CreateUser ops) _ = do
   dbSettings <- getDbSettings
   passwd <- Utils.passwordInput "Set a password: "
-  pool <- HasqlPool.acquire (10, 1, dbSettings)
+  pool <- HasqlPool.acquire 10 Nothing dbSettings
   hashUser <- PasswordUtils.mkUser username passwd
   case hashUser of
     Left err -> die (show err)

@@ -47,7 +47,7 @@ import Haka.Types
   )
 import qualified Haka.Utils as Utils
 import qualified Hasql.Pool as HqPool
-import PostgreSQL.Binary.Data (UUID)
+import qualified Data.UUID as U
 
 data OperationError = UsageError | Text
   deriving (Show)
@@ -102,10 +102,10 @@ class (Monad m, MonadThrow m) => Db m where
   getTotalActivityTime :: HqPool.Pool -> Text -> Int64 -> Text -> m (Maybe Int64)
 
   -- | Create a unique badge link for the user/project combination.
-  createBadgeLink :: HqPool.Pool -> Text -> Text -> m UUID
+  createBadgeLink :: HqPool.Pool -> Text -> Text -> m U.UUID
 
   -- | Find the user/project combination from the badge id.
-  getBadgeLinkInfo :: HqPool.Pool -> UUID -> m BadgeRow
+  getBadgeLinkInfo :: HqPool.Pool -> U.UUID -> m BadgeRow
 
   -- | Get the status of a queue item.
   getJobStatus :: HqPool.Pool -> A.Value -> m (Maybe Text)
@@ -393,7 +393,7 @@ deleteApiToken pool token tknId = do
     Nothing -> throw UnknownApiToken
     Just _ -> deleteToken pool (ApiToken tknId)
 
-mkBadgeLink :: Db m => HqPool.Pool -> Text -> ApiToken -> m UUID
+mkBadgeLink :: Db m => HqPool.Pool -> Text -> ApiToken -> m U.UUID
 mkBadgeLink pool proj token = do
   retrievedUser <- getUser pool token
   case retrievedUser of

@@ -2,10 +2,10 @@
 , case-insensitive, containers, contravariant-extras, cookie
 , cryptonite, fakedata, file-embed, hasql, hasql-pool, hasql-queue
 , hasql-transaction, http-client, http-client-tls, http-media
-, http-types, katip, modern-uri, mr-env, optparse-applicative
-, postgresql-binary, postgresql-simple, postgresql-simple-migration
-, random, raw-strings-qq, relude, req, safe-exceptions, servant
-, servant-client, servant-server, stdenv, system-filepath, text
+, http-types, katip, lib, modern-uri, mr-env, optparse-applicative
+, postgresql-binary, postgresql-migration, postgresql-simple
+, random, raw-strings-qq, relude, req, safe-exceptions, scientific
+, servant, servant-client, servant-server, system-filepath, text
 , time, unix, uuid, uuid-types, vector, wai, wai-cors, wai-extra
 , wai-logger, warp
 }:
@@ -20,9 +20,10 @@ mkDerivation {
     contravariant-extras cookie cryptonite file-embed hasql hasql-pool
     hasql-queue hasql-transaction http-client http-client-tls
     http-media http-types katip modern-uri mr-env optparse-applicative
-    postgresql-binary postgresql-simple postgresql-simple-migration
-    raw-strings-qq relude req safe-exceptions servant servant-server
-    system-filepath text time unix uuid uuid-types vector wai wai-extra
+    postgresql-binary postgresql-migration postgresql-simple
+    raw-strings-qq relude req safe-exceptions scientific servant
+    servant-server system-filepath text time unix uuid uuid-types
+    vector wai wai-extra
   ];
   executableHaskellDepends = [
     aeson base base64-bytestring fakedata hasql hasql-pool hasql-queue
@@ -34,5 +35,5 @@ mkDerivation {
   doHaddock = false;
   doCheck = false;
   description = "Wakatime API server implementation / Dashboard UI";
-  license = stdenv.lib.licenses.unlicense;
+  license = lib.licenses.unlicense;
 }

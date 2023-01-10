@@ -49,7 +49,7 @@ app settings conf =
 initApp :: ServerSettings -> (AppCtx -> Application) -> IO ()
 initApp settings unApp = do
   dbSettings <- Cli.getDbSettings
-  dbPool <- HasqlPool.acquire (10, 1, dbSettings)
+  dbPool <- HasqlPool.acquire 10 Nothing dbSettings
 
   -- Set up the db schema for the postgres queue.
   res <- HasqlConn.acquire dbSettings
