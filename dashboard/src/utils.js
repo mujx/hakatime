@@ -64,7 +64,7 @@ export default {
     const n = parseInt(v);
     const offSet = new Date().getTimezoneOffset() / 60;
 
-    return ((n - offSet) % 23).toString();
+    return ((n - offSet) % 24).toString();
   },
   secondsToHms: function (d) {
     d = Number(d);
