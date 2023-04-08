@@ -8,7 +8,8 @@ WORKDIR /usr/src/app
 COPY dashboard ./
 COPY .git ./
 
-RUN yarn install && yarn run prod && rm -rf .git
+RUN yarn install --network-timeout 1000000000 && \
+    yarn run prod
 
 #
 # Build the server.
