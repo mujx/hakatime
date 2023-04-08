@@ -8,14 +8,11 @@ on:
     branches:
       - master
 
-jobs:
-  cancel-running-workflows:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: styfle/cancel-workflow-action@0.8.0
-        with:
-          access_token: ${{ github.token }}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
   build-dashboard:
     runs-on: ubuntu-latest
     steps:
