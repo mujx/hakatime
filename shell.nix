@@ -4,7 +4,7 @@ pkgs.stdenv.mkDerivation {
   name = "hakatime-dev";
 
   buildInputs = [
-    pkgs.haskell.compiler.ghc924
+    pkgs.haskell.compiler.ghc927
     pkgs.cabal-install
     pkgs.zlib
     pkgs.postgresql

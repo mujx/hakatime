@@ -13,12 +13,12 @@ RUN yarn install && yarn run prod && rm -rf .git
 #
 # Build the server.
 #
-FROM alpine:3.15 as server-builder
+FROM alpine:3.17 as server-builder
 
 WORKDIR /build
 
 ENV BOOTSTRAP_HASKELL_NONINTERACTIVE "1"
-ENV BOOTSTRAP_HASKELL_GHC_VERSION    "9.2.4"
+ENV BOOTSTRAP_HASKELL_GHC_VERSION    "9.2.7"
 
 COPY UNLICENSE      ./
 COPY app/           ./app
@@ -39,7 +39,7 @@ RUN apk add --no-cache curl gcc g++ libc-dev musl-dev binutils-gold make zlib-de
 
 RUN apk add upx && upx /app/bin/hakatime
 
-FROM alpine:3.13
+FROM alpine:3.17
 
 COPY --from=dashboard-builder /usr/src/app/dist /app/bin/dashboard
 COPY --from=server-builder    /app/bin/hakatime /app/bin/hakatime

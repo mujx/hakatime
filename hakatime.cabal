@@ -10,7 +10,7 @@ maintainer:          siderisk@auth.gr
 category:            Web, UI
 build-type:          Simple
 extra-doc-files:     README.md
-tested-with:         GHC == 9.2.4
+tested-with:         GHC == 9.2.7
 
 source-repository head
   type:     git
@@ -83,7 +83,7 @@ library
                      , case-insensitive
                      , containers
                      , contravariant-extras
-                     , cookie               == 0.4.5
+                     , cookie               >= 0.4.5
                      , cryptonite           >= 0.26
                      , file-embed
                      , hasql                == 1.*
