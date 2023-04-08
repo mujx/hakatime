@@ -34,7 +34,7 @@ COPY tools/         ./tools
 RUN apk add --no-cache curl gcc g++ libc-dev musl-dev binutils-gold make zlib-dev alpine-sdk gmp-dev libffi-dev xz tar perl ncurses-dev postgresql-dev ca-certificates && \
     curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh && \
     source "/root/.ghcup/env" && \
-    cabal build -j2 exe:hakatime && \
+    cabal build exe:hakatime && \
     mkdir -p /app/bin                             && \
     cp /build/dist-newstyle/build/*-linux/ghc-*/hakatime-*/x/hakatime/opt/build/hakatime/hakatime /app/bin/hakatime
 
