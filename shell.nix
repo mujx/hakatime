@@ -12,6 +12,8 @@ pkgs.stdenv.mkDerivation {
     pkgs.pgcli
     pkgs.cabal2nix
     pkgs.ormolu
+    pkgs.nodejs-18_x
+    pkgs.yarn
   ];
 
   shellHook = ''

@@ -6,9 +6,9 @@ FROM node:18 as dashboard-builder
 WORKDIR /usr/src/app
 
 COPY dashboard ./
-COPY .git ./
+COPY .git      ./
 
-RUN yarn install && yarn run prod && rm -rf .git
+RUN yarn install && yarn run prod
 
 #
 # Build the server.
@@ -18,7 +18,8 @@ FROM alpine:3.17 as server-builder
 WORKDIR /build
 
 ENV BOOTSTRAP_HASKELL_NONINTERACTIVE "1"
-ENV BOOTSTRAP_HASKELL_GHC_VERSION    "9.2.7"
+ENV BOOTSTRAP_HASKELL_GHC_VERSION    "9.0.2"
+ENV BOOTSTRAP_HASKELL_CABAL_VERSION  "3.10.1.0"
 
 COPY UNLICENSE      ./
 COPY app/           ./app

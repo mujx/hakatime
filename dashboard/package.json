@@ -18,7 +18,8 @@
     "dev": "HAKA_VERSION=$(git rev-parse --short HEAD) parcel index.html --no-source-maps",
     "prod": "HAKA_VERSION=$(git rev-parse --short HEAD) parcel build index.html --detailed-report --no-source-maps",
     "lint": "eslint --ext js src",
-    "fmt": "prettier --write src/**/*.js src/*.js"
+    "fmt": "prettier --write src/**/*.js src/*.js",
+    "ci": "yarn run prod && yarn run lint && yarn run fmt"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.15.3",

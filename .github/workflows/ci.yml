@@ -33,14 +33,11 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('dashboard/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      - name: Install dependencies
-        run: cd dashboard && yarn install
       - name: Build
-        run: cd dashboard && yarn run prod
-      - name: Lint
-        run: cd dashboard && yarn run lint
-      - name: Format
-        run: cd dashboard && yarn run fmt
+        run: |
+          cd dashboard
+          yarn install
+          yarn run ci
 
   build-server:
     runs-on: ubuntu-latest
