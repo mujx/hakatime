@@ -3,8 +3,17 @@ import utils from "../utils.js";
 import * as auth from "../auth";
 import * as api from "../api";
 
+/**
+ * @typedef {Object} Project
+ * @property {string} name
+ * @property {string} desc
+ * @property {number} totalSeconds
+*/
+
 const Model = {
+  /** @type {Project[]} */
   projects: [],
+  /** @type {Project?} */
   currentProject: null,
   dates: null,
   obj: null,
@@ -14,8 +23,11 @@ const Model = {
     Model.dates = null;
     Model.obj = null;
   },
+  /** @param {Project[]} projects */
   initProjectList: projects => {
-    Model.projects = projects;
+    Model.projects = _.orderBy(projects, ["totalSeconds", "name"], ["desc", "asc"])
+      .filter(n => n.name !== "Other")
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     if (Model.projects.length > 0) {
       Model.currentProject = Model.projects[0];

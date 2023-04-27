@@ -521,7 +521,7 @@ const ProjectComponent = {
     const toolbar = m("div.d-sm-flex.mb-4", [
       m(
         "h1.h3.mb-0.mr-auto.text-gray-800",
-        LocalState.currentProject ? LocalState.currentProject : "Projects"
+        LocalState.currentProject ? LocalState.currentProject.name : "Projects"
       ),
       m("div.autoComplete_wrapper", [
         m(
@@ -546,9 +546,9 @@ const ProjectComponent = {
             return m(
               "a.btn.dropdown-item",
               {
-                onclick: LocalState.fetchProjectStats
+                onclick: () => { LocalState.fetchProjectStats(project) }
               },
-              project
+              project.name
             );
           })
         )
