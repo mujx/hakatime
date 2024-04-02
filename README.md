@@ -94,7 +94,7 @@ services:
       # https://[wakapi-instance]/api/compat/wakatime/v1/users/current/heartbeats.bulk
       HAKA_REMOTE_WRITE_TOKEN: "<token>"
     ports:
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
   haka_db:
     container_name: haka_db
     image: postgres:12-alpine
