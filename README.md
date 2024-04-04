@@ -94,6 +94,8 @@ services:
       # https://[wakapi-instance]/api/compat/wakatime/v1/users/current/heartbeats.bulk
       HAKA_REMOTE_WRITE_TOKEN: "<token>"
     ports:
+      # This will start the services on all interfaces. 
+      # More info here: https://github.com/compose-spec/compose-spec/blob/master/spec.md#ports
       - "8080:8080"
   haka_db:
     container_name: haka_db
