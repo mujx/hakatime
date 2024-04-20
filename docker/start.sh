@@ -15,11 +15,11 @@ done;
 echo "Connected to PostgreSQL"
 
 # If the database is not created, initialze with the database schema.
-if PGPASSWORD="${HAKA_DB_PASS}" psql -w -U "${HAKA_DB_USER}" -h "${HAKA_DB_HOST}" -d "${HAKA_DB_NAME}" -c "select count(*) from users" 2>&1 > /dev/null; then
+if PGPASSWORD="${HAKA_DB_PASS}" psql -w -U "${HAKA_DB_USER}" -h "${HAKA_DB_HOST}" -p ${HAKA_DB_PORT} -d "${HAKA_DB_NAME}" -c "select count(*) from users" 2>&1 > /dev/null; then
   echo "Database ${HAKA_DB_NAME} already exists"
 else
   echo "Database ${HAKA_DB_NAME} does not exist. Initializing database ..."
-  PGPASSWORD=${HAKA_DB_PASS} psql -w -U "${HAKA_DB_USER}" -h "${HAKA_DB_HOST}" -d "${HAKA_DB_NAME}" < /app/init.sql
+  PGPASSWORD=${HAKA_DB_PASS} psql -w -U "${HAKA_DB_USER}" -h "${HAKA_DB_HOST}" -p ${HAKA_DB_PORT} -d "${HAKA_DB_NAME}" < /app/init.sql
   echo "Database ${HAKA_DB_NAME} initialized"
 fi
 
